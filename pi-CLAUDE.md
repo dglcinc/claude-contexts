@@ -47,11 +47,39 @@ cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 
 ## Current Work
 
-- **pivac PR #16** (`feature/emporia-module`): adds `pivac.Emporia` module for Emporia Vue Gen 2 power monitoring.
-  After merging:
-  1. `git pull` in `~/github/pivac`
-  2. `pip install pyemvue --break-system-packages` (activate pivac-venv first)
-  3. Run `scripts/emporia-discover.py` to get device GIDs
-  4. Add `pivac.Emporia` block to `/etc/pivac/config.yml` with real GIDs
-  5. Install and enable `pivac-emporia.service`
-  See `CLAUDE.md` in the pivac repo for full details.
+**Deploying pivac.Emporia module (PR #16 already merged into master)**
+
+`~/github/pivac` is up to date on master. `pyemvue` is installed in `~/pivac-venv`.
+
+**Blocked on:** PyEmVue API mismatch in `scripts/emporia-discover.py`. Authentication
+succeeds but `populate_device_properties()` fails with:
+```
+AttributeError: 'list' object has no attribute 'device_gid'
+```
+This means the installed version of PyEmVue returns a different structure from
+`get_devices()` than the script expects. Need to inspect the installed version's
+API and fix `emporia-discover.py` and `pivac/Emporia.py` accordingly.
+
+**Diagnosis starting point:**
+```bash
+source ~/pivac-venv/bin/activate
+pip show pyemvue
+python3 -c "
+import pyemvue
+vue = pyemvue.PyEmVue()
+vue.login(username='david@dglc.com', password='NuAUf2VFwH!*')
+devices = vue.get_devices()
+print(type(devices))
+print(type(devices[0]) if devices else 'empty')
+print(devices[0] if devices else 'empty')
+"
+```
+
+**After fixing the API mismatch, remaining steps:**
+1. Run `emporia-discover.py` successfully to get device GIDs
+2. Add `pivac.Emporia` block to `/etc/pivac/config.yml` with real GIDs and panel names
+3. Test standalone: `python -c "import pivac.Emporia as m; import json; print(json.dumps(m.status(), indent=2))"`
+4. Install service: `sudo cp scripts/systemd/pivac-emporia.service /etc/systemd/system/`
+5. `sudo systemctl daemon-reload && sudo systemctl enable --now pivac-emporia`
+
+**Note on password:** Password contains `!` — always use single quotes in bash: `--password 'NuAUf2VFwH!*'`
