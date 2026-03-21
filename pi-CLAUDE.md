@@ -3,8 +3,16 @@
 This file lives at `~/CLAUDE.md` on the Pi. Claude Code reads it automatically
 from the home directory whenever you work in any subdirectory (e.g. `~/github/pivac`).
 
-To install or update it:
+**First-time setup:**
 ```bash
+cd ~/github
+git clone https://github.com/dglcinc/claude-contexts.git
+cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
+```
+
+**To update after changes to this file:**
+```bash
+git -C ~/github/claude-contexts pull
 cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 ```
 
@@ -42,7 +50,7 @@ cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 - **pivac PR #16** (`feature/emporia-module`): adds `pivac.Emporia` module for Emporia Vue Gen 2 power monitoring.
   After merging:
   1. `git pull` in `~/github/pivac`
-  2. `pip install pyemvue --break-system-packages` (in pivac-venv)
+  2. `pip install pyemvue --break-system-packages` (activate pivac-venv first)
   3. Run `scripts/emporia-discover.py` to get device GIDs
   4. Add `pivac.Emporia` block to `/etc/pivac/config.yml` with real GIDs
   5. Install and enable `pivac-emporia.service`
