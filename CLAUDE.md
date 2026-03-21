@@ -5,7 +5,7 @@ This file is read at the start of every session when setting project context. It
 ## How to Set Project Context
 
 When the user says "set context to X":
-1. Run `uname -s` and `whoami` to detect which machine we're on (see Machine Detection below)
+1. Check the mounted folder to detect which machine we're on (see Machine Detection below)
 2. Confirm you've read this global file
 3. Read `CLAUDE.md` from the project repo at `<github-dir>/X/CLAUDE.md`
 4. Confirm what's been loaded and wait for the next prompt — do not start any work yet
@@ -14,14 +14,22 @@ The global CLAUDE.md is always in: `<github-dir>/claude-contexts/CLAUDE.md`
 
 ## Machine Detection
 
-Run `uname -s` to determine the machine:
+The VM always reports `Linux` for `uname -s` regardless of host, so detect the machine by checking the mounted folder path instead:
 
-| `uname -s` | `whoami` | Machine            | Claude top-level folder                          | GitHub directory                                      |
-|------------|----------|--------------------|--------------------------------------------------|-------------------------------------------------------|
-| `Darwin`   | `david`  | Mac (David's MacBook) | `~/OneDrive - DGLC/Claude`                    | `~/OneDrive - DGLC/Claude/github/`                    |
-| `Linux`    | `pi`     | Raspberry Pi       | `/home/pi`                                       | `/home/pi/github/`                                    |
+```bash
+ls /Users/david/Library/CloudStorage/OneDrive-DGLC/Claude/github 2>/dev/null && echo "mac" || echo "pi"
+```
 
-The Mac path resolves to: `/Users/david/Library/CloudStorage/OneDrive-DGLC/Claude`
+| Mounted path visible at VM                                      | Machine               | Host Claude top-level folder       | Host GitHub directory                        |
+|-----------------------------------------------------------------|-----------------------|------------------------------------|----------------------------------------------|
+| `/sessions/eager-modest-noether/mnt/Claude/` (OneDrive-backed) | Mac (David's MacBook) | `~/OneDrive - DGLC/Claude`         | `~/OneDrive - DGLC/Claude/github/`           |
+| `/sessions/eager-modest-noether/mnt/Claude/` (Pi home-backed)  | Raspberry Pi          | `/home/pi`                         | `/home/pi/github/`                           |
+
+To distinguish Mac vs Pi when both mount to the same VM path, check for a Mac-specific marker:
+```bash
+ls /Users/david/Library/CloudStorage/OneDrive-DGLC/Claude/github/Arduino 2>/dev/null && echo "mac" || echo "pi"
+```
+(The Arduino repo only exists on the Mac clone; the Pi clone does not have it.)
 
 ## GitHub Setup
 
