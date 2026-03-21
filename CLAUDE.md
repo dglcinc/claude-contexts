@@ -2,15 +2,29 @@
 
 This file is read at the start of every session when setting project context. It applies to all projects.
 
-## How to Set Project Context
+## Context Setup by Tool
 
+### Cowork (desktop app)
 When the user says "set context to X":
 1. Check the mounted folder to detect which machine we're on (see Machine Detection below)
-2. Confirm you've read this global file
+2. Read this global file
 3. Read `CLAUDE.md` from the project repo at `<github-dir>/X/CLAUDE.md`
 4. Confirm what's been loaded and wait for the next prompt — do not start any work yet
 
-The global CLAUDE.md is always in: `<github-dir>/claude-contexts/CLAUDE.md`
+The global CLAUDE.md for Cowork is: `<github-dir>/claude-contexts/CLAUDE.md`
+
+### Claude Code (CLI, used on the Pi)
+Claude Code automatically reads `CLAUDE.md` from the current directory and all
+parent directories — no "set context" command is needed. To set up:
+1. Copy `pi-CLAUDE.md` from this repo to `~/CLAUDE.md` on the Pi (one-time, re-run after updates):
+   ```bash
+   cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
+   ```
+2. Start Claude Code from the project directory:
+   ```bash
+   cd ~/github/pivac && claude
+   ```
+   Claude Code will automatically read `~/CLAUDE.md` (global) and `~/github/pivac/CLAUDE.md` (project).
 
 ## Machine Detection
 
@@ -29,7 +43,7 @@ To distinguish Mac vs Pi when both mount to the same VM path, check for a Mac-sp
 ```bash
 ls /Users/david/Library/CloudStorage/OneDrive-DGLC/Claude/github/Arduino 2>/dev/null && echo "mac" || echo "pi"
 ```
-(The Arduino repo only exists on the Mac clone; the Pi clone does not have it.)
+(The Arduino repo only exists in the Mac clone; the Pi clone does not have it.)
 
 ## GitHub Setup
 
