@@ -53,6 +53,17 @@ ls /sessions/eager-modest-noether/mnt/Claude/github/Arduino 2>/dev/null && echo 
 - Always create feature branches and open pull requests for code and documentation changes
 - Push directly to the default branch only for meta/context files (CLAUDE.md)
 
+## Git and OneDrive Limitations (Cowork/Mac sessions)
+
+When running in Cowork mode on the Mac, repo folders are mounted via OneDrive. Git operations from the VM against this mount are unreliable — `git fetch`, `git pull`, `git stash`, and branch switches frequently fail with SIGBUS, lock file errors, or silent exit code 1. Do not attempt these operations from the VM.
+
+**Always use the GitHub MCP instead:**
+- Use `mcp__github__push_files` or `mcp__github__create_or_update_file` to push changes
+- Use `mcp__github__create_branch`, `mcp__github__create_pull_request` for PR workflow
+- Use `mcp__github__get_file_contents` to read files from GitHub when needed
+- For `git pull` on the Mac or Pi: give the user the command to run in their terminal
+- The only safe local git operation is `git log` / `git status` for read-only inspection
+
 ## Working Style
 
 - **Execute without repeated check-ins.** Before a multi-step task, state the plan briefly and confirm once. Then carry out all steps without asking permission at each one.
