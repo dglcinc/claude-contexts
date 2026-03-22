@@ -9,7 +9,8 @@ When the user says "set context to X":
 1. Check the mounted folder to detect which machine we're on (see Machine Detection below)
 2. Read this global file
 3. Read `CLAUDE.md` from the project repo at `<github-dir>/X/CLAUDE.md`
-4. Confirm what's been loaded and wait for the next prompt — do not start any work yet
+4. Run `git pull` in `<github-dir>/X/` to pull the latest code from GitHub
+5. Confirm what's been loaded and the result of the pull, then wait for the next prompt — do not start any work yet
 
 The global CLAUDE.md for Cowork is: `<github-dir>/claude-contexts/CLAUDE.md`
 
@@ -31,7 +32,7 @@ parent directories — no "set context" command is needed. To set up:
 The VM always reports `Linux` for `uname -s` regardless of host, so detect the machine by checking the mounted folder path instead:
 
 ```bash
-ls /Users/david/Library/CloudStorage/OneDrive-DGLC/Claude/github 2>/dev/null && echo "mac" || echo "pi"
+ls /sessions/eager-modest-noether/mnt/Claude/github 2>/dev/null && echo "mac" || echo "pi"
 ```
 
 | Mounted path visible at VM                                      | Machine               | Host Claude top-level folder       | Host GitHub directory                        |
@@ -41,9 +42,9 @@ ls /Users/david/Library/CloudStorage/OneDrive-DGLC/Claude/github 2>/dev/null && 
 
 To distinguish Mac vs Pi when both mount to the same VM path, check for a Mac-specific marker:
 ```bash
-ls /Users/david/Library/CloudStorage/OneDrive-DGLC/Claude/github/Arduino 2>/dev/null && echo "mac" || echo "pi"
+ls /sessions/eager-modest-noether/mnt/Claude/github/Arduino 2>/dev/null && echo "mac" || echo "pi"
 ```
-(The Arduino repo only exists in the Mac clone; the Pi clone does not have it.)
+(The Arduino repo only exists on the Mac clone; the Pi clone does not have it.)
 
 ## GitHub Setup
 
