@@ -37,6 +37,10 @@ cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 - Always create feature branches and open pull requests for code changes
 - Push directly to the default branch only for meta/context files (CLAUDE.md)
 
+## Shortcuts
+
+- **"save context"**: Update all relevant CLAUDE.md files (project and global) to reflect current state, save any unsaved facts to local memory files, and update the MEMORY.md index. Do this as if the user is about to quit and needs a future session to have a complete picture.
+
 ## Current Work
 
 - **pivac Emporia setup complete** (PR #17 merged 2026-03-22): `pivac-emporia.service` is installed, enabled, and running. All PyEmVue API compatibility issues fixed. No outstanding Emporia work.
