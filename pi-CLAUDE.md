@@ -24,7 +24,7 @@ cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 
 - **Execute without repeated check-ins.** Before a multi-step task, state the plan briefly and confirm once. Then carry out all steps without asking permission at each one.
 - **Targeted edits, not rewrites.** When modifying an existing file, make surgical changes to the relevant lines. Do not rewrite or reorder content that isn't changing — it creates noise in diffs and risks dropping things accidentally.
-- **PR workflow for code.** Always create a feature branch and open a pull request for code changes. Only push directly to the default branch for meta/context files (CLAUDE.md).
+- **PR workflow for code and docs.** Always create a feature branch and open a pull request for code changes, README updates, and module documentation. Only push directly to the default branch for meta/context files (CLAUDE.md files). When in doubt, use a PR.
 - **Keep context files current.** After significant changes — new architecture, bug fixes, new devices, deployment changes — update the relevant CLAUDE.md and include it in the commit.
 - **No unnecessary confirmation loops.** Don't ask "should I proceed?" or "does this look right?" mid-task. Finish the work, then summarize what was done.
 - **Commit message quality.** Write commit messages that explain why, not just what. Reference the problem being solved, not just the files changed.
