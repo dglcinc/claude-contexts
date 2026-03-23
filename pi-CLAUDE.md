@@ -44,3 +44,4 @@ cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 ## Current Work
 
 - **pivac Emporia setup complete** (PR #17 merged 2026-03-22): `pivac-emporia.service` is installed, enabled, and running. All PyEmVue API compatibility issues fixed. No outstanding Emporia work.
+- **pivac Sentry setup complete** (PRs #28–#32 merged 2026-03-23): `pivac-sentry.service` is installed, enabled, and running. Grafana panels "Sentry Boiler Values" and "Sentry Boiler Status" are working. No outstanding Sentry work.
