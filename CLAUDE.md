@@ -29,22 +29,22 @@ parent directories — no "set context" command is needed. To set up:
 
 ## Machine Detection
 
-The VM always reports `Linux` for `uname -s` regardless of host, so detect the machine by checking the mounted folder path instead:
+The VM always reports `Linux` for `uname -s` regardless of host, and the session name in the VM path changes each session. Detect the machine by checking for a Mac-specific marker in the mounted folder:
 
 ```bash
-ls /sessions/eager-modest-noether/mnt/Claude/github 2>/dev/null && echo "mac" || echo "pi"
+ls /sessions/*/mnt/Claude/github/Arduino 2>/dev/null && echo "mac" || echo "pi"
 ```
 
-| Mounted path visible at VM                                      | Machine               | Host Claude top-level folder       | Host GitHub directory                        |
-|-----------------------------------------------------------------|-----------------------|------------------------------------|----------------------------------------------|
-| `/sessions/eager-modest-noether/mnt/Claude/` (OneDrive-backed) | Mac (David's MacBook) | `~/OneDrive - DGLC/Claude`         | `~/OneDrive - DGLC/Claude/github/`           |
-| `/sessions/eager-modest-noether/mnt/Claude/` (Pi home-backed)  | Raspberry Pi          | `/home/pi`                         | `/home/pi/github/`                           |
+The Arduino repo only exists in the Mac OneDrive clone; the Pi clone does not have it. To get the current session path:
 
-To distinguish Mac vs Pi when both mount to the same VM path, check for a Mac-specific marker:
 ```bash
-ls /sessions/eager-modest-noether/mnt/Claude/github/Arduino 2>/dev/null && echo "mac" || echo "pi"
+ls /sessions/
 ```
-(The Arduino repo only exists on the Mac clone; the Pi clone does not have it.)
+
+| Mounted path visible at VM                          | Machine               | Host Claude top-level folder       | Host GitHub directory                        |
+|-----------------------------------------------------|-----------------------|------------------------------------|----------------------------------------------|
+| `/sessions/<session>/mnt/Claude/` (OneDrive-backed) | Mac (David's MacBook) | `~/OneDrive - DGLC/Claude`         | `~/OneDrive - DGLC/Claude/github/`           |
+| `/sessions/<session>/mnt/Claude/` (Pi home-backed)  | Raspberry Pi          | `/home/pi`                         | `/home/pi/github/`                           |
 
 ## GitHub Setup
 
@@ -53,16 +53,26 @@ ls /sessions/eager-modest-noether/mnt/Claude/github/Arduino 2>/dev/null && echo 
 - Always create feature branches and open pull requests for code and documentation changes
 - Push directly to the default branch only for meta/context files (CLAUDE.md)
 
-## Git and OneDrive Limitations (Cowork/Mac sessions)
+## Git Workflow
 
-When running in Cowork mode on the Mac, repo folders are mounted via OneDrive. Git operations from the VM against this mount are unreliable — `git fetch`, `git pull`, `git stash`, and branch switches frequently fail with SIGBUS, lock file errors, or silent exit code 1. Do not attempt these operations from the VM.
+### Mac (Cowork sessions)
+Local git via Bash works fine on the Mac — OneDrive-mounted repos can be cloned and used normally from the VM. This is the preferred approach as it is more token-efficient than the GitHub MCP (sends diffs rather than full file contents).
 
-**Always use the GitHub MCP instead:**
-- Use `mcp__github__push_files` or `mcp__github__create_or_update_file` to push changes
-- Use `mcp__github__create_branch`, `mcp__github__create_pull_request` for PR workflow
-- Use `mcp__github__get_file_contents` to read files from GitHub when needed
-- For `git pull` on the Mac or Pi: give the user the command to run in their terminal
-- The only safe local git operation is `git log` / `git status` for read-only inspection
+**Standard workflow on Mac:**
+- Edit files with Edit/Write tools, then commit and push with Bash git commands
+- Repos are cloned at `<mnt>/Claude/github/<repo>/` with token auth embedded in the remote URL
+- Token is stored at `<mnt>/Claude/.github-token`
+- Set up a new clone with: `git clone https://dglcinc:<token>@github.com/dglcinc/<repo>.git`
+- Use `git config user.email "dglcinc@users.noreply.github.com"` and `user.name "David Lewis"` after cloning
+- Feature branches + PRs for code changes; push directly to main for meta/context files
+
+**Use the GitHub MCP only for:**
+- Merging pull requests (`mcp__github__merge_pull_request`)
+- Creating repos (`mcp__github__create_repository`)
+- Operations on repos not cloned locally
+
+### Pi (Claude Code sessions)
+Local git on the Pi is unreliable when the working directory is OneDrive-mounted. All git operations on the Pi must use the GitHub MCP tools instead. Never run `git push`, `git pull`, `git fetch`, or branch operations locally on the Pi.
 
 ## Working Style
 
