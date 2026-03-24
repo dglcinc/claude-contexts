@@ -6,10 +6,10 @@ This file is read at the start of every session when setting project context. It
 
 ### Cowork (desktop app)
 When the user says "set context to X":
-1. Check the mounted folder to detect which machine we're on (see Machine Detection below)
-2. Read this global file
+1. Request access to `~/OneDrive - DGLC/Claude` (working folder) and `~/github` (repos) if not already mounted
+2. Read this global file from `<github-dir>/claude-contexts/CLAUDE.md`
 3. Read `CLAUDE.md` from the project repo at `<github-dir>/X/CLAUDE.md`
-4. Run `git pull` in `<github-dir>/X/` to pull the latest code from GitHub
+4. Attempt `git pull` in `<github-dir>/X/` — see Git Workflow notes below for known limitations
 5. Confirm what's been loaded and the result of the pull, then wait for the next prompt — do not start any work yet
 
 The global CLAUDE.md for Cowork is: `<github-dir>/claude-contexts/CLAUDE.md`
@@ -32,19 +32,20 @@ parent directories — no "set context" command is needed. To set up:
 The VM always reports `Linux` for `uname -s` regardless of host, and the session name in the VM path changes each session. Detect the machine by checking for a Mac-specific marker in the mounted folder:
 
 ```bash
-ls /sessions/*/mnt/Claude/github/Arduino 2>/dev/null && echo "mac" || echo "pi"
+ls /sessions/*/mnt/github/Arduino 2>/dev/null && echo "mac" || echo "pi"
 ```
 
-The Arduino repo only exists in the Mac OneDrive clone; the Pi clone does not have it. To get the current session path:
+The Arduino repo only exists in the Mac github clone; the Pi clone does not have it. To get the current session path:
 
 ```bash
 ls /sessions/
 ```
 
-| Mounted path visible at VM                          | Machine               | Host Claude top-level folder       | Host GitHub directory                        |
-|-----------------------------------------------------|-----------------------|------------------------------------|----------------------------------------------|
-| `/sessions/<session>/mnt/Claude/` (OneDrive-backed) | Mac (David's MacBook) | `~/OneDrive - DGLC/Claude`         | `~/OneDrive - DGLC/Claude/github/`           |
-| `/sessions/<session>/mnt/Claude/` (Pi home-backed)  | Raspberry Pi          | `/home/pi`                         | `/home/pi/github/`                           |
+| Mounted path visible at VM                          | Machine               | Host Claude top-level folder       | Host GitHub directory              |
+|-----------------------------------------------------|-----------------------|------------------------------------|-------------------------------------|
+| `/sessions/<session>/mnt/Claude/` (OneDrive-backed) | Mac (David's MacBook) | `~/OneDrive - DGLC/Claude`         | `~/github/`                         |
+| `/sessions/<session>/mnt/github/` (Mac github dir) | Mac (David's MacBook) | `~/github`                         | `~/github/`                         |
+| `/sessions/<session>/mnt/Claude/` (Pi home-backed)  | Raspberry Pi          | `/home/pi`                         | `/home/pi/github/`                  |
 
 ## GitHub Setup
 
@@ -56,12 +57,17 @@ ls /sessions/
 ## Git Workflow
 
 ### Mac (Cowork sessions)
-Local git via Bash works fine on the Mac — OneDrive-mounted repos can be cloned and used normally from the VM. This is the preferred approach as it is more token-efficient than the GitHub MCP (sends diffs rather than full file contents).
+Repos live at `~/github/` (outside OneDrive) and are mounted into the VM at `/sessions/<session>/mnt/github/`. The VM can create and modify files in this mount but **cannot delete files** — this is a VirtioFS security restriction, not a permissions issue.
+
+**Practical consequences:**
+- The VM cannot delete files by default. Before any `git pull` or `rm` operation, call `mcp__cowork__allow_cowork_file_delete` with a path inside the target folder. This unlocks deletion for the entire mounted folder for the session.
+- Call it once per session per mounted folder — after that, `git pull`, `git commit`, `git push`, and file cleanup all work normally.
 
 **Standard workflow on Mac:**
-- Edit files with Edit/Write tools, then commit and push with Bash git commands
-- Repos are cloned at `<mnt>/Claude/github/<repo>/` with token auth embedded in the remote URL
-- Token is stored at `<mnt>/Claude/.github-token`
+- At session start, call `mcp__cowork__allow_cowork_file_delete` for the github folder before attempting any git operations
+- Edit files with Edit/Write tools in the VM, then commit and push with Bash git commands
+- Repos are cloned at `~/github/<repo>/` with token auth embedded in the remote URL
+- Token is stored at `~/OneDrive - DGLC/Claude/.github-token`
 - Set up a new clone with: `git clone https://dglcinc:<token>@github.com/dglcinc/<repo>.git`
 - Use `git config user.email "dglcinc@users.noreply.github.com"` and `user.name "David Lewis"` after cloning
 - Feature branches + PRs for code changes; push directly to main for meta/context files
