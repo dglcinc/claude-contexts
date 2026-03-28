@@ -44,3 +44,5 @@ cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 ## Current Work
 
 - **pivac Emporia setup complete** (PR #17 merged 2026-03-22): `pivac-emporia.service` is installed, enabled, and running. All PyEmVue API compatibility issues fixed. No outstanding Emporia work.
+- **pivac Sentry setup complete** (PRs #28–#32 merged 2026-03-23, #34–#35 merged 2026-03-24/25): `pivac-sentry.service` is installed, enabled, and running. Grafana panels "Sentry Boiler Values" and "Sentry Boiler Status" are working. PR #34 replaced `errorCode` SK path with semantic `status` string. PR #35 changed DHW label from `"DHW"` to `"dh2o"` (WilhelmSK rendering fix). Status values: `"Idle"` | `"Call"` | `"Run"` | `"dh2o"` | error code. No outstanding Sentry work.
+- **Grafana power panel circuits** (PR #33 merged 2026-03-24, PR #36 merged 2026-03-26): Apartment Power panel includes air_cond, furnace, garage_entry_basement, kit_plugs_6, kit_plugs_14, trophy_a, trophy_b. House Power panel includes wall_oven, bosch_bova. Dashboard refresh slowed to 30s (PR #37 merged 2026-03-26) to prevent SQLite lock contention under concurrent query load. No outstanding Grafana work.
