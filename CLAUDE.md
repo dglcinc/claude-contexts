@@ -14,6 +14,14 @@ When the user says "set context to X":
 
 The global CLAUDE.md for Cowork is: `<github-dir>/claude-contexts/CLAUDE.md`
 
+### Claude Code (CLI, Mac — working directory: ~/github/claude-contexts)
+When the user says "set context to X" or "set context X":
+1. This file is already loaded automatically (Claude Code reads CLAUDE.md from the working directory)
+2. Read `~/github/claude-contexts/X.md` if it exists — this is the Cowork-style context summary for the project
+3. Read `~/github/X/CLAUDE.md` for the full project context
+4. Run `git pull` in `~/github/X/` to get latest (use `dangerouslyDisableSandbox: true` — sandbox blocks .git writes)
+5. Confirm what's been loaded and the result of the pull, then wait for the next prompt — do not start any work yet
+
 ### Claude Code (CLI, used on the Pi)
 Claude Code automatically reads `CLAUDE.md` from the current directory and all
 parent directories — no "set context" command is needed. To set up:
