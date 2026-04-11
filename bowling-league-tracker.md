@@ -31,7 +31,7 @@ Full stack: Python 3 / Flask / SQLAlchemy / SQLite, Bootstrap 5, Jinja2. No JS f
 - Server: Mac Mini M4, `utilityserver@10.0.0.84`
 - nginx reverse proxy + TLS: Pi at `pi@10.0.0.82`
 - App: gunicorn via launchd (`com.dglc.bowling-app`), binds `0.0.0.0:5001`
-- DB: `~/OneDrive - DGLC/Claude/bowling-league-tracker/league.db` (OneDrive installed on server; auto-detected by config.py)
+- DB: `~/bowling-data/league.db` (local on utilityserver — NOT OneDrive; SQLite + cloud sync = corruption risk; backups handle redundancy)
 - Restart: `pkill -f "gunicorn.*wsgi"` (launchd auto-restarts)
 - Logs: `/tmp/bowling-app.log`, `/tmp/bowling-app.err`
 
