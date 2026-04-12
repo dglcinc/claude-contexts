@@ -35,10 +35,11 @@ Full stack: Python 3 / Flask / SQLAlchemy / SQLite, Bootstrap 5, Jinja2. No JS f
 - Restart: `pkill -f "gunicorn.*wsgi"` (launchd auto-restarts)
 - Logs: `/tmp/bowling-app.log`, `/tmp/bowling-app.err`
 
-## Current State (as of 2026-04-11)
+## Current State (as of 2026-04-12)
 
-- PRs #37–#41 merged to main; no open PRs
-- Next: mobile PWA (`mobile_bp` at `/m/`, device detection, mobile views — see `bowling-ios-app.md`)
+- PRs #37–#62 all merged to main; no open PRs
+- Mobile PWA complete: `/m/` blueprint, device detection, Home/Standings/Scores/Me/Schedule tabs, passkeys with conditional mediation, desktop home 3-column dashboard, navbar refactor
+- Next: push notifications (Web Push/VAPID — see `bowling-ios-app.md` PWA addendum for spec)
 - Also queued: season rollover wizard
 
 ## Git Workflow
