@@ -37,8 +37,9 @@ Full stack: Python 3 / Flask / SQLAlchemy / SQLite, Bootstrap 5, Jinja2. No JS f
 
 ## Current State (as of 2026-04-12)
 
-- PRs #37–#62 all merged to main; no open PRs
+- PRs #37–#64 all merged to main; no open PRs
 - Mobile PWA complete: `/m/` blueprint, device detection, Home/Standings/Scores/Me/Schedule tabs, passkeys with conditional mediation, desktop home 3-column dashboard, navbar refactor
+- Admin OTP: "Send OTP to Selected" on season detail roster; per-bowler "Send OTP" on All Bowlers page
 - Next: push notifications (Web Push/VAPID — see `bowling-ios-app.md` PWA addendum for spec)
 - Also queued: season rollover wizard
 
