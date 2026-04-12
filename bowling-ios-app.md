@@ -108,3 +108,71 @@ BowlingApp/
 - [ ] TestFlight beta
 - [ ] Push notifications
 - [ ] App Store submission
+
+---
+
+## Addendum — PWA/Flask Mobile Web Approach (2026-04-11)
+
+**Decision:** Build mobile-optimized Flask views first, as a PWA. Native Swift app deferred.
+This covers all planned features for both iPhone and Android with ~30% of the native app effort.
+
+### Architecture
+
+**Device detection:** User-Agent check in `before_request`. iPhone and Android mobile UAs redirect to `/m/` by default. A `prefer_desktop` cookie suppresses the redirect permanently (set when user taps "Full site"). Desktop users with a small browser window are unaffected.
+
+**Preference toggle:**
+- Mobile pages have a "Full site" link in the footer → sets `prefer_desktop` cookie → redirects to desktop home
+- Desktop nav has a "Mobile site" link (or auto-detects on very small screens) → clears cookie → redirects to `/m/`
+
+**Admin/editor on iPhone:** Default lands on mobile view. "Full site" link provides full access when needed (score entry, admin panel). No role-based routing — the escape hatch is always available.
+
+**Blueprint:** New `mobile_bp` at `/m/`, separate mobile templates extending a mobile base. Login-required on all mobile routes (reuses existing auth).
+
+### Mobile views (match the iOS app tab structure)
+
+| Route | Content |
+|---|---|
+| `GET /m/` | Home: upcoming lane assignment (logged-in bowler highlighted), last week result, tournament state |
+| `GET /m/standings` | Team points table, week selector |
+| `GET /m/scores` | Week browser; tap week → bowler list with games/series |
+| `GET /m/me` | My season stats (avg, HG, HS scratch+hcp), week-by-week history, notification preferences |
+
+### Push notifications
+
+**Protocol:** Web Push (RFC 8030) with VAPID keys — no Apple Developer account needed. Works on Android without PWA install; requires PWA install on iOS 16.4+.
+
+**Server side (Python):**
+- `pywebpush` library
+- VAPID key pair generated once, stored in `.env` (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CLAIMS_EMAIL`)
+- `push_subscriptions` table: `bowler_id`, `subscription_json` (endpoint + auth keys), `platform`, `preferences` (JSON: `bowling_tomorrow`, `bowling_tonight`, `scores_posted`)
+- `POST /m/push/subscribe` — stores subscription from browser JS
+- `PATCH /m/push/preferences` — updates notification toggles
+- `send_notifications.py` — checks trigger conditions, sends via pywebpush; launchd timer runs it on schedule
+
+**Three notification types** (each independently toggleable in Me tab):
+- **Bowling tomorrow** — evening before bowl date (6pm): "Bowling tomorrow at 7pm. You're on lanes 3-4 vs Team 2."
+- **Bowling tonight** — morning of bowl day (9am): "Tonight: lanes 3-4 vs Team 2. See you there."
+- **Scores posted** — after `week.is_entered` flips True: "Week 14 scores posted. Your team went 6–2."
+
+**iOS onboarding:** Must install PWA first, then enable notifications. Me tab shows install prompt if not installed, then permission prompt once installed.
+
+### Build order
+
+1. **Mobile blueprint skeleton + detection** — `mobile_bp`, before_request redirect, prefer_desktop cookie, Full site / Mobile site toggle, mobile base template
+2. **Home screen** — upcoming lane assignments (personalized), last week result, tournament/off-season states
+3. **Standings + Scores + Me** — responsive views for each tab
+4. **Push infrastructure** — VAPID keys, push_subscriptions table, subscribe/preferences endpoints, send_notifications.py, launchd timer
+5. **Me tab notifications UI** — install prompt (iOS), permission prompt, toggle preferences
+
+### PWA status checklist
+
+- [ ] Mobile blueprint + detection + preference toggle
+- [ ] Home screen (lane assignments, last week, tournament state)
+- [ ] Standings tab
+- [ ] Scores tab
+- [ ] Me tab (stats + history)
+- [ ] Push subscription infrastructure
+- [ ] send_notifications.py + launchd timer
+- [ ] Me tab notification UI (install prompt + toggles)
+- [ ] Android testing
+- [ ] iOS PWA install + notification testing

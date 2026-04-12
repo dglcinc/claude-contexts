@@ -19,9 +19,11 @@ When the user says "set context to X" or "set context X":
 1. This file is already loaded automatically (Claude Code reads CLAUDE.md from the working directory)
 2. Read `~/OneDrive - DGLC/Claude/CLAUDE.md` — shared cross-machine context (infrastructure, deployment, roadmap)
 3. Read `~/github/claude-contexts/X.md` if it exists — project context summary
-4. Read `~/github/X/CLAUDE.md` for the full project context
-5. Run `git pull` in `~/github/X/` to get latest (use `dangerouslyDisableSandbox: true` — sandbox blocks .git writes)
-6. Confirm what's been loaded and the result of the pull, then wait for the next prompt — do not start any work yet
+4. Read all other `~/github/claude-contexts/*.md` files whose names start with X (e.g. `X-ios-app.md`, `X-plan.md`) — supplemental plans and context
+5. Read `~/.claude/projects/-Users-david-github-claude-contexts/memory/session_state_<X-slug>.md` if it exists — last session's in-progress state
+6. Read `~/github/X/CLAUDE.md` for the full project context
+7. Run `git pull` in `~/github/X/` to get latest (use `dangerouslyDisableSandbox: true` — sandbox blocks .git writes)
+8. Confirm what's been loaded and the result of the pull, then wait for the next prompt — do not start any work yet
 
 ### Claude Code (CLI, used on the Pi)
 Claude Code automatically reads `CLAUDE.md` from the current directory and all

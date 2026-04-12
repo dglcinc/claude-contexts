@@ -38,7 +38,8 @@ Full stack: Python 3 / Flask / SQLAlchemy / SQLite, Bootstrap 5, Jinja2. No JS f
 ## Current State (as of 2026-04-11)
 
 - PRs #37–#41 merged to main; no open PRs
-- Next: season rollover wizard
+- Next: mobile PWA (`mobile_bp` at `/m/`, device detection, mobile views — see `bowling-ios-app.md`)
+- Also queued: season rollover wizard
 
 ## Git Workflow
 
