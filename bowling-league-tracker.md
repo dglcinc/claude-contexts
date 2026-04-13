@@ -37,11 +37,11 @@ Full stack: Python 3 / Flask / SQLAlchemy / SQLite, Bootstrap 5, Jinja2. No JS f
 
 ## Current State (as of 2026-04-12)
 
-- PRs #37–#64 all merged to main; no open PRs
+- PRs #37–#67 all merged to main; no open PRs
 - Mobile PWA complete: `/m/` blueprint, device detection, Home/Standings/Scores/Me/Schedule tabs, passkeys with conditional mediation, desktop home 3-column dashboard, navbar refactor
-- Admin OTP: "Send OTP to Selected" on season detail roster; per-bowler "Send OTP" on All Bowlers page
-- Next: push notifications (Web Push/VAPID — see `bowling-ios-app.md` PWA addendum for spec)
-- Also queued: season rollover wizard
+- Push notifications: Web Push/VAPID fully implemented and deployed (PR #65); Me tab has full onboarding flow; launchd timer running on utilityserver every 10 min
+- Admin UI overhaul (PRs #66–#67): Weekly Alpha rename, All Bowlers removed, roster Active/All filter (cross-season All), Send Invite with configurable message, viewer access on Scores pages, YTD Alpha team filter, Reports button label bug fixed
+- Next: season rollover wizard
 
 ## Git Workflow
 
