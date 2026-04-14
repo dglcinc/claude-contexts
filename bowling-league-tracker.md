@@ -37,12 +37,13 @@ Full stack: Python 3 / Flask / SQLAlchemy / SQLite, Bootstrap 5, Jinja2. No JS f
 
 ## Current State (as of 2026-04-13)
 
-- PRs #37–#69 all merged to main; no open PRs
-- Mobile PWA complete: `/m/` blueprint, device detection, Home/Standings/Scores/Me/Schedule tabs, passkeys with conditional mediation, desktop home 3-column dashboard, navbar refactor
-- Push notifications: Web Push/VAPID fully implemented and deployed (PR #65); Me tab has full onboarding flow; launchd timer running on utilityserver every 10 min
-- Admin UI overhaul (PRs #66–#67): Weekly Alpha rename, All Bowlers removed, roster Active/All filter, Send Invite with configurable message, viewer access on Scores pages, YTD Alpha team filter, Reports button label bug fixed
-- Historical import (PRs #68–#69): 13 seasons imported (2004-2005 through 2016-2017); 1st/2nd/3rd tournament placements captured with `place` field on TournamentEntry; unified roster All view (no separate "unrostered" section); `LAST_NAME_ALIASES` for Gosset→Gossett, Gradofsky→Grodofsky; all name disambiguation handled automatically via first-name data in sheets
-- Next: season rollover wizard
+- PRs #37–#76 all merged to main; no open PRs
+- Mobile PWA complete; push notifications deployed (PR #65); admin UI overhauled (PRs #66–#67)
+- Historical import (PRs #68–#69): 13 seasons imported (2004-2005 through 2016-2017)
+- Tournament data corrections (PRs #70–#73): bulk email, placement fixes, historical tournament winner repair
+- Bowler merges + tournament year shift (PR #75): Brywlaski, Kincey, Oakley, Graf duplicates merged; Mike Schmitt/Tucker names corrected; Martorana first name filled in; all tournament placement entries shifted one year earlier (2004-05 through 2016-17 were each carrying prior year's winners); 2003-04 stub season created (id=23)
+- UI improvements + club championship (PR #76): ClubChampionshipResult model + admin entry; sortable column headers (wkly_alpha, ytd_alpha, bowler_dir, records); bowler_detail breadcrumb back nav; Flask-Caching on Records and Bowler Directory (10 min, busted on score entry)
+- Next: season rollover wizard; enter historical club championship winners via Admin → Tournament Placements
 
 ## Git Workflow
 
