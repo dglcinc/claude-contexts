@@ -37,7 +37,7 @@ Full stack: Python 3 / Flask / SQLAlchemy / SQLite, Bootstrap 5, Jinja2. No JS f
 
 ## Current State (as of 2026-04-13)
 
-- PRs #37–#86 all merged to main; no open PRs
+- PRs #37–#87 all merged to main; no open PRs
 - Mobile PWA complete; push notifications deployed (PR #65); admin UI overhauled (PRs #66–#67)
 - Historical import (PRs #68–#69): 13 seasons imported (2004-2005 through 2016-2017)
 - Tournament data corrections (PRs #70–#73): bulk email, placement fixes, historical tournament winner repair
@@ -46,6 +46,7 @@ Full stack: Python 3 / Flask / SQLAlchemy / SQLite, Bootstrap 5, Jinja2. No JS f
 - Post-season score entry fixes (PRs #82–#83): null team guards in score_position_night + position_entry; season selector now navigates correctly on admin pages (/seasons/ URL pattern)
 - Sortable columns extended (PRs #84, #86): bowler_detail (all 3 tables), Records By Season tab (flattened header)
 - Club championship finalists rule (PR #85): if same team wins both halves, finalists are that team + second-place second-half team
+- Records champion fix (PR #87): Team Champion column on By Season tab now uses ClubChampionshipResult when recorded, falls back to points leader
 - Next: season rollover wizard; enter historical club championship winners via Admin → Tournament Placements
 
 ## Git Workflow
