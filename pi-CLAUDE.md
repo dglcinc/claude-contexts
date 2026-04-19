@@ -14,6 +14,8 @@ cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 - User: `pi`
 - GitHub directory: `~/github/`
 - Python venv for pivac: `~/pivac-venv/` — always activate before running pivac scripts
+- Storage: 128GB SD card (swapped 2026-04-19); ~42 MB/s buffered read, 60GB free
+- xterm font: FiraCode Nerd Font Mono 11pt (installed to `~/.local/share/fonts/`; configured in `~/.Xresources`)
 
 ## Projects on This Pi
 
@@ -67,3 +69,4 @@ CLAUDE.md files always push directly to main/master (no PR needed). All other co
 - **pivac Sentry setup complete** (PRs #28–#32 merged 2026-03-23, #34–#35 merged 2026-03-24/25): `pivac-sentry.service` is installed, enabled, and running. Grafana panels "Sentry Boiler Values" and "Sentry Boiler Status" are working. PR #34 replaced `errorCode` SK path with semantic `status` string. PR #35 changed DHW label from `"DHW"` to `"dh2o"` (WilhelmSK rendering fix). Status values: `"Idle"` | `"Call"` | `"Run"` | `"dh2o"` | error code. No outstanding Sentry work.
 - **Grafana power panel circuits** (PR #33 merged 2026-03-24, PR #36 merged 2026-03-26): Apartment Power panel includes air_cond, furnace, garage_entry_basement, kit_plugs_6, kit_plugs_14, trophy_a, trophy_b. House Power panel includes wall_oven, bosch_bova. Dashboard refresh slowed to 30s (PR #37 merged 2026-03-26) to prevent SQLite lock contention under concurrent query load. No outstanding Grafana work.
 - **bowling-league-tracker** (mlb.dglc.com, app on Mac Mini `10.0.0.84`): 2025-2026 season fully entered (22 regular + 4 post-season tournament weeks). 2026-2027 season roster and schedule seeded. No open PRs. Pi hosts nginx reverse proxy only — app and DB are on the Mac Mini (`~/bowling-data/league.db`). No outstanding Pi-side work.
+- **SD card swap** (2026-04-19): Upgraded to 128GB card. Partition auto-expanded to fill card (~117GB, 60GB free). FiraCode Nerd Font Mono installed for xterm Unicode symbol rendering.
