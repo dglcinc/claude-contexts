@@ -16,10 +16,9 @@ else
 fi
 
 # --- Claude Code skills ---
-# Symlink each skill directory into ~/.claude/skills/.
-# If Claude Code follows symlinks for skill directories, edits to skills/
-# in the repo are reflected immediately (no re-run needed).
-# If not, replace the ln -s with cp -r below.
+# Symlinks work for skill directories — edits to skills/ in the repo
+# are reflected immediately. Use /reload-plugins to pick up changes
+# without restarting Claude Code.
 mkdir -p ~/.claude/skills
 for skill_dir in "$SCRIPT_DIR/skills/"/*/; do
   name="$(basename "$skill_dir")"
