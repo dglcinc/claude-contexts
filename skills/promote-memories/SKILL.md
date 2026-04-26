@@ -1,12 +1,13 @@
+---
+name: promote-memories
+description: Review current project memory files and graduate stable knowledge into permanent CLAUDE.md files. Removes promoted memories from the memory folder and updates MEMORY.md.
+---
+
 # Promote Memories
 
 Review the current project's memory files and graduate stable knowledge into
 the appropriate permanent CLAUDE.md files. Removes promoted memories from the
 memory folder and updates MEMORY.md.
-
-## How to run
-
-Invoked as `/promote-memories` in any Claude Code session. No arguments needed.
 
 ## Instructions
 
@@ -46,18 +47,6 @@ Show a table of every memory file with its proposed destination and one-line rea
 Ask for a single confirmation before proceeding. If the user disagrees with any
 classification, adjust before executing.
 
-Example format:
-```
-Memory                        → Destination          Reason
-feedback_pr_workflow.md       → global.md            cross-project working style
-feedback_no_personal_data.md  → bowling CLAUDE.md    project-specific rule
-reference_m4_ssh.md           → OneDrive             contains IP address
-feedback_git_sandbox.md       → bowling CLAUDE.md    project-specific workflow
-reference_historical_import.md → OneDrive            contains player names
-session_state_bowling.md      → bowling CLAUDE.md    project state, no sensitive data
-reference_m4_ssh.md           → stay local           machine-specific SSH alias
-```
-
 ### Step 4 — Execute promotions
 
 For each memory being promoted:
@@ -73,8 +62,7 @@ For each memory being promoted:
 
 ### Step 5 — Commit
 
-- Changes to `global.md` or `claude-contexts/CLAUDE.md`: commit directly to main
-  in the `claude-contexts` repo.
+- Changes to `global.md` or `claude-contexts/CLAUDE.md`: commit directly to main in the `claude-contexts` repo.
 - Changes to a project CLAUDE.md: commit directly to main in that project's repo.
 - Changes to OneDrive CLAUDE.md: no git commit (personal perimeter).
 - Never commit anything to GitHub that was classified as sensitive.

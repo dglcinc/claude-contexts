@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run once after cloning claude-contexts on a new machine.
-# Creates symlinks for Obsidian vault config and Claude Code commands.
+# Creates symlinks for Obsidian vault config and Claude Code skills.
 
 set -e
 
@@ -15,18 +15,24 @@ else
   echo "Created: $VAULT/.obsidian → $SCRIPT_DIR/.obsidian"
 fi
 
-# --- Claude Code custom commands ---
-# Claude Code does not follow symlinks for command files — copy instead.
-# Re-run setup.sh after editing a skill to update the installed copy.
-mkdir -p ~/.claude/commands
-for skill in "$SCRIPT_DIR/skills/"*.md; do
-  name="$(basename "$skill")"
-  target=~/.claude/commands/"$name"
-  cp "$skill" "$target"
-  echo "Installed command: $name"
+# --- Claude Code skills ---
+# Symlink each skill directory into ~/.claude/skills/.
+# If Claude Code follows symlinks for skill directories, edits to skills/
+# in the repo are reflected immediately (no re-run needed).
+# If not, replace the ln -s with cp -r below.
+mkdir -p ~/.claude/skills
+for skill_dir in "$SCRIPT_DIR/skills/"/*/; do
+  name="$(basename "$skill_dir")"
+  target=~/.claude/skills/"$name"
+  if [ -e "$target" ]; then
+    echo "Skill $name already exists — skipping (remove to reset)"
+  else
+    ln -s "$skill_dir" "$target"
+    echo "Installed skill: $name"
+  fi
 done
 
 echo ""
 echo "Setup complete."
 echo "Open ~/github as a vault in Obsidian."
-echo "Claude Code commands available: $(ls "$SCRIPT_DIR/skills/"*.md 2>/dev/null | xargs -I{} basename {} .md | tr '\n' ' ')"
+echo "Skills installed: $(ls -d "$SCRIPT_DIR/skills/"*/ 2>/dev/null | xargs -I{} basename {} | tr '\n' ' ')"
