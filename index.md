@@ -6,7 +6,7 @@ Central navigation for all active projects. Each project folder contains context
 
 | Project | Repo | Context |
 |---------|------|---------|
-| Bowling League Tracker | [dglcinc/bowling-league-tracker](https://github.com/dglcinc/bowling-league-tracker) | [Session context](bowling/bowling-league-tracker.md) · [iOS/PWA plan](bowling/bowling-ios-app.md) |
+| Bowling League Tracker | [dglcinc/bowling-league-tracker](https://github.com/dglcinc/bowling-league-tracker) | [Session context](bowling-league-tracker/bowling-league-tracker.md) · [iOS/PWA plan](bowling-league-tracker/bowling-ios-app.md) |
 | pivac | [dglcinc/pivac](https://github.com/dglcinc/pivac) | [Overview](pivac/overview.md) |
 | MacDownToo | [dglcinc/MacDownToo](https://github.com/dglcinc/MacDownToo) | [Overview](macdown/overview.md) |
 | Arduino sketches | [dglcinc/Arduino](https://github.com/dglcinc/Arduino) | ad hoc |
