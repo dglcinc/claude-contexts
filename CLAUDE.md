@@ -66,13 +66,8 @@ Repos live at `~/github/` (outside OneDrive) and are mounted into the VM at `/se
 - Use `git config user.email "dglcinc@users.noreply.github.com"` and `user.name "David Lewis"` after cloning
 - Feature branches + PRs for code changes; push directly to main for meta/context files
 
-**Use the GitHub MCP only for:**
-- Merging pull requests (`mcp__github__merge_pull_request`)
-- Creating repos (`mcp__github__create_repository`)
-- Operations on repos not cloned locally
-
 ### Pi (Claude Code sessions)
-Local git on the Pi is unreliable when the working directory is OneDrive-mounted. All git operations on the Pi must use the GitHub MCP tools instead. Never run `git push`, `git pull`, `git fetch`, or branch operations locally on the Pi.
+Standard git works fine on the Pi. Repos live at `~/github/` on the Pi's local filesystem (not OneDrive-mounted), so `git pull`, `git push`, `git fetch`, and branch operations all work normally via Bash.
 
 ## MCP Servers
 
