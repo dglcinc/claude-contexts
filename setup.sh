@@ -16,20 +16,14 @@ else
 fi
 
 # --- Claude Code skills ---
-# Symlinks work for skill directories — edits to skills/ in the repo
-# are reflected immediately. Use /reload-plugins to pick up changes
-# without restarting Claude Code.
-mkdir -p ~/.claude/skills
-for skill_dir in "$SCRIPT_DIR/skills/"/*/; do
-  name="$(basename "$skill_dir")"
-  target=~/.claude/skills/"$name"
-  if [ -e "$target" ]; then
-    echo "Skill $name already exists — skipping (remove to reset)"
-  else
-    ln -s "$skill_dir" "$target"
-    echo "Installed skill: $name"
-  fi
-done
+# ~/.claude/skills can be a symlink to the repo skills/ directory.
+# New skills added to the repo appear after /reload-plugins — no re-run needed.
+if [ -e ~/.claude/skills ]; then
+  echo "~/.claude/skills already exists — skipping (remove it first to reset)"
+else
+  ln -s "$SCRIPT_DIR/skills" ~/.claude/skills
+  echo "Created: ~/.claude/skills → $SCRIPT_DIR/skills"
+fi
 
 echo ""
 echo "Setup complete."
