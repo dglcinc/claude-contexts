@@ -1,0 +1,79 @@
+---
+name: save-context
+description: Save current session state before clearing or switching projects. Updates memory, CLAUDE.md files, and commits changes. Also triggered by "save context" or "wrap". Always run before /clear.
+---
+
+# /save-context
+
+Save everything before clearing or switching projects. Run this, then type `/clear`, then `/set-context <project>`.
+
+## Steps
+
+### 1. Identify the active project
+Look at what CLAUDE.md files were loaded this session. The project name is the repo subdirectory under `~/github/` (e.g. `bowling-league-tracker`). If no project was set, skip to step 6.
+
+### 2. Check git state
+```bash
+cd ~/github/<project> && git status && git branch --show-current
+GITHUB_TOKEN=$(git remote get-url origin | sed 's/.*:\(.*\)@.*/\1/') \
+  gh pr list --repo dglcinc/<project>
+```
+
+### 3. Update the session state memory file
+Memory folder: `~/.claude/projects/-Users-david-github-<project>/memory/`
+File: `session_state_<project>.md`
+
+Write or overwrite with:
+- `last_updated`: today's date
+- `current_branch`: active branch or "main"
+- `open_prs`: PR numbers and titles, or "none"
+- `last_worked_on`: 2–4 sentences on what was done
+- `next_steps`: remaining work in priority order
+- `notes`: decisions, blockers, context future-Claude needs
+
+### 4. Update the project CLAUDE.md
+If meaningful changes happened (merged PRs, new architecture, new decisions), update the `## Current State` section in `~/github/<project>/CLAUDE.md`.
+
+### 5. Update the claude-contexts project summary
+Update `~/github/claude-contexts/<project>/<project>.md` `## Current State` section to match.
+
+### 6. Update OneDrive cross-machine context
+If infrastructure, deployment, or roadmap changed, update `~/OneDrive - DGLC/Claude/CLAUDE.md`.
+
+### 7. Update MEMORY.md index
+If new memory files were created this session, add them to the memory folder's `MEMORY.md`.
+
+### 8. Commit any CLAUDE.md changes
+Push updated CLAUDE.md files directly to main (no PR needed for context files).
+
+### 9. Check for promotable memories
+Count the memory files in the current project's memory folder. If there are more than 3 non-session-state memories, remind the user:
+> "You have N memory files that may be ready to promote. Run `/promote-memories` before `/clear` to graduate them to permanent CLAUDE.md files."
+
+### 10. Confirm
+Tell the user what was saved and where. Remind them to run `/clear` when ready to switch context.
+
+---
+
+## Session state file format
+
+```markdown
+---
+name: Session State — <Project Name>
+description: In-progress session state for <project>
+type: project
+---
+
+**Last updated:** YYYY-MM-DD
+**Branch:** <branch or "main">
+**Open PRs:** #123 — title (or "none")
+
+## Last worked on
+<2–4 sentences>
+
+## Next steps
+1. ...
+
+## Notes
+<decisions, blockers, context>
+```

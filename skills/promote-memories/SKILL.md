@@ -13,13 +13,13 @@ memory folder and updates MEMORY.md.
 
 ### Step 1 — Locate memory folder
 
-Determine the current working directory and derive the memory path:
-```
-~/.claude/projects/<slug>/memory/
-```
-where `<slug>` is the working directory path with `/` replaced by `-` and
-leading `/` dropped (e.g. `/Users/david/github/bowling-league-tracker` →
-`-Users-david-github-bowling-league-tracker`).
+If a project name was passed as an argument (e.g. `/promote-memories bowling-league-tracker`),
+use `~/.claude/projects/-Users-david-github-<project>/memory/`.
+
+Otherwise, derive the path from the current working directory: replace `/` with `-`
+and drop the leading `/` (e.g. `/Users/david/github/bowling-league-tracker` →
+`-Users-david-github-bowling-league-tracker`), giving:
+`~/.claude/projects/<slug>/memory/`
 
 Read all `.md` files in the memory folder and the `MEMORY.md` index.
 
