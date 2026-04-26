@@ -24,6 +24,8 @@ Open the PR at session end, even if the user doesn't explicitly ask. If a PR mer
 
 When the goal is to fix something on `main`, confirm the PR's base branch is `main` before running `gh pr create`. Only target a feature branch as the base when building stacked changes that shouldn't land until the parent merges.
 
+Add `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` to every commit in every repo. This applies to direct commits and PR commits alike.
+
 ## Skills
 
 - **`/save-context`** (or type "save context"): Save session state, update CLAUDE.md files, commit. Run before `/clear`.
