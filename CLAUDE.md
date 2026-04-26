@@ -1,42 +1,6 @@
-# Global Claude Context
+# Claude Contexts — Tool Configuration
 
-This file is read at the start of every session when setting project context. It applies to all projects.
-
-## Context Setup by Tool
-
-### Cowork (desktop app)
-When the user says "set context to X":
-1. Request access to `~/OneDrive - DGLC/Claude` (working folder) and `~/github` (repos) if not already mounted
-2. Read this global file from `<github-dir>/claude-contexts/CLAUDE.md`
-3. Read `CLAUDE.md` from the project repo at `<github-dir>/X/CLAUDE.md`
-4. Attempt `git pull` in `<github-dir>/X/` — see Git Workflow notes below for known limitations
-5. Confirm what's been loaded and the result of the pull, then wait for the next prompt — do not start any work yet
-
-The global CLAUDE.md for Cowork is: `<github-dir>/claude-contexts/CLAUDE.md`
-
-### Claude Code (CLI, Mac — working directory: ~/github/claude-contexts)
-When the user says "set context to X" or "set context X":
-1. This file is already loaded automatically (Claude Code reads CLAUDE.md from the working directory)
-2. Read `~/OneDrive - DGLC/Claude/CLAUDE.md` — shared cross-machine context (infrastructure, deployment, roadmap)
-3. Read `~/github/claude-contexts/X/X.md` if it exists — project context summary (note: files are now in per-project subfolders)
-4. Read all other `~/github/claude-contexts/X/*.md` files — supplemental plans and context for the project
-5. Read `~/.claude/projects/-Users-david-github-claude-contexts/memory/session_state_<X-slug>.md` if it exists — last session's in-progress state
-6. Read `~/github/X/CLAUDE.md` for the full project context
-7. Run `git pull` in `~/github/X/` to get latest (use `dangerouslyDisableSandbox: true` — sandbox blocks .git writes)
-8. Confirm what's been loaded and the result of the pull, then wait for the next prompt — do not start any work yet
-
-### Claude Code (CLI, used on the Pi)
-Claude Code automatically reads `CLAUDE.md` from the current directory and all
-parent directories — no "set context" command is needed. To set up:
-1. Copy `pi-CLAUDE.md` from this repo to `~/CLAUDE.md` on the Pi (one-time, re-run after updates):
-   ```bash
-   cp ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
-   ```
-2. Start Claude Code from the project directory:
-   ```bash
-   cd ~/github/pivac && claude
-   ```
-   Claude Code will automatically read `~/CLAUDE.md` (global) and `~/github/pivac/CLAUDE.md` (project).
+Tool-specific configuration and workflow quirks. Global working-style preferences live in `global.md` (symlinked to `~/.claude/CLAUDE.md`). To load a project: `/set-context <project>`.
 
 ## Machine Detection
 

@@ -43,14 +43,30 @@ If infrastructure, deployment, or roadmap changed, update `~/OneDrive - DGLC/Cla
 ### 7. Update MEMORY.md index
 If new memory files were created this session, add them to the memory folder's `MEMORY.md`.
 
-### 8. Commit any CLAUDE.md changes
+### 8. Handle untracked files
+Run `git status` in the project directory. If there are untracked files (beyond `.claude/`):
+- List them for the user
+- Ask which should be **committed**, which should be added to **`.gitignore`**, and which to leave alone for now
+- Add a `.gitignore` entry for anything the user wants ignored
+- Stage anything the user wants committed
+
+### 9. Handle missing remote
+Check whether a git remote exists (`git remote -v`). If there is no remote:
+- Ask: "Do you want to create a GitHub repository for this project under dglcinc? (y/n — public or private?)"
+- If yes, create it:
+  ```bash
+  GITHUB_TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token) \
+    gh repo create dglcinc/<project> --<visibility> --source=. --remote=origin --push
+  ```
+
+### 10. Commit any CLAUDE.md changes
 Push updated CLAUDE.md files directly to main (no PR needed for context files).
 
-### 9. Check for promotable memories
+### 11. Check for promotable memories
 Count the memory files in the current project's memory folder. If there are more than 3 non-session-state memories, remind the user:
 > "You have N memory files that may be ready to promote. Run `/promote-memories` before `/clear` to graduate them to permanent CLAUDE.md files."
 
-### 10. Confirm
+### 12. Confirm
 Tell the user what was saved and where. Remind them to run `/clear` when ready to switch context.
 
 ---

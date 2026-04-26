@@ -25,6 +25,15 @@ else
   echo "Created: ~/.claude/skills → $SCRIPT_DIR/skills"
 fi
 
+# --- Global CLAUDE.md ---
+# ~/.claude/CLAUDE.md is a symlink to global.md so edits to global.md take effect immediately.
+if [ -e ~/.claude/CLAUDE.md ]; then
+  echo "~/.claude/CLAUDE.md already exists — skipping (remove it first to reset)"
+else
+  ln -s "$SCRIPT_DIR/global.md" ~/.claude/CLAUDE.md
+  echo "Created: ~/.claude/CLAUDE.md → $SCRIPT_DIR/global.md"
+fi
+
 echo ""
 echo "Setup complete."
 echo "Open ~/github as a vault in Obsidian."
