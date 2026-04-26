@@ -13,6 +13,12 @@ The argument is the repo directory name under `~/github/` (e.g. `bowling-league-
 
 ## Steps
 
+### 0. Pull claude-contexts
+```bash
+git -C ~/github/claude-contexts pull
+```
+This updates `global.md`, `pi-CLAUDE.md`, and all skills in place via their symlinks — no restart needed.
+
 ### 1. Read cross-machine context
 Read `~/OneDrive - DGLC/Claude/CLAUDE.md` — infrastructure details, private IPs, deployment state, roadmap.
 

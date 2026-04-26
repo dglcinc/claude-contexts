@@ -34,6 +34,18 @@ else
   echo "Created: ~/.claude/CLAUDE.md → $SCRIPT_DIR/global.md"
 fi
 
+# --- Pi: ~/CLAUDE.md symlink ---
+# On the Pi, ~/CLAUDE.md is read via directory hierarchy and provides Pi-specific context.
+# On Mac this file doesn't exist, so the symlink only makes sense on Pi.
+if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "armv7l" ]; then
+  if [ -e ~/CLAUDE.md ]; then
+    echo "~/CLAUDE.md already exists — skipping (remove it first to reset)"
+  else
+    ln -s "$SCRIPT_DIR/pi-CLAUDE.md" ~/CLAUDE.md
+    echo "Created: ~/CLAUDE.md → $SCRIPT_DIR/pi-CLAUDE.md"
+  fi
+fi
+
 echo ""
 echo "Setup complete."
 echo "Open ~/github as a vault in Obsidian."

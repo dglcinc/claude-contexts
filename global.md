@@ -16,8 +16,6 @@ Write commit messages that explain why, not just what. Reference the problem bei
 
 When explaining an approach or decision, write in sentences rather than fragmenting into bullet lists.
 
-On Mac, the top-level working directory is `~/OneDrive - DGLC/Claude`.
-
 ## PR Workflow
 
 All code and documentation changes require a feature branch and pull request. Only CLAUDE.md context files may be pushed directly to the default branch.
