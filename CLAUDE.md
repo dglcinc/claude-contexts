@@ -81,13 +81,3 @@ claude mcp add apple-mail /opt/homebrew/bin/apple-mail-mcp
 This writes to `~/.claude/settings.json`. The standalone `~/.claude/mcp.json` file is **not** read by Claude Code CLI — using that file alone silently fails. After registering and restarting, run `/mcp` to verify `apple-mail` shows as connected.
 
 macOS permission required: Automation access to Mail.app (System Settings → Privacy & Security → Automation). If previously denied, reset with `tccutil reset Automation`.
-
-## Working Style
-
-- **Execute without repeated check-ins.** Before a multi-step task, state the plan briefly and confirm once. Then carry out all steps without asking permission at each one.
-- **Targeted edits, not rewrites.** When modifying an existing file, make surgical changes to the relevant lines. Do not rewrite or reorder content that isn't changing — it creates noise in diffs and risks dropping things accidentally.
-- **PR workflow for code.** Always create a feature branch and open a pull request for code and documentation changes. Only push directly to the default branch for meta/context files (CLAUDE.md).
-- **Keep context files current.** After significant changes — new architecture, bug fixes, new devices, deployment changes — update the relevant CLAUDE.md (project and/or global) and include it in the commit.
-- **No unnecessary confirmation loops.** Don't ask "should I proceed?" or "does this look right?" mid-task. Finish the work, then summarize what was done.
-- **Commit message quality.** Write commit messages that explain why, not just what. Reference the problem being solved, not just the files changed.
-- **Prose over bullets in explanations.** When explaining an approach or decision, write in sentences rather than fragmenting everything into bullet lists.
