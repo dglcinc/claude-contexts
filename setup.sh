@@ -16,18 +16,14 @@ else
 fi
 
 # --- Claude Code custom commands ---
-# ~/.claude/commands must be a real directory (Claude Code does not follow a symlink here).
-# Symlink each skill file individually instead.
+# Claude Code does not follow symlinks for command files — copy instead.
+# Re-run setup.sh after editing a skill to update the installed copy.
 mkdir -p ~/.claude/commands
 for skill in "$SCRIPT_DIR/skills/"*.md; do
   name="$(basename "$skill")"
   target=~/.claude/commands/"$name"
-  if [ -e "$target" ]; then
-    echo "Command $name already exists — skipping"
-  else
-    ln -s "$skill" "$target"
-    echo "Created: $target → $skill"
-  fi
+  cp "$skill" "$target"
+  echo "Installed command: $name"
 done
 
 echo ""
