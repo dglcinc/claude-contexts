@@ -14,7 +14,10 @@ ln -sf ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 - GitHub directory: `~/github/`
 - Python venv for pivac: `~/pivac-venv/` — always activate before running pivac scripts
 - Storage: 128GB SD card (swapped 2026-04-19); ~42 MB/s buffered read, 60GB free
+- Swap: 1 GB (`CONF_SWAPSIZE=1024` in `/etc/dphys-swapfile`, file at `/var/swap`)
+- journald: capped at 500 MB (`SystemMaxUse=500M` in `/etc/systemd/journald.conf`)
 - xterm font: FiraCode Nerd Font Mono 11pt (installed to `~/.local/share/fonts/`; configured in `~/.Xresources`)
+- Kernel quirk: RPi kernel package carries a `~bookworm` build label (e.g. `1:6.12.62-1+rpt1~bookworm`) even though userland is Debian trixie. This appears in `platform.version()` and pip install logs — it is cosmetic and not a misconfiguration.
 
 ## Projects on This Pi
 
