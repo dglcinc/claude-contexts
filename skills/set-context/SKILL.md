@@ -19,8 +19,17 @@ git -C ~/github/claude-contexts pull
 ```
 This updates `global.md`, `pi-CLAUDE.md`, and all skills in place via their symlinks — no restart needed.
 
-### 1. Read cross-machine context
-Check whether `~/OneDrive - DGLC/Claude/<project>.md` exists. If it does, read it — infrastructure details, private IPs, deployment state, roadmap. If it does not exist, skip this step silently.
+### 1. Load cross-machine context (OneDrive)
+
+Check for all files matching `~/OneDrive - DGLC/Claude/<project>*.md`. If none exist, skip silently.
+
+If files exist: check their combined size:
+```bash
+ls ~/OneDrive\ -\ DGLC/Claude/<project>*.md 2>/dev/null | xargs wc -c 2>/dev/null | tail -1
+```
+
+- If combined size is **over 2,000 chars**: spawn an **Explore** subagent to read all matching files and return a structured brief covering: (1) infrastructure IPs and hostnames, (2) roadmap status — which phases are done and which are open, (3) any open data quality issues or pending actions. Keep the brief under 400 words. The subagent reads the full files; only the summary enters the main conversation.
+- If combined size is **2,000 chars or under**: read the files directly.
 
 ### 2. Read project summaries
 If `~/github/claude-contexts/<project>/` exists:
@@ -31,7 +40,14 @@ If `~/github/claude-contexts/<project>/` exists:
 If `~/.claude/projects/-Users-david-github-<project>/memory/session_state_<project>.md` exists, read it — last session's branch, open PRs, next steps, and notes.
 
 ### 4. Read project CLAUDE.md
-Read `~/github/<project>/CLAUDE.md` — full project context: architecture, data model, routes, deployment.
+
+First check if Claude Code is running from within the project directory:
+```bash
+[[ "$(pwd)" == "$HOME/github/<project>"* ]] && echo "IN_PROJECT" || echo "NOT_IN_PROJECT"
+```
+
+- If `IN_PROJECT`: the runtime has already auto-loaded `CLAUDE.md` — skip reading it and note "CLAUDE.md auto-loaded by runtime" in the summary.
+- If `NOT_IN_PROJECT`: read `~/github/<project>/CLAUDE.md` — full project context: architecture, data model, routes, deployment.
 
 ### 5. Pull latest
 Run `git pull` in `~/github/<project>/` with `dangerouslyDisableSandbox: true`.
