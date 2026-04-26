@@ -16,12 +16,19 @@ else
 fi
 
 # --- Claude Code custom commands ---
-if [ -e ~/.claude/commands ]; then
-  echo "~/.claude/commands already exists — skipping (remove it first if you want to reset)"
-else
-  ln -s "$SCRIPT_DIR/skills" ~/.claude/commands
-  echo "Created: ~/.claude/commands → $SCRIPT_DIR/skills"
-fi
+# ~/.claude/commands must be a real directory (Claude Code does not follow a symlink here).
+# Symlink each skill file individually instead.
+mkdir -p ~/.claude/commands
+for skill in "$SCRIPT_DIR/skills/"*.md; do
+  name="$(basename "$skill")"
+  target=~/.claude/commands/"$name"
+  if [ -e "$target" ]; then
+    echo "Command $name already exists — skipping"
+  else
+    ln -s "$skill" "$target"
+    echo "Created: $target → $skill"
+  fi
+done
 
 echo ""
 echo "Setup complete."
