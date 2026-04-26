@@ -110,6 +110,19 @@ Repos live at `~/github/` (outside OneDrive) and are mounted into the VM at `/se
 ### Pi (Claude Code sessions)
 Local git on the Pi is unreliable when the working directory is OneDrive-mounted. All git operations on the Pi must use the GitHub MCP tools instead. Never run `git push`, `git pull`, `git fetch`, or branch operations locally on the Pi.
 
+## MCP Servers
+
+### Apple Mail
+Binary: `/opt/homebrew/bin/apple-mail-mcp` (installed via `npm install -g apple-mail-mcp`, version 1.4.0)
+
+Register for Claude Code CLI with:
+```bash
+claude mcp add apple-mail /opt/homebrew/bin/apple-mail-mcp
+```
+This writes to `~/.claude/settings.json`. The standalone `~/.claude/mcp.json` file is **not** read by Claude Code CLI — using that file alone silently fails. After registering and restarting, run `/mcp` to verify `apple-mail` shows as connected.
+
+macOS permission required: Automation access to Mail.app (System Settings → Privacy & Security → Automation). If previously denied, reset with `tccutil reset Automation`.
+
 ## Working Style
 
 - **Execute without repeated check-ins.** Before a multi-step task, state the plan briefly and confirm once. Then carry out all steps without asking permission at each one.
