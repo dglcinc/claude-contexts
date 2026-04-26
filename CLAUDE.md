@@ -18,8 +18,8 @@ The global CLAUDE.md for Cowork is: `<github-dir>/claude-contexts/CLAUDE.md`
 When the user says "set context to X" or "set context X":
 1. This file is already loaded automatically (Claude Code reads CLAUDE.md from the working directory)
 2. Read `~/OneDrive - DGLC/Claude/CLAUDE.md` — shared cross-machine context (infrastructure, deployment, roadmap)
-3. Read `~/github/claude-contexts/X.md` if it exists — project context summary
-4. Read all other `~/github/claude-contexts/*.md` files whose names start with X (e.g. `X-ios-app.md`, `X-plan.md`) — supplemental plans and context
+3. Read `~/github/claude-contexts/X/X.md` if it exists — project context summary (note: files are now in per-project subfolders)
+4. Read all other `~/github/claude-contexts/X/*.md` files — supplemental plans and context for the project
 5. Read `~/.claude/projects/-Users-david-github-claude-contexts/memory/session_state_<X-slug>.md` if it exists — last session's in-progress state
 6. Read `~/github/X/CLAUDE.md` for the full project context
 7. Run `git pull` in `~/github/X/` to get latest (use `dangerouslyDisableSandbox: true` — sandbox blocks .git writes)
@@ -57,6 +57,25 @@ ls /sessions/
 | `/sessions/<session>/mnt/Claude/` (OneDrive-backed) | Mac (David's MacBook) | `~/OneDrive - DGLC/Claude`         | `~/github/`                         |
 | `/sessions/<session>/mnt/github/` (Mac github dir) | Mac (David's MacBook) | `~/github`                         | `~/github/`                         |
 | `/sessions/<session>/mnt/Claude/` (Pi home-backed)  | Raspberry Pi          | `/home/pi`                         | `/home/pi/github/`                  |
+
+## Content Perimeter
+
+Content is classified as either **infrastructure** (GitHub-managed) or **personal** (stays within David's personal devices and cloud tenants). Claude may freely read and write both, but must never move personal content outside the perimeter.
+
+### Personal perimeter — never commit to GitHub or send to external services
+- `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dglcinc/` — personal Obsidian vault
+- `~/OneDrive - DGLC/` — all of OneDrive (including the Claude working folder)
+- Any file the user explicitly identifies as personal
+
+### Infrastructure — GitHub-managed, may be public
+- `~/github/claude-contexts/` — agentic infrastructure: CLAUDE.md files, project context, plans, skills
+- All other repos under `~/github/` — project code and documentation
+
+### Rules
+- Never `git add`, commit, or push files from personal locations
+- Never send personal content to external APIs, services, or third-party tools
+- Never mix personal content into infrastructure files (e.g. do not paste personal notes into CLAUDE.md)
+- Claude may read personal content to inform its work, but the output of that work must respect the same perimeter as the input
 
 ## GitHub Setup
 
