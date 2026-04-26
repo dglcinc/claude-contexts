@@ -38,7 +38,7 @@ If meaningful changes happened (merged PRs, new architecture, new decisions), up
 Update `~/github/claude-contexts/<project>/<project>.md` `## Current State` section to match.
 
 ### 6. Update OneDrive cross-machine context
-If infrastructure, deployment, or roadmap changed, update `~/OneDrive - DGLC/Claude/CLAUDE.md`.
+If infrastructure, deployment, or roadmap changed, update `~/OneDrive - DGLC/Claude/<project>.md`. If that file does not exist yet, create it (see `/new-context` step 4 for the template). Do not modify `~/OneDrive - DGLC/Claude/CLAUDE.md` — that is now an index only.
 
 ### 7. Update MEMORY.md index
 If new memory files were created this session, add them to the memory folder's `MEMORY.md`.

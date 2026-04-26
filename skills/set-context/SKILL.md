@@ -1,6 +1,6 @@
 ---
 name: set-context
-description: Load full context for a project. Reads OneDrive CLAUDE.md, project summaries, session state, and project CLAUDE.md, then runs git pull. Usage: /set-context <project-name>
+description: Load full context for a project. Reads per-project OneDrive context file, project summaries, session state, and project CLAUDE.md, then runs git pull. Usage: /set-context <project-name>
 ---
 
 # /set-context
@@ -20,7 +20,7 @@ git -C ~/github/claude-contexts pull
 This updates `global.md`, `pi-CLAUDE.md`, and all skills in place via their symlinks — no restart needed.
 
 ### 1. Read cross-machine context
-Read `~/OneDrive - DGLC/Claude/CLAUDE.md` — infrastructure details, private IPs, deployment state, roadmap.
+Check whether `~/OneDrive - DGLC/Claude/<project>.md` exists. If it does, read it — infrastructure details, private IPs, deployment state, roadmap. If it does not exist, skip this step silently.
 
 ### 2. Read project summaries
 If `~/github/claude-contexts/<project>/` exists:

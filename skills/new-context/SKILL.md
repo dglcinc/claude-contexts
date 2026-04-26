@@ -64,7 +64,18 @@ Write `~/github/claude-contexts/<name>/<name>.md` with a minimal summary:
 1. ...
 ```
 
-### 4. Initialize git
+### 4. Create OneDrive cross-machine context file
+Write `~/OneDrive - DGLC/Claude/<name>.md` with a minimal template:
+
+```markdown
+# <Name> — Cross-Machine Context
+
+<Brief description of infrastructure context that needs to be shared across machines: server addresses, deployment commands, service names, credentials locations, etc. Leave blank if not yet known.>
+```
+
+Also add an entry for it in `~/OneDrive - DGLC/Claude/CLAUDE.md` under the `## Projects` section.
+
+### 5. Initialize git
 Ask: "Initialize a git repository? (y/n)"
 
 If yes:
@@ -75,7 +86,7 @@ git add CLAUDE.md
 git commit -m "Initial project setup with CLAUDE.md"
 ```
 
-### 5. Create GitHub repo
+### 6. Create GitHub repo
 If git was initialized, ask: "Create a GitHub repository under dglcinc? (y/n — and public or private?)"
 
 If yes:
@@ -86,7 +97,7 @@ GITHUB_TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token) \
 
 Where `--<visibility>` is `--private` or `--public` based on the user's answer.
 
-### 6. Confirm
+### 7. Confirm
 Report what was created. Tell the user:
 - To open a new Claude Code session in the project: `cd ~/github/<name> && claude`
 - Or to load context in an existing session: `/set-context <name>`
