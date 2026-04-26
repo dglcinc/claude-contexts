@@ -1,0 +1,7 @@
+# Obsidian personal state — do not commit
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+
+# macOS
+.DS_Store
