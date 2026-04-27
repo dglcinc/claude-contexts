@@ -1,16 +1,22 @@
 ---
 name: save-context
-description: Save current session state before clearing or switching projects. Updates memory, CLAUDE.md files, and commits changes. Also triggered by "save context" or "wrap". Always run before /clear.
+description: Save current session state before clearing or switching projects. Updates memory, CLAUDE.md files, and commits changes. Also triggered by "save context" or "wrap". Always run before /clear. Accepts an optional project name argument (e.g. /save-context claude-contexts) to save to a different context than the one launched with.
 ---
 
 # /save-context
 
 Save everything before clearing or switching projects. Run this, then type `/clear`, then `/set-context <project>`.
 
+Usage: `/save-context [project-name]`
+
+If a project name is passed as an argument (available as `$ARGS`), use that as the target context instead of auto-detecting from loaded CLAUDE.md files. This is useful when you've been doing work relevant to a different project than the one you launched with.
+
 ## Steps
 
 ### 1. Identify the active project
-Look at what CLAUDE.md files were loaded this session. The project name is the repo subdirectory under `~/github/` (e.g. `bowling-league-tracker`). If no project was set, skip to step 6.
+If `$ARGS` is non-empty, use that value as the project name (e.g. `/save-context claude-contexts` → project = `claude-contexts`). Otherwise, look at what CLAUDE.md files were loaded this session. The project name is the repo subdirectory under `~/github/` (e.g. `bowling-league-tracker`). If no project was set, skip to step 6.
+
+When using an argument-supplied project name, confirm with the user: "Saving to context **`<project>`** (overriding the launched context). Continue?"
 
 ### 2. Check git state
 ```bash
