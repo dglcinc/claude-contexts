@@ -1,6 +1,6 @@
 ---
 name: set-context
-description: Load full context for a project. Reads per-project OneDrive context file, project summaries, session state, and project CLAUDE.md, then runs git pull. Usage: /set-context <project-name>
+description: Load full context for a project. Reads per-project OneDrive context file, project summaries, session state, and project CLAUDE.md. Clones the repo if missing, otherwise runs git pull. Usage: /set-context <project-name>
 ---
 
 # /set-context
@@ -37,9 +37,28 @@ If `~/github/claude-contexts/<project>/` exists:
 - Read any other `*.md` files in that folder — supplemental plans and notes
 
 ### 3. Read session state
-If `~/.claude/projects/-Users-david-github-<project>/memory/session_state_<project>.md` exists, read it — last session's branch, open PRs, next steps, and notes.
+The per-project memory path is derived from `$HOME` (it differs by machine — `/Users/david`, `/Users/utilityserver`, `/home/pi`). Compute it with:
+```bash
+ENCODED=$(echo "$HOME/github/<project>" | tr '/' '-')
+ls ~/.claude/projects/${ENCODED}/memory/session_state_<project>.md 2>/dev/null
+```
+If the file exists, read it — last session's branch, open PRs, next steps, and notes.
 
-### 4. Read project CLAUDE.md
+### 4. Sync local clone
+
+Check whether `~/github/<project>/` exists.
+
+- **If it exists**: run `git pull` in `~/github/<project>/` with `dangerouslyDisableSandbox: true`.
+- **If it does not exist**: clone it. The token lives at `~/OneDrive - DGLC/Claude/.github-token`:
+  ```bash
+  TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token)
+  git clone "https://dglcinc:${TOKEN}@github.com/dglcinc/<project>.git" ~/github/<project>
+  git -C ~/github/<project> config user.email "dglcinc@users.noreply.github.com"
+  git -C ~/github/<project> config user.name "David Lewis"
+  ```
+  If the clone fails (repo doesn't exist on GitHub, auth error, etc.), surface the error and stop — do not proceed to step 5. Note in the final summary whether the repo was pulled or freshly cloned.
+
+### 5. Read project CLAUDE.md
 
 First check if Claude Code is running from within the project directory:
 ```bash
@@ -49,11 +68,8 @@ First check if Claude Code is running from within the project directory:
 - If `IN_PROJECT`: the runtime has already auto-loaded `CLAUDE.md` — skip reading it and note "CLAUDE.md auto-loaded by runtime" in the summary.
 - If `NOT_IN_PROJECT`: read `~/github/<project>/CLAUDE.md` — full project context: architecture, data model, routes, deployment.
 
-### 5. Pull latest
-Run `git pull` in `~/github/<project>/` with `dangerouslyDisableSandbox: true`.
-
 ### 6. Confirm and wait
-Report what was loaded and the result of the git pull in a brief summary. Then **wait for the user's next instruction** — do not begin any work.
+Report what was loaded and the result of the git pull/clone in a brief summary. Then **wait for the user's next instruction** — do not begin any work.
 
 ## On the Pi
 
