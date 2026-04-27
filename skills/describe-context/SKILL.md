@@ -24,8 +24,9 @@ wc -c ~/.claude/CLAUDE.md 2>/dev/null
 # Project CLAUDE.md
 wc -c ~/github/<project>/CLAUDE.md 2>/dev/null
 
-# Session state
-wc -c ~/.claude/projects/-Users-david-github-<project>/memory/session_state_<project>.md 2>/dev/null
+# Session state (per-project memory dir derived from $HOME)
+ENC=$(echo "$HOME/github/<project>" | tr '/' '-')
+wc -c ~/.claude/projects/${ENC}/memory/session_state_<project>.md 2>/dev/null
 
 # OneDrive context
 wc -c ~/OneDrive\ -\ DGLC/Claude/<project>.md 2>/dev/null
@@ -33,8 +34,9 @@ wc -c ~/OneDrive\ -\ DGLC/Claude/<project>.md 2>/dev/null
 # claude-contexts project summary
 wc -c ~/github/claude-contexts/<project>/<project>.md 2>/dev/null
 
-# MEMORY.md index (auto-loaded by runtime)
-wc -c ~/.claude/projects/-Users-david-github/memory/MEMORY.md 2>/dev/null
+# MEMORY.md index — auto-loaded by runtime, lives next to the launch dir
+ENC_HOME=$(echo "$HOME/github" | tr '/' '-')
+wc -c ~/.claude/projects/${ENC_HOME}/memory/MEMORY.md 2>/dev/null
 
 # Any individual memory files that were explicitly read this session
 # (check conversation history — only count files that were actually read)
@@ -58,6 +60,15 @@ JSONL includes JSON framing overhead — divide the byte count by 5 (not 4) for 
 - JSONL transcript: bytes ÷ 5 ≈ tokens
 - System prompt + tool schemas: fixed estimate of **~12,000 tokens** (runtime-injected, not readable as files)
 
+### 4a. Determine the active context window
+
+The hard-coded "200,000" is wrong on Opus/Sonnet 1M-context sessions. Read the active model from your environment header (e.g. `claude-opus-4-7[1m]` vs `claude-opus-4-7`) and pick:
+
+- Model ID has **`[1m]` suffix** → window is **1,000,000 tokens**
+- Otherwise (4.x Opus/Sonnet/Haiku standard) → window is **200,000 tokens**
+
+Use that number in the table footer below, not a hard-coded constant.
+
 ### 5. Display the breakdown
 
 Print this table, omitting rows where files were not found:
@@ -80,7 +91,7 @@ Print this table, omitting rows where files were not found:
 | **Total**                    |              | **~NNN** |
 
 *Text files: chars ÷ 4. JSONL transcript: bytes ÷ 5. System overhead is a fixed estimate.*
-*Context window: 200,000 tokens. Currently using ~NN%.*
+*Context window: <WINDOW from step 4a> tokens. Currently using ~NN%.*
 ```
 
 After the table, add one sentence calling out the largest contributor if it's disproportionately large (e.g. conversation transcript growing across a long session).

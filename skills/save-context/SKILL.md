@@ -26,8 +26,13 @@ GITHUB_TOKEN=$(git remote get-url origin | sed 's/.*:\(.*\)@.*/\1/') \
 ```
 
 ### 3. Update the session state memory file
-Memory folder: `~/.claude/projects/-Users-david-github-<project>/memory/`
-File: `session_state_<project>.md`
+The memory folder path is derived from `$HOME` (it differs by machine — `/Users/david`, `/Users/utilityserver`, `/home/pi`). Compute it with:
+```bash
+ENCODED=$(echo "$HOME/github/<project>" | tr '/' '-')
+MEMDIR=~/.claude/projects/${ENCODED}/memory/
+mkdir -p "$MEMDIR"
+```
+File: `${MEMDIR}/session_state_<project>.md`
 
 Write or overwrite with:
 - `last_updated`: today's date
