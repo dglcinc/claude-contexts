@@ -14,12 +14,16 @@ memory folder and updates MEMORY.md.
 ### Step 1 — Locate memory folder
 
 If a project name was passed as an argument (e.g. `/promote-memories bowling-league-tracker`),
-use `~/.claude/projects/-Users-david-github-<project>/memory/`.
+derive the memory folder from `$HOME` (path differs by machine — `/Users/david`, `/Users/utilityserver`, `/home/pi`):
+```bash
+ENCODED=$(echo "$HOME/github/<project>" | tr '/' '-')
+MEMDIR=~/.claude/projects/${ENCODED}/memory/
+```
 
-Otherwise, derive the path from the current working directory: replace `/` with `-`
-and drop the leading `/` (e.g. `/Users/david/github/bowling-league-tracker` →
-`-Users-david-github-bowling-league-tracker`), giving:
-`~/.claude/projects/<slug>/memory/`
+Otherwise, derive from the current working directory: replace `/` with `-`
+(keeping the leading `-`), giving `~/.claude/projects/<slug>/memory/`. For example
+`/Users/utilityserver/github/bowling-league-tracker` →
+`-Users-utilityserver-github-bowling-league-tracker`.
 
 Read all `.md` files in the memory folder and the `MEMORY.md` index.
 

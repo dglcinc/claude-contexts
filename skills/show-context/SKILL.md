@@ -29,7 +29,12 @@ GITHUB_TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token) \
 
 ### 4. Read session state
 
-Read `~/.claude/projects/-Users-david-github-<project>/memory/session_state_<project>.md` if it exists.
+The memory folder path is derived from `$HOME` (varies by machine):
+```bash
+ENCODED=$(echo "$HOME/github/<project>" | tr '/' '-')
+ls ~/.claude/projects/${ENCODED}/memory/session_state_<project>.md 2>/dev/null
+```
+Read it if it exists.
 
 ### 5. Display the summary
 

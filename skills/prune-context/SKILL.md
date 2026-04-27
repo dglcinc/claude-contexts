@@ -22,8 +22,9 @@ wc -c ~/.claude/CLAUDE.md 2>/dev/null
 # Project CLAUDE.md
 wc -c ~/github/<project>/CLAUDE.md 2>/dev/null
 
-# Session state
-wc -c ~/.claude/projects/-Users-david-github-<project>/memory/session_state_<project>.md 2>/dev/null
+# Session state (per-project memory dir derived from $HOME — varies by machine)
+ENC=$(echo "$HOME/github/<project>" | tr '/' '-')
+wc -c ~/.claude/projects/${ENC}/memory/session_state_<project>.md 2>/dev/null
 
 # OneDrive context files
 ls ~/OneDrive\ -\ DGLC/Claude/<project>*.md 2>/dev/null | while read f; do wc -c "$f"; done
@@ -31,8 +32,9 @@ ls ~/OneDrive\ -\ DGLC/Claude/<project>*.md 2>/dev/null | while read f; do wc -c
 # claude-contexts project summaries
 ls ~/github/claude-contexts/<project>/*.md 2>/dev/null 2>/dev/null | while read f; do wc -c "$f"; done
 
-# MEMORY.md
-wc -c ~/.claude/projects/-Users-david-github/memory/MEMORY.md 2>/dev/null
+# MEMORY.md (auto-loaded by runtime, lives next to launch dir)
+ENC_HOME=$(echo "$HOME/github" | tr '/' '-')
+wc -c ~/.claude/projects/${ENC_HOME}/memory/MEMORY.md 2>/dev/null
 
 # Transcript
 PWD_ENCODED=$(pwd | tr '/' '-')
