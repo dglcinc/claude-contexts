@@ -69,6 +69,17 @@ Repos live at `~/github/` (outside OneDrive) and are mounted into the VM at `/se
 ### Pi (Claude Code sessions)
 Standard git works fine on the Pi. Repos live at `~/github/` on the Pi's local filesystem (not OneDrive-mounted), so `git pull`, `git push`, `git fetch`, and branch operations all work normally via Bash.
 
+## Memory System
+
+Structured memory lives in this repo and is symlinked into `~/.claude/` by `setup.sh`:
+
+- `memory/` → symlinked to `~/.claude/memory/` — global cross-project memory (memory.md index, general.md conventions, user.md profile, tools/, domain/)
+- `hooks/pre-tool-memory.{sh,py}` → symlinked to `~/.claude/hooks/` — PreToolUse hook that auto-injects project MEMORY.md + global index on the first tool call per session (PPID-flagged so it fires once per Claude Code process)
+
+`setup.sh` also idempotently merges the hook registration into `~/.claude/settings.json` via `jq` (settings.json itself is per-machine — statusLine paths, plugin list, etc — so it can't be symlinked). Requires `jq` installed (`brew install jq` / `apt install jq`).
+
+The actual memory rules (lifecycle, when to write, when to ask before modifying) live in `global.md` under the Memory Management, Global Memory, Repo Memory Auto-Init, and Domain Knowledge Lifecycle sections.
+
 ## MCP Servers
 
 ### Apple Mail
