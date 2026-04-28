@@ -13,9 +13,6 @@ The argument is the repo directory name under `~/github/` (e.g. `bowling-league-
 
 ## Steps
 
-### 0. Rename session
-Invoke the Skill tool with `skill="rename"` and `args="<project-name>"` to title the session after the project.
-
 ### 1. Pull claude-contexts
 ```bash
 git -C ~/github/claude-contexts pull
@@ -72,7 +69,7 @@ First check if Claude Code is running from within the project directory:
 - If `NOT_IN_PROJECT`: read `~/github/<project>/CLAUDE.md` — full project context: architecture, data model, routes, deployment.
 
 ### 7. Confirm and wait
-Report what was loaded and the result of the git pull/clone in a brief summary. Then **wait for the user's next instruction** — do not begin any work.
+Report what was loaded and the result of the git pull/clone in a brief summary. Include a one-line reminder: "Type `/rename <project>` to title your HUD session." Then **wait for the user's next instruction** — do not begin any work.
 
 ## On the Pi
 
