@@ -13,13 +13,16 @@ The argument is the repo directory name under `~/github/` (e.g. `bowling-league-
 
 ## Steps
 
-### 0. Pull claude-contexts
+### 0. Rename session
+Invoke the Skill tool with `skill="rename"` and `args="<project-name>"` to title the session after the project.
+
+### 1. Pull claude-contexts
 ```bash
 git -C ~/github/claude-contexts pull
 ```
 This updates `global.md`, `pi-CLAUDE.md`, and all skills in place via their symlinks — no restart needed.
 
-### 1. Load cross-machine context (OneDrive)
+### 2. Load cross-machine context (OneDrive)
 
 Check for all files matching `~/OneDrive - DGLC/Claude/<project>*.md`. If none exist, skip silently.
 
@@ -31,12 +34,12 @@ ls ~/OneDrive\ -\ DGLC/Claude/<project>*.md 2>/dev/null | xargs wc -c 2>/dev/nul
 - If combined size is **over 2,000 chars**: spawn an **Explore** subagent to read all matching files and return a structured brief covering: (1) infrastructure IPs and hostnames, (2) roadmap status — which phases are done and which are open, (3) any open data quality issues or pending actions. Keep the brief under 400 words. The subagent reads the full files; only the summary enters the main conversation.
 - If combined size is **2,000 chars or under**: read the files directly.
 
-### 2. Read project summaries
+### 3. Read project summaries
 If `~/github/claude-contexts/<project>/` exists:
 - Read `~/github/claude-contexts/<project>/<project>.md` — project context summary
 - Read any other `*.md` files in that folder — supplemental plans and notes
 
-### 3. Read session state
+### 4. Read session state
 The per-project memory path is derived from `$HOME` (it differs by machine — `/Users/david`, `/Users/utilityserver`, `/home/pi`). Compute it with:
 ```bash
 ENCODED=$(echo "$HOME/github/<project>" | tr '/' '-')
@@ -44,7 +47,7 @@ ls ~/.claude/projects/${ENCODED}/memory/session_state_<project>.md 2>/dev/null
 ```
 If the file exists, read it — last session's branch, open PRs, next steps, and notes.
 
-### 4. Sync local clone
+### 5. Sync local clone
 
 Check whether `~/github/<project>/` exists.
 
@@ -58,7 +61,7 @@ Check whether `~/github/<project>/` exists.
   ```
   If the clone fails (repo doesn't exist on GitHub, auth error, etc.), surface the error and stop — do not proceed to step 5. Note in the final summary whether the repo was pulled or freshly cloned.
 
-### 5. Read project CLAUDE.md
+### 6. Read project CLAUDE.md
 
 First check if Claude Code is running from within the project directory:
 ```bash
@@ -68,7 +71,7 @@ First check if Claude Code is running from within the project directory:
 - If `IN_PROJECT`: the runtime has already auto-loaded `CLAUDE.md` — skip reading it and note "CLAUDE.md auto-loaded by runtime" in the summary.
 - If `NOT_IN_PROJECT`: read `~/github/<project>/CLAUDE.md` — full project context: architecture, data model, routes, deployment.
 
-### 6. Confirm and wait
+### 7. Confirm and wait
 Report what was loaded and the result of the git pull/clone in a brief summary. Then **wait for the user's next instruction** — do not begin any work.
 
 ## On the Pi
