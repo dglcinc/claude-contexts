@@ -5,6 +5,7 @@ Read this file at session start. Load specific topic files only when relevant.
 | File | Description | Last updated |
 |------|-------------|--------------|
 | `general.md` | Cross-project conventions and preferences | 2026-04-28 |
+| `user.md` | David — user profile, setup, working style | 2026-04-28 |
 
 ## Cross-Memory Sync Rule
 
