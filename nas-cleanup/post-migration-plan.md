@@ -2,175 +2,320 @@
 
 ## Context
 
-The DS1512+ → DS225+ migration is the next major step in the nas-cleanup project (Phase 1: SSDs → DS225+ via USB; Phase 2: NAS-to-NAS rsync via daemon mode). Once the DS225+ has all the data, the user wants to do a **post-cutover cleanup pass on the DS225+ only** to convert what is currently a faithful backup of a messy filesystem into a clean preserved-data archive.
+After the DS1512+ → DS225+ migration completes (Phase 1: SSDs → DS225+ via USB; Phase 2: NAS-to-NAS rsync via daemon mode), the DS225+ holds a faithful but messy archive of ~13 years of Mac home directories from `snashome/` and `users/` (and any other backup dirs found under `/volume1/`). The cleanup converts that into a curated, application-agnostic content archive organized by content type, not by user-Mac-of-origin.
 
-The user's stated goals:
-1. Remove the application/system noise the rsync excludes have been catching (Caches, `.app` bundles, SyncServices, etc.) — applied retroactively as deletes on the destination
-2. Hash-dedup byte-identical photos and music across the overlapping iPhoto / Photos / iTunes libraries
-3. Inventory remaining large files (Parallels images, big videos, disk images) for case-by-case manual decisions
+The user explicitly does **not** need to restore the data to a Mac, phone, or iPhoto/Photos.app — this is a preserved-data archive (photos, music, video, documents). That assumption simplifies several decisions: it's OK to break a `.photoslibrary` bundle's internal references because we'll never reopen it.
 
-User explicitly does **not** need to restore the data to a Mac, phone, or other computer — this is purely a data archive (photos, mp3s, emails, documents). That assumption simplifies several decisions: e.g., it's OK to break a `.photoslibrary` bundle's internal references because we'll never reopen it in Photos.app.
+Cleanup runs **on the DS225+**, never on the SSDs (which become the third-copy archive). All scripts are dry-run by default with explicit `--apply` to mutate.
 
-**Key inventory findings** (from explore-agent scan of `/Volumes/ds_backup{,_2}/` 2026-04-28):
+**Source scope**: everything under `/volume1/` on the DS225+ after migration. Notable sources expected:
+- `snashome/` — more recent shared mounts (david, mmc, mmc_archive, OldPhotoDirectories, mp3, old_fileserver_stuff, users, www)
+- `users/` — older LDAP-era home directory experiment, same era of content
+- `rsync/` — Pi backup target, will be deleted (user will recreate after cleanup)
+- `www/` — to be reviewed; not currently in any backup script
+- Any other top-level dirs found — flagged for review
 
-- **~650 MB** of cleanable noise (Caches, PubSub, SyncServices, app bundles, photo Database/Faces, etc.) — small absolute size, but worth doing for hygiene
-- **~674 GB** in three overlapping photo libraries — the real dedup opportunity
-  - `mmc_archive/Pictures/Photos Library 2.photoslibrary` 260 GB
-  - `OldPhotoDirectories/Photos_Library.photoslibrary` 186 GB
-  - `OldPhotoDirectories/iPhoto_Library.migratedphotolibrary` 228 GB
-- **~792 GB** in iTunes media (`/Volumes/ds_backup_2/mp3/iTunes/`) — likely heavy internal duplication and now-unwanted TV/movie content
-- **~164 GB** in a single video archive (`mmc_archive/2020_beyers_vid/` — wedding video + multiple proxies)
-- **~3 GB** of old VM/installer files (Parallels installers, one Virtual PC image) — low-value retention candidates
+NAS-specific directories (DSM internals like `@appstore`, `@database`, etc.) are not preserved.
 
-Cleanup runs **on the DS225+**, never on the SSDs (which become the third-copy archive).
+## Final target layout
 
-## Approach
+The cleanup produces a new top-level layout on the DS225+:
 
-Five phases. Each ships its own script. All phases are designed to be **idempotent** and **dry-run by default** — every script supports a `--dry-run` flag (default) and an explicit `--apply` flag to actually mutate the filesystem. This is critical because we are destructively modifying the canonical archive.
+```
+/volume1/
+  music/                           — Artist/Album/NN Title.ext
+  photos/                          — date- and album-organized originals + edits
+  movies/
+    iMovie/<project>/              — preserved iMovie project bundles
+    FinalCut/<project>/            — preserved Final Cut project bundles
+    other/<source-context>/        — standalone videos
+  documents/<source-context>/      — preserved folder structure
+  david/
+    .bw/                           — segregated, deduped
+    images/                        — non-camera (web-downloaded) photos
+    app-data/                      — preserved application context (per-app)
+    [other personal content the rules don't cover]
+  maureen/
+    [same shape as david/]
+  cleaned/                         — staging dir during cleanup; removed at end
+```
 
-Repo layout: extend `nas-cleanup` with new scripts under `~/github/nas-cleanup/post_migration/` (new subdirectory to keep the migration backup scripts at the repo root unchanged).
+Sources under `snashome/` and `users/` are read during cleanup; once a content type is migrated and verified, the corresponding source subtree is deleted.
 
-### Phase 1 — Refactor exclude patterns into shared source
+`maureen` ≡ `mmc` in the source tree — confirm before renaming.
 
-**Why:** the cleanup phase must apply the SAME pattern set the rsync excludes use, otherwise the two will drift. Today the patterns are duplicated across `nas_backup.sh`, `nas_backup_mp3.sh`, `nas_backup_photos.sh`, and `nas_ofd_backup.sh`.
+## Phases
 
-**Actions:**
-- Create `excludes.txt` at repo root — one pattern per line, no rsync-flag wrapping
-- Add a small helper `_load_excludes.sh` that converts each line into `--exclude='<line>'` flags for rsync
-- Refactor each `nas_backup*.sh` to source `_load_excludes.sh` and substitute into the rsync invocation (preserves all current per-script logic; just centralizes the pattern list)
-- Cleanup scripts in later phases also read `excludes.txt`
+All phases produce CSV/Markdown reports on dry run. `--apply` performs the destructive action. Each script is idempotent and re-runnable.
 
-**Critical files:**
-- `excludes.txt` (new)
-- `_load_excludes.sh` (new)
-- `nas_backup.sh`, `nas_backup_mp3.sh`, `nas_backup_photos.sh`, `nas_ofd_backup.sh` (refactor)
+### Phase 1 — Inventory and classification
 
-**Note:** anchored patterns like `/mmc/Library` (used in `nas_backup.sh` only) stay in the script that uses them — `excludes.txt` is for the universal patterns.
-
-### Phase 2 — Noise removal on DS225+
-
-**Why:** strip the cruft that's been getting filtered out at backup time. ~650 MB reclaim, but more importantly removes irrelevant data that would clutter dedup hashing in later phases.
-
-**Actions:**
-- New script: `post_migration/cleanup_noise.sh` — runs **on the DS225+** (executed via `ssh admin@ds225 bash -s < cleanup_noise.sh` from the Mac, or copied to the NAS and run there)
-- For each pattern in `excludes.txt`, run `find <root> -type d -path '*<pattern>' -prune -print` (dry run) or `... -exec rm -rf {} +` (apply mode)
-- Special case for the few patterns that match files (not directories) — handled separately
-- Always logs what would be / was removed to a timestamped log file
-- **Hard guard:** script must refuse to run unless invoked under a known DS225+ path prefix (`/volume1/...`); explicit safety check against accidentally pointing it at an SSD
-
-**Critical files:**
-- `post_migration/cleanup_noise.sh` (new)
-- Reads `excludes.txt`
-
-**Verification:** dry-run on DS225+ with output diffed against expected list (the patterns in `excludes.txt`); then apply; then re-run dry-run to confirm it now reports zero matches (idempotency check).
-
-### Phase 3 — Large-file inventory
-
-**Why:** the user wants to manually decide on Parallels images, the 164 GB wedding video, big disk images, etc. — not delete blindly.
+**Why:** before touching anything, produce a single classification map of every top-level subtree on the DS225+. The user reviews the map and approves before any phase ≥ 3 runs.
 
 **Actions:**
-- New script: `post_migration/inventory_large.sh` — runs on DS225+
-- `find /volume1/<root> -type f -size +1G -printf '%s\t%p\n' | sort -rn`
-- Categorize by extension and path heuristics:
-  - VM images: `*.pvm`, `*.hdd`, `*.vmdk`, `*.vdi`, `*.vhd`
-  - Disk images: `*.dmg`, `*.iso`
-  - Video: `*.mov`, `*.mp4`, `*.avi`, `*.dv`
-  - Photos library internals: paths under `*.photoslibrary/`
-  - Other
-- Output: a plain Markdown table per category with size, path, and a `[ ] keep / [ ] delete` checkbox the user can fill in
-- Output goes to `~/nas_large_files_review.md` on the user's Mac (scp from DS225+ at end)
-- **No deletion in this script** — purely produces the review document
+- Walk `/volume1/<top-level-dirs>` to depth 3
+- For each dir at depth 1–3, classify by heuristic:
+  - **photo-library**: contains `*.photoslibrary`, `*.migratedphotolibrary`, `iPhoto Library*`, or `Masters/`+`Database/` siblings
+  - **music**: predominantly `.mp3`/`.m4a`/`.flac`/`.aif`/`.wav`
+  - **video**: predominantly `.mov`/`.mp4`/`.avi`/`.dv`
+  - **video-project**: `*.iMovieProject`, `*.fcpbundle`, `*.imovielibrary`
+  - **documents**: predominantly `.pdf`/`.doc{,x}`/`.xls{,x}`/`.txt`/`.rtf`/`.pages`/`.numbers`/`.key`/`.md`
+  - **app-install**: `.app` bundles or installer pkg/dmg trees outside system Applications
+  - **download-dump**: dirs literally named `Downloads`, or containing only browser-cache-shaped content
+  - **game-install**: known patterns (Minecraft `*.jar` + `versions/`, Unreal Tournament `Engine/`, Steam `steamapps/`, etc.)
+  - **app-data**: known per-app dirs (Skype chat DBs, GarageBand projects, OmniFocus, Quicken, TurboTax, 1Password, AddressBook, Mail Maildir/, etc.)
+  - **bw**: any path matching `**/.bw/**`
+  - **nas-internal**: `@appstore`, `@database`, `#recycle`, etc.
+  - **unknown**: everything else
+- Output: `cleanup_inventory.md` — Markdown table per top-level subtree, with size, classification, and a `[ ] approve / [ ] flag` column
+- **No mutation.** User reviews the map and either approves or annotates. Subsequent phases consume this map.
 
 **Critical files:**
-- `post_migration/inventory_large.sh` (new)
+- `post_migration/inventory.sh` (new) — orchestrator
+- `post_migration/inventory.py` (new) — classifier
 
-**Follow-on:** once user marks the file with keep/delete decisions, run `post_migration/apply_large_decisions.sh` (also new, also dry-run-by-default) to action the deletions.
+### Phase 2 — Target layout scaffold
 
-### Phase 4 — Photo dedup
-
-**Why:** the three overlapping `.photoslibrary` / iPhoto libraries almost certainly share most originals. Hash dedup across all of them, keeping one copy.
+**Why:** create the empty `music/`, `photos/`, `movies/`, `documents/`, `david/`, `maureen/`, `cleaned/` dirs with the right ownership before anything moves in.
 
 **Actions:**
-- New script: `post_migration/dedup_photos.sh` — runs on DS225+ (likely needs Python, which DSM ships)
-- Walks `Masters/` (iPhoto-era) and `originals/` (modern Photos-era) inside every `*.photoslibrary` and `*.migratedphotolibrary` plus loose `iPhoto_Library*` dirs
-- Computes SHA-256 of each file, stores in a SQLite index (`/tmp/photo_dedup.db`) so reruns are cheap
-- For each hash with >1 file: keeps the copy in the **largest library** (most likely canonical), deletes the others
-- The deletion is the trick: removing a `Masters/` file breaks Photos.app's reference to it, but per user direction we will never reopen these libraries in Photos.app, so this is acceptable. Library bundles become "ragged" but the unique files stay accessible.
-- Outputs a per-pair "kept X, deleted Y" log
-- `--dry-run` mode produces a CSV (path, hash, action) the user can review before `--apply`
+- `mkdir -p` the layout under `/volume1/`
+- Set ownership to a single canonical user (per CLAUDE.md, the new NAS uses `admin` or a dedicated user; UID mapping from DS1512+ is not preserved)
 
 **Critical files:**
-- `post_migration/dedup_photos.sh` (new)
-- `post_migration/dedup_photos.py` (new — does the SHA-256 work)
+- `post_migration/scaffold.sh` (new) — trivial; could be inlined
 
-**Caveat:** byte-identical only. Photos that were re-encoded between libraries (e.g., a JPEG re-saved at different quality) will look like duplicates to a human but be different to sha256. Documented as a limitation; the user's stated goal is "duplicates" which is what this does.
+### Phase 3 — Music: dedup, organize, comedy filter, low-bitrate review
 
-### Phase 5 — Music dedup
-
-**Why:** same logic for the iTunes media tree (~792 GB). Multiple iTunes libraries on the source likely have many of the same tracks, plus internal duplicates from re-imports (the user already noted "Track 1.m4a" iTunes-duplicate-import suffixes resolved earlier in `mp3/iTunes/iTunes Music/A Paris/`).
+**Why:** ~792 GB of iTunes media has heavy internal duplication and now-unwanted content. The user's rules: keep CD rips at higher bitrate, organize Artist/Album/Track, drop comedy artists, optionally drop ≤128 kbps survivors.
 
 **Actions:**
-- New script: `post_migration/dedup_music.sh` — same shape as the photo dedup, scoped to `*.mp3`, `*.m4a`, `*.m4p`, `*.aif`, `*.wav`, `*.flac`
-- Same SHA-256 → SQLite → keep largest-library approach
-- Walks the entire mp3 tree (it's all on `ds_backup_2/mp3/` so will be on `/volume1/<wherever-mp3-lives>` on DS225+)
-- Same `--dry-run` / `--apply` discipline
+1. **Find** all music files under inventoried music sources: `.mp3`, `.m4a`, `.m4p`, `.aif`, `.wav`, `.flac`
+2. **Read tags** (artist, album, title, track #, bitrate) — Python `mutagen`. Filename/path fallback for missing tags
+3. **Group by (artist, album, title)** — case-insensitive, normalized
+4. **Within each group, keep the highest bitrate**; ties broken by file size (larger wins)
+5. **Comedy filter** — emit a `cleanup_music_artists.md` listing every distinct artist found. User marks each `[ ] keep / [ ] comedy`. `--apply` removes everything tagged comedy.
+6. **Low-bitrate review** — after dedup, list every surviving track at ≤128 kbps. User reviews `cleanup_music_lowbitrate.md` and marks `[ ] keep / [ ] drop`.
+7. **Place winners** at `music/<Artist>/<Album>/<NN Title>.<ext>` (track number zero-padded; missing track # → omit prefix)
+8. **Sources unchanged** — copy not move during dry run; `--apply` deletes source after place succeeds
+
+**Filename normalization:**
+- Strip iTunes "Track 1" / "Track 2" suffixes (already seen in `iTunes Music/A Paris/`)
+- Resolve NFC/NFD normalization to NFC
+- Sanitize filesystem-illegal chars
 
 **Critical files:**
-- `post_migration/dedup_music.sh` (new)
-- `post_migration/dedup_music.py` (new)
+- `post_migration/music_curate.sh` (new) — orchestrator with `--phase tag-scan|dedup|comedy|lowbitrate|place`
+- `post_migration/music_curate.py` (new) — does the work
+
+**Verification:**
+- After `--apply`, source music trees should be empty (or contain only files the user excluded)
+- Spot-check 10 random tracks — playable, correct tags
+- DS225+ free space should increase by approximately the dedup CSV's reported reclamation
+
+### Phase 4 — Photos: extract originals + edits, dedup, organize
+
+**Why:** 674 GB across three overlapping `.photoslibrary`/iPhoto libraries plus loose photo dirs. User wants originals + edits, no application exhaust, organized by date and album where possible.
+
+**Actions:**
+1. **Locate sources** — every `*.photoslibrary`, `*.migratedphotolibrary`, `iPhoto_Library*`, plus loose photo dirs from inventory
+2. **Per library, extract:**
+   - **Originals** from `Masters/` (iPhoto-era, dated path: `Masters/YYYY/MM/DD/`) and `originals/` (Photos.app-era, hash-bucketed paths)
+   - **Edits** — iPhoto stores in `Modified/`; Photos.app stores rendered edit output under `resources/renders/` or `resources/modelresources/` (paired with adjustment XMPs). **Need spike at start of phase to confirm structure on the actual libraries** before automating.
+   - **Album metadata** — iPhoto: parse `AlbumData.xml` for album → photo associations. Photos.app: read `Photos.sqlite` (read-only) for `ZGENERICALBUM` joins.
+3. **Discard everything else** — Database/, Thumbnails/, resources/proxies/, faces/, ML caches, iCloud sync state. Same intent as the rsync exclude set, applied as a delete after extraction
+4. **Hash-dedup originals** — SHA-256 across all extracted originals. Largest-source wins (most likely canonical). Edits keyed to their original — if original is a duplicate of one in another library, the edit version follows the original's "winner" placement.
+5. **Internet-downloaded heuristic** — files with no camera EXIF (no `Make`/`Model` tags) AND filename matching common web patterns (`image-N.jpg`, `IMG_N.jpg` without camera EXIF, `download-N.png`, etc.) → routed to `david/images/` instead of `photos/`. **Heuristic is fuzzy; emit a `cleanup_photos_web_candidates.md` for user spot-check before final placement.**
+6. **Place winners** at:
+   - `photos/<YYYY>/<YYYY-MM-DD>[ — <Album>]/filename.ext` (date from EXIF `DateTimeOriginal`, fallback to file mtime)
+   - Edits placed alongside the original with `_edit` suffix or in an `edits/` sibling — TBD after the spike in step 2
+   - Web candidates → `david/images/<YYYY>/filename.ext`
+
+**Critical files:**
+- `post_migration/photos_curate.sh` (new) — orchestrator
+- `post_migration/photos_curate.py` (new) — does the work
+- `post_migration/photoslibrary_inspect.py` (new, run-once spike) — sample structure of each library before automation
+
+**Caveats** (documented in dry-run output):
+- Byte-identical dedup only — re-encoded duplicates (re-saved JPEG at different quality) look identical to a human but differ to SHA-256
+- Album metadata extraction may be incomplete for libraries with corrupted `AlbumData.xml` / `Photos.sqlite`
+- The web/camera split is heuristic — anything ambiguous goes in the spot-check report
+
+### Phase 5 — Videos: sort
+
+**Why:** videos appear in three contexts that need different placement rules.
+
+**Actions:**
+- For each video file (`.mov`, `.mp4`, `.avi`, `.dv`, `.m4v`) found anywhere in scope:
+  - **Inside a `.photoslibrary` / iPhoto library** (extracted in Phase 4) → `photos/` alongside other extracted media (Phase 4 handles)
+  - **Inside an iMovie project bundle** (`*.iMovieProject` or `*.imovielibrary`) → `movies/iMovie/<project-name>/` (preserve the bundle wholesale)
+  - **Inside a Final Cut bundle** (`*.fcpbundle`) → `movies/FinalCut/<project-name>/` (preserve the bundle wholesale)
+  - **Standalone (loose)** → `movies/other/<source-context>/<filename>` where source-context is the original parent dir name (e.g., `mmc_archive_2020_beyers_vid/`)
+- Inside project bundles: do NOT strip rendered proxies, even though they're regeneratable — they're part of the bundle and stripping risks breaking the project. Bundle is an atomic unit.
+- The 164 GB `mmc_archive/2020_beyers_vid/` wedding video case: classification depends on what's in there — if it's a project bundle, treat as such; if it's source DV + finished mp4, place under `movies/other/2020_beyers_vid/` and emit a review note about whether to keep DV originals + finished render or just the finished render.
+
+**Critical files:**
+- `post_migration/videos_sort.sh` (new) — orchestrator
+- `post_migration/videos_sort.py` (new) — does the work
+
+### Phase 6 — Documents
+
+**Why:** documents should keep their original folder structure (the user's organization) under a `documents/` root, with source-context preserved.
+
+**Actions:**
+- Find all document files (`.pdf`, `.doc{,x}`, `.xls{,x}`, `.ppt{,x}`, `.txt`, `.rtf`, `.pages`, `.numbers`, `.key`, `.md`, `.odt`, `.tex`)
+- Place under `documents/<source-context>/<original-relative-path>`
+  - `source-context` = top-level source dir slug (`snashome_david_Documents`, `users_mmc_Desktop`, etc.)
+- Optional: hash-dedup across the documents/ tree — defer pending user decision (small disk footprint vs. losing path context)
+
+**Critical files:**
+- `post_migration/documents_collect.sh` (new) — straightforward rsync with file-type filter
+
+### Phase 7 — Personal trees: `.bw`, `images`, `app-data`, miscellaneous
+
+**Why:** content that's clearly David's or Maureen's but doesn't fit a global category goes in their personal folders.
+
+**Actions:**
+- **`.bw` content** — find every `**/.bw/**` path under david-owned source trees. Hash-dedup. Place under `david/.bw/<original-relative-path-after-.bw>`. Maureen's trees are not expected to have `.bw` — confirm in inventory.
+- **`images/`** — receives web-downloaded photos identified in Phase 4 (already routed there)
+- **`app-data/`** — application data the user wants kept for possible future recovery. From the rsync exclude analysis, the kept-by-default categories are: 1Password vaults, Quicken / TurboTax records, OmniFocus / Things DBs, Skype chats, Bento DBs, AddressBook, Mail (Maildir/mbox), GarageBand loops & projects, Steam saves, Minecraft saves. Each gets a subdir under `david/app-data/<app>/` or `maureen/app-data/<app>/`.
+- **Miscellaneous personal content** — anything categorized as user-data but not matching above (random user-created folders, scripts, dotfiles) → `david/<original-relative-path>` or `maureen/<original-relative-path>` preserving the in-user folder structure
+- **Per-user assignment**: source path under `david/` or `mmc/` → respective user. Source path under `users/<other-user>/` → flag for review (might be old David/Maureen content under a different LDAP UID).
+
+**Critical files:**
+- `post_migration/personal_collect.sh` (new) — per-user pass
+
+### Phase 8 — Hard-delete categories
+
+**Why:** content the user has explicitly said to remove. Run after Phases 3–7 have extracted everything they want from the source trees.
+
+**Targets:**
+- **Game installs** — Minecraft (path or `*.jar` + `versions/` shape), Unreal Tournament, Steam (`steamapps/common/`), generic game launchers (Origin, Battle.net), per-game Application Support saves that aren't on the keep list
+- **Old app installs** in user `Applications/` dirs — `.app` bundles outside `/Applications/`. The existing rsync excludes already drop `Applications (Parallels)` and Parallels' `* Applications.app` shadow bundles; this phase catches the rest.
+- **Download dumps** — any dir literally named `Downloads`, plus browser caches the rsync excludes already covered (these are deletes from the source side now).
+- **`/volume1/rsync`** — entirely removed (user recreates the Pi backup job)
+- **NAS-internal directories** that we're not preserving (per inventory)
+- **Application "exhaust"** caught by the existing rsync exclude set: Caches, PubSub, SyncServices, Database/Faces, photoslibrary/resources & Thumbnails, etc. — applied retroactively as deletes since no later phase needs them.
+
+**Actions:**
+- `find` each pattern, list, dry-run, `--apply`
+- All deletions logged to a timestamped log file
+- **Hard guard:** script refuses to run unless invoked under a known DS225+ path prefix (`/volume1/...`); explicit safety check against accidentally pointing it at an SSD
+
+**Critical files:**
+- `post_migration/hard_delete.sh` (new) — patterns from a config file (`hard_delete_patterns.txt`)
+- `post_migration/hard_delete_patterns.txt` (new) — pattern list, version-controlled
+
+### Phase 9 — Anomaly review
+
+**Why:** anything not classified by Phase 1, or anything Phases 3–8 couldn't decide on, surfaces here for user case-by-case decision.
+
+**Actions:**
+- After Phases 3–8 run, what remains in `snashome/`, `users/`, etc. should be empty or near-empty. Whatever survives is the anomaly set.
+- Walk what's left, emit `cleanup_anomalies.md` — one entry per surviving file/dir > 10 MB, with size, path, suggested action
+- Categories of anomaly to expect:
+  - **VM disk images** — `.pvm`, `.hdd`, `.vmdk`, `.vdi`, `.vhd`. Per the original plan inventory, ~3 GB of VM/installer files. User likely wants to keep specific images and drop installers. Manual decision per file.
+  - **DMG / ISO** — `.dmg`, `.iso`. Mix of OS install media (drop) and user-created images (keep). Manual decision.
+  - **Source code / scripts** — small but contextual. Default: route to `david/code/` or `maureen/code/` preserving structure.
+  - **Email** — Apple Mail Maildir/mbox lives under `Library/Mail/`. Already routed to `app-data/Mail/` in Phase 7.
+  - **Truly unknown** — flagged.
+- User fills in actions; `apply_anomaly_decisions.sh` actions them.
+
+**Critical files:**
+- `post_migration/anomalies.sh` (new) — produces the review doc
+- `post_migration/apply_anomaly_decisions.sh` (new) — actions the user-marked decisions
+
+### Phase 10 — Source decommission
+
+**Why:** once Phases 3–9 verify clean and the new layout is good, the original `snashome/` and `users/` (and other source dirs) get deleted. Until then, both source and target coexist.
+
+**Actions:**
+- After user signs off on each of Phases 3–9 individually, AND after spot-check of the new layout, AND after disk-space sanity check (target tree size matches expectation):
+  - `rm -rf /volume1/snashome` (and other migrated sources)
+  - The SSD archives remain as belt-and-suspenders
+- Final state: `/volume1/{music,photos,movies,documents,david,maureen}` plus DSM internals
+
+**Critical files:**
+- Manual operation; no script. The user runs the deletes after signing off on each phase.
 
 ## Critical files (summary)
 
-**Modify:**
-- `nas_backup.sh`, `nas_backup_mp3.sh`, `nas_backup_photos.sh`, `nas_ofd_backup.sh` — refactor to read shared excludes
-- `CLAUDE.md` — document the new `post_migration/` workflow and ordering
+**Modify (none — backup scripts are unchanged by this work):**
+- The original Phase 1 of the previous plan (refactor `excludes.txt` shared across `nas_backup*.sh`) is **deferred** — backup is nearly done; refactor is hygiene, not blocking. Can be a future small PR.
 
-**Create:**
-- `excludes.txt`
-- `_load_excludes.sh`
-- `post_migration/cleanup_noise.sh`
-- `post_migration/inventory_large.sh`
-- `post_migration/apply_large_decisions.sh`
-- `post_migration/dedup_photos.sh` + `dedup_photos.py`
-- `post_migration/dedup_music.sh` + `dedup_music.py`
+**Create under `~/github/nas-cleanup/post_migration/`:**
 
-**Reuse:**
-- The exclude-pattern set already developed in `nas_backup.sh` is the source of truth for Phase 2 (extracted to `excludes.txt`)
-- The existing `nas_cleanup.sh` (current macOS junk remover on `/Volumes/ds_backup/`) is **not** reused — its scope is narrower and SSD-targeted; the new `cleanup_noise.sh` is broader and DS225+-targeted
+| File | Purpose |
+|------|---------|
+| `inventory.sh` + `inventory.py` | Phase 1 classification map |
+| `scaffold.sh` | Phase 2 target dir creation |
+| `music_curate.sh` + `music_curate.py` | Phase 3 music dedup/organize/filter |
+| `photos_curate.sh` + `photos_curate.py` + `photoslibrary_inspect.py` | Phase 4 photo extract/dedup/organize |
+| `videos_sort.sh` + `videos_sort.py` | Phase 5 video routing |
+| `documents_collect.sh` | Phase 6 document copy |
+| `personal_collect.sh` | Phase 7 .bw / images / app-data / misc |
+| `hard_delete.sh` + `hard_delete_patterns.txt` | Phase 8 deletes |
+| `anomalies.sh` + `apply_anomaly_decisions.sh` | Phase 9 review and apply |
+
+**Output reports** (Markdown checkboxes the user fills in, per phase):
+
+| File | Phase |
+|------|-------|
+| `cleanup_inventory.md` | 1 |
+| `cleanup_music_artists.md` | 3 |
+| `cleanup_music_lowbitrate.md` | 3 |
+| `cleanup_photos_web_candidates.md` | 4 |
+| `cleanup_anomalies.md` | 9 |
 
 ## Ordering
 
-Strict ordering matters because each phase changes what later phases see:
 1. Migration completes → DS225+ has all data
-2. **Phase 1** (exclude refactor) — non-destructive, can be done anytime; ideally before migration runs so Phase 2 works as soon as DS225+ has data
-3. **Phase 2** (noise removal) — first, because it strips cruft that would otherwise pollute dedup hashes
-4. **Phase 3** (large-file inventory) — produces the review doc; user reviews on their schedule
-5. **Phase 4** (photo dedup) — independent of Phase 3
-6. **Phase 5** (music dedup) — independent
-7. User actions Phase 3 review doc with `apply_large_decisions.sh`
+2. **Phase 1** — inventory; user reviews and approves classification
+3. **Phase 2** — scaffold
+4. **Phase 3** — music
+5. **Phase 4** — photos (after the photoslibrary spike confirms edit-extraction approach)
+6. **Phase 5** — videos
+7. **Phase 6** — documents
+8. **Phase 7** — personal
+9. **Phase 8** — hard deletes (only after 3–7 have extracted what they want)
+10. **Phase 9** — anomaly review
+11. **Phase 10** — source decommission, after user sign-off on the new layout
 
 ## Verification plan
 
-End-to-end testing happens incrementally. At each phase:
+- **Phase 1**: user approves the classification map. No mutation, no verification needed.
+- **Phase 2**: `ls /volume1/{music,photos,movies,documents,david,maureen,cleaned}` returns six empty dirs.
+- **Phase 3**: spot-check 10 random tracks (playable, correct tags); source music tree is empty after `--apply`; free space increased by reported reclamation.
+- **Phase 4**: spot-check 10 random photos by hash from kept-library (readable, EXIF preserved); web-candidate spot-check passes user review; album organization sanity check on a known album.
+- **Phase 5**: every project bundle is intact (open in iMovie/FCP if curious); standalone count matches expectation.
+- **Phase 6**: file count under `documents/` ≈ source document file count; spot-check folder structure preservation.
+- **Phase 7**: `david/.bw/` deduped (no two files with same hash); `david/images/` matches Phase 4's web-candidate set after user review.
+- **Phase 8**: re-run dry-run after `--apply`; expected zero matches (idempotent).
+- **Phase 9**: after applying anomaly decisions, source dirs are empty or contain only items user explicitly opted to keep in place.
+- **Phase 10**: post-decommission, `du -sh /volume1/*` shows the curated layout only; DS225+ free space matches projection.
 
-- **Phase 1:** Run `nas_backup.sh --dry-run` (after refactor) and confirm the rsync command line includes the same excludes as before the refactor. Verify by capturing the full rsync command both before and after refactor and `diff`-ing.
-- **Phase 2:** Run `cleanup_noise.sh --dry-run` on DS225+; expected output is the list of all dirs matching the excludes. Run `--apply`. Re-run `--dry-run`; expected output is empty (idempotent).
-- **Phase 3:** Run `inventory_large.sh`; verify the output Markdown is well-formed and the categories make sense. Spot-check the largest 5 files in each category against `du`.
-- **Phase 4:** Run `dedup_photos.sh --dry-run`; review the CSV — confirm that the "keep" column always names a file in the largest library, and the "delete" column never has the same file path as a "keep". After `--apply`, sample 10 random photos by hash from the kept library to confirm they're still readable. Confirm total free space on DS225+ increased by approximately the dedup CSV's reported reclamation.
-- **Phase 5:** Same as Phase 4 but for music files. Spot-check by playing a few tracks from the kept library.
-
-Roll-back path for any phase: restore from one of the SSDs (which we've deliberately left untouched). Document which SSD path maps to which DS225+ path so a partial restore is easy.
-
-## Out of scope (deferred)
-
-- **Aggressive content-archive rebuild** (extracting `Masters/` out of every `.photoslibrary` into a flat `/archive/photos/` tree). User chose to defer; can be a Phase 6 later.
-- **Cleanup on the SSDs themselves.** They stay as untouched belt-and-suspenders archive.
-- **Decommissioning the DS1512+.** That happens on its own timeline once the DS225+ + cleanup are verified.
-- **Mail re-extraction** to mbox/Maildir format. Mail data is small (<500 MB); leave in place for now.
+Roll-back path for any phase: restore from the SSDs (untouched). Document SSD-path → DS225+-path mapping so partial restores are easy.
 
 ## Open questions for the user
 
-None blocking — happy to start when the migration completes. Two things worth deciding before then, but not gating:
+These are best resolved before Phase 3, but none gate Phase 1 (inventory):
 
-1. Whether to also dedup files **within** a single library (e.g., Photos.app's own `.photoslibrary/Masters/` sometimes has byte-identical files due to import quirks). Default plan = yes (the dedup just operates on all files in one pass).
-2. Threshold for "large file" review in Phase 3. Default = 1 GB. Higher threshold = fewer files to review but might miss some. Lower = more review work.
+1. **Comedy artist list** — confirm the workflow (enumerate → user marks each artist) is OK, or do you want to seed an initial list (e.g., specific artists from "Nappy Tunes" you remember)?
+2. **Photo edits format** — for `*.photoslibrary` (Photos.app era), edits aren't stored as a separate JPEG; they're rendered output paired with adjustment XMP-like sidecars under `resources/`. Plan: spike at start of Phase 4 to confirm. Acceptable?
+3. **`maureen` ≡ `mmc`** — confirm. The source uses `mmc`; you wrote `maureen` in the instructions. I'll rename `mmc/` → `maureen/` at placement time unless you want to keep `mmc` as the dirname.
+4. **`users/<other-user>/` UIDs** — the older LDAP-era `users/` dir likely contains UIDs for david and mmc plus possibly others. Each non-david/non-mmc UID's content needs a manual call: assign to one of david/maureen, drop, or treat as separate.
+5. **App-data scope** — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
+6. **Documents dedup** — preserve folder structure verbatim (default), or also hash-dedup across the documents tree? Path context vs. disk savings.
+7. **Web-photo heuristic threshold** — false-positive risk. Default: anything without camera EXIF gets flagged for review. Acceptable?
+8. **Source decommission timing** — delete `snashome/`/`users/` immediately after Phase 9 sign-off, or hold for a grace period (e.g., 30 days) in case something's missing?
+9. **`www/` and any other untouched source dirs** — these aren't in any backup script and weren't classified by the original work. Treat per Phase 1 inventory output (default: classify and ask) — confirm.
+10. **iTunes Music Library files** (`iTunes Library.itl`, `iTunes Music Library.xml`) — application metadata that could regenerate iTunes' view of the library, but useless without iTunes. Default: drop. Confirm.
+
+## Out of scope (deferred)
+
+- **Aggressive content-archive rebuild** — already de-scoped in the prior plan.
+- **Cleanup on the SSDs.** They stay as untouched archive.
+- **Decommissioning the DS1512+** — separate timeline once DS225+ + cleanup verified.
+- **Mail re-extraction to mbox/Maildir** — handled by Phase 7 routing as `app-data/Mail/`. Format conversion deferred.
+- **Refactor of `excludes.txt`** in the backup scripts — hygiene, not blocking; deferred as a future small PR.
+- **Re-encode pass on duplicate-but-not-byte-identical media** (e.g., re-saved JPEGs that differ only by quality) — visual-similarity dedup is hard and out of scope.
