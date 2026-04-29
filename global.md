@@ -56,14 +56,7 @@ Maintain a structured memory system rooted at .claude/memory/
 
 ### Maintenance
 
-When I say "reorganize memory":
-1. Read all memory files
-2. Remove duplicates and outdated entries
-3. Merge entries that belong together
-4. Split files that cover too many topics
-5. Re-sort entries by date within each file
-6. Update memory.md index
-7. Show me a summary of what changed
+To audit and clean up the memory system, run `/reorganize-memories`. The skill confirms each modification with `AskUserQuestion` before acting.
 
 ## Global Memory
 

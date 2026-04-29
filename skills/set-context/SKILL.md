@@ -19,6 +19,8 @@ git -C ~/github/claude-contexts pull
 ```
 This updates `global.md`, `pi-CLAUDE.md`, and all skills in place via their symlinks — no restart needed.
 
+If this is the first time using this machine after the memory system was added, also run `~/github/claude-contexts/setup.sh` once to install the memory symlinks (`~/.claude/memory`, `~/.claude/hooks`) and merge the PreToolUse hook block into `~/.claude/settings.json`. Idempotent — safe to re-run any time. Requires `jq`.
+
 ### 2. Load cross-machine context (OneDrive)
 
 Check for all files matching `~/OneDrive - DGLC/Claude/<project>*.md`. If none exist, skip silently.
