@@ -6,6 +6,7 @@ Read this file at session start. Load specific topic files only when relevant.
 |------|-------------|--------------|
 | `general.md` | Cross-project conventions and preferences | 2026-04-28 |
 | `user.md` | David — user profile, setup, working style | 2026-04-28 |
+| `tools/claude-hud.md` | claude-hud statusLine setup quirks (GNU grep `\t` workaround) | 2026-04-28 |
 
 ## Cross-Memory Sync Rule
 

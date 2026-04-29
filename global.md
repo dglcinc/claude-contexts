@@ -65,6 +65,7 @@ Project MEMORY.md and this index are auto-injected before each tool call via Pre
 
 Topic files:
 - ~/.claude/memory/general.md — cross-project conventions and preferences
+- ~/.claude/memory/tools/claude-hud.md — claude-hud statusLine setup quirks (GNU grep `\t` workaround)
 
 ## Global Memory Reference Rule
 
