@@ -95,6 +95,67 @@ else
   echo "Added:     PreToolUse memory hook to settings.json"
 fi
 
+# --- macOS sandbox config + sandbox-bypass hook ---
+# Skipped on non-Darwin (Pi). Keeps sandbox.excludedCommands in sync with the
+# pre-tool-sandbox-bypass hook so reflexive `dangerouslyDisableSandbox: true`
+# on already-excluded commands (git/ssh/docker/gh) doesn't trigger an
+# unnecessary permission prompt.
+if [ "$(uname)" = "Darwin" ] && [ -f "$SETTINGS" ] && command -v jq >/dev/null 2>&1; then
+  EXCLUDED=(git docker ssh gh)
+  if jq -e --argjson want "$(printf '%s\n' "${EXCLUDED[@]}" | jq -R . | jq -s .)" \
+       '($want - (.sandbox.excludedCommands // [])) | length == 0' \
+       "$SETTINGS" >/dev/null 2>&1; then
+    echo "OK:        sandbox.excludedCommands includes ${EXCLUDED[*]}"
+  else
+    tmp=$(mktemp)
+    jq --argjson want "$(printf '%s\n' "${EXCLUDED[@]}" | jq -R . | jq -s .)" '
+      .sandbox //= {}
+      | .sandbox.excludedCommands = ((.sandbox.excludedCommands // []) + $want | unique)
+    ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+    echo "Updated:   sandbox.excludedCommands now includes ${EXCLUDED[*]}"
+  fi
+
+  # Filesystem write allowances. ~/github lets git operate inside any repo
+  # checkout (not just the current cwd) without sandbox-bypass; ds_backup volumes
+  # are Mac mini only and only added if the volume actually exists.
+  for path in "$HOME/github" /Volumes/ds_backup /Volumes/ds_backup_2; do
+    [ -d "$path" ] || continue
+    if jq -e --arg p "$path" '(.sandbox.filesystem.allowWrite // []) | any(. == $p)' "$SETTINGS" >/dev/null 2>&1; then
+      echo "OK:        sandbox.filesystem.allowWrite includes $path"
+    else
+      tmp=$(mktemp)
+      jq --arg p "$path" '
+        .sandbox //= {}
+        | .sandbox.filesystem //= {}
+        | .sandbox.filesystem.allowWrite = ((.sandbox.filesystem.allowWrite // []) + [$p] | unique)
+      ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+      echo "Added:     $path to sandbox.filesystem.allowWrite"
+    fi
+  done
+
+  # PreToolUse Bash hook that denies dangerouslyDisableSandbox for the excluded commands.
+  # Identifies prior versions by marker substring so a regex/message edit auto-replaces.
+  SANDBOX_HOOK_CMD="bash ~/.claude/hooks/pre-tool-sandbox-bypass.sh"
+  SANDBOX_MARKER="pre-tool-sandbox-bypass.sh"
+  if jq -e --arg cmd "$SANDBOX_HOOK_CMD" \
+       '[.hooks.PreToolUse[]?.hooks[]?.command] | any(. == $cmd)' \
+       "$SETTINGS" >/dev/null 2>&1; then
+    echo "OK:        PreToolUse Bash sandbox-bypass hook already configured"
+  else
+    tmp=$(mktemp)
+    jq --arg cmd "$SANDBOX_HOOK_CMD" --arg marker "$SANDBOX_MARKER" '
+      .hooks //= {}
+      | .hooks.PreToolUse //= []
+      | .hooks.PreToolUse |= (
+          map(.hooks = ((.hooks // []) | map(select((.command // "") | contains($marker) | not))))
+          | map(select((.hooks // []) | length > 0))
+        )
+      | .hooks.PreToolUse += [{matcher:"Bash",hooks:[{type:"command",command:$cmd}]}]
+    ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+    echo "Added:     PreToolUse Bash sandbox-bypass hook to settings.json"
+  fi
+fi
+
 echo ""
 echo "Setup complete."
 echo "Open ~/github as a vault in Obsidian."
