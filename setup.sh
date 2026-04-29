@@ -63,6 +63,38 @@ if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "armv7l" ]; then
   link_or_repair "$SCRIPT_DIR/pi-CLAUDE.md" "$HOME/CLAUDE.md"
 fi
 
+# --- Global memory directory ---
+# Cross-project memory (memory.md index, general.md conventions, tools/, domain/).
+# Symlinked so edits sync across machines via git.
+link_or_repair "$SCRIPT_DIR/memory" "$HOME/.claude/memory"
+
+# --- PreToolUse memory hook ---
+# Auto-injects project MEMORY.md and the global index on the first tool call per session.
+link_or_repair "$SCRIPT_DIR/hooks" "$HOME/.claude/hooks"
+
+# --- settings.json hook registration ---
+# settings.json is per-machine (statusLine, plugin list differ), so we can't symlink it.
+# Instead, idempotently merge the PreToolUse hook block. Requires jq.
+SETTINGS="$HOME/.claude/settings.json"
+HOOK_CMD="bash ~/.claude/hooks/pre-tool-memory.sh"
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARNING:   jq not found — cannot merge hook into settings.json."
+  echo "           Install jq (brew install jq / apt install jq) and re-run."
+elif [ ! -f "$SETTINGS" ]; then
+  echo "WARNING:   $SETTINGS does not exist — start Claude Code once to create it,"
+  echo "           then re-run this script."
+elif jq -e --arg cmd "$HOOK_CMD" '[.hooks.PreToolUse[]?.hooks[]?.command] | any(. == $cmd)' "$SETTINGS" >/dev/null 2>&1; then
+  echo "OK:        settings.json PreToolUse memory hook already configured"
+else
+  tmp=$(mktemp)
+  jq --arg cmd "$HOOK_CMD" '
+    .hooks //= {}
+    | .hooks.PreToolUse //= []
+    | .hooks.PreToolUse += [{matcher:"*",hooks:[{type:"command",command:$cmd,timeout:5}]}]
+  ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "Added:     PreToolUse memory hook to settings.json"
+fi
+
 echo ""
 echo "Setup complete."
 echo "Open ~/github as a vault in Obsidian."

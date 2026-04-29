@@ -36,8 +36,16 @@ For each memory file, determine the appropriate destination using these rules:
 | **Stay local** (no promotion) | Machine-specific info: local IP addresses, SSH config, Pi-only commands, paths that differ per machine |
 | **OneDrive** (`~/OneDrive - DGLC/Claude/CLAUDE.md`) | Sensitive info: personal names, private hostnames, credentials, anything that should not be on GitHub |
 | **Project CLAUDE.md** (`~/github/<project>/CLAUDE.md`) | Project-specific knowledge safe for GitHub: workflow quirks, architecture decisions, key file locations, deployment commands using public hostnames |
+| **Global Memory — `~/.claude/memory/general.md`** | Cross-project conventions and preferences: date formats, naming patterns, workflow style — facts about how the user works, not rules Claude must follow |
+| **Global Memory — `~/.claude/memory/user.md`** | User profile, setup, working style — who the user is, their devices, their preferences |
+| **Global Memory — `~/.claude/memory/tools/{tool}.md`** | Tool-specific config, CLI patterns, workarounds — one file per tool (e.g. `tools/jq.md`, `tools/gh.md`) |
+| **Global Memory — `~/.claude/memory/domain/{name}.md`** | Domain knowledge accumulating toward eventual plugin promotion (e.g. HVAC monitoring, bowling-league scoring rules) — staging area, see lifecycle below |
 | **claude-contexts CLAUDE.md** (`~/github/claude-contexts/CLAUDE.md`) | Cross-project workflow rules specific to this toolchain: context loading, MCP setup, tool quirks |
-| **global.md** (`~/github/claude-contexts/global.md`) | Truly global preferences: working style, PR conventions, content perimeter rules — anything that should apply on every machine and every project |
+| **global.md** (`~/github/claude-contexts/global.md`) | Truly global preferences expressed as **rules Claude must follow**: working style, PR conventions, content perimeter rules |
+
+**Memory vs rules — which tier?** If the content is a *fact about the user or their setup*, it belongs in Global Memory (general.md / user.md / tools/ / domain/). If it's *a rule Claude must apply*, it belongs in global.md or a project CLAUDE.md. Same content can drive both — the rule goes in CLAUDE.md, the underlying fact in memory.
+
+**Domain Knowledge Lifecycle:** content in `~/.claude/memory/domain/{name}.md` is staging. When a domain matures enough to package, the next promotion step is a plugin/skill — at that point the memory file becomes a one-line pointer to the plugin and the body lives in the plugin repo. This step is out of scope for routine `/promote-memories` runs; flag the candidate to the user instead of attempting the plugin promotion automatically.
 
 **Sensitivity check** — mark a memory as sensitive (→ OneDrive) if it contains:
 - Personal names (people's real names, not generic role references)
