@@ -1,6 +1,6 @@
 ---
 name: save-context
-description: Save current session state before clearing or switching projects. Updates memory, CLAUDE.md files, and commits changes. Also triggered by "save context" or "wrap". Always run before /clear. Accepts an optional project name argument (e.g. /save-context claude-contexts) to save to a different context than the one launched with.
+description: Save current session state before clearing or switching projects. Updates memory, CLAUDE.md files, and commits changes. Also triggered by "save context" or "wrap". Always run before /clear. Accepts an optional project name argument (full or unambiguous partial — e.g. /save-context claude resolves to claude-contexts) to save to a different context than the one launched with.
 ---
 
 # /save-context
@@ -9,14 +9,39 @@ Save everything before clearing or switching projects. Run this, then type `/cle
 
 Usage: `/save-context [project-name]`
 
-If a project name is passed as an argument (available as `$ARGS`), use that as the target context instead of auto-detecting from loaded CLAUDE.md files. This is useful when you've been doing work relevant to a different project than the one you launched with.
+If a project name is passed as an argument (available as `$ARGS`), use that as the target context instead of auto-detecting from loaded CLAUDE.md files. The argument may be a full directory name (e.g. `bowling-league-tracker`) or any unambiguous partial of one (e.g. `bowling`, `nas`, `claude`). This is useful when you've been doing work relevant to a different project than the one you launched with.
 
 ## Steps
 
 ### 1. Identify the active project
-If `$ARGS` is non-empty, use that value as the project name (e.g. `/save-context claude-contexts` → project = `claude-contexts`). Otherwise, look at what CLAUDE.md files were loaded this session. The project name is the repo subdirectory under `~/github/` (e.g. `bowling-league-tracker`). If no project was set, skip to step 6.
 
-When using an argument-supplied project name, confirm with the user: "Saving to context **`<project>`** (overriding the launched context). Continue?"
+If `$ARGS` is empty, look at what CLAUDE.md files were loaded this session. The project name is the repo subdirectory under `~/github/` (e.g. `bowling-league-tracker`). If no project was set, skip to step 6.
+
+If `$ARGS` is non-empty, the argument may be partial. Resolve it to a full project name before proceeding.
+
+```bash
+ARG="$ARGS"
+# Candidate set: directories under ~/github/ and ~/github/claude-contexts/
+# (excluding claude-contexts itself, which is the infrastructure repo)
+CANDIDATES=$(
+  { ls -1 ~/github/ 2>/dev/null; ls -1 ~/github/claude-contexts/ 2>/dev/null; } \
+    | grep -v '^claude-contexts$' \
+    | sort -u
+)
+# Match rules, in order:
+# 1. Exact match (case-insensitive) → use it.
+# 2. Prefix match (case-insensitive) → if exactly one, use it.
+# 3. Substring match (case-insensitive) → if exactly one, use it.
+MATCHES=$(echo "$CANDIDATES" | grep -i -- "$ARG")
+```
+
+Decision:
+- **Exact match** (case-insensitive) on a directory name: use it, preserving the on-disk casing.
+- **Single prefix or substring match**: use it, and surface the autocomplete in the confirmation prompt (e.g. "Resolved `claude` → `claude-contexts`").
+- **Multiple matches**: do not guess. Use `AskUserQuestion` to present the matches and let the user pick. Then proceed with the chosen name.
+- **No matches anywhere locally**: stop and ask the user. Save-context writes to an existing project's state — a no-match argument is almost always a typo, and silently falling through would scatter session-state files into nonexistent project memory dirs. Show the candidate set and ask the user to retry with a real name (or confirm they really want to create a new one).
+
+After resolving, confirm with the user: "Saving to context **`<resolved-project>`** (overriding the launched context). Continue?" If the argument was partial, include the autocomplete in the prompt.
 
 ### 2. Check git state
 ```bash
