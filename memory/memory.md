@@ -7,7 +7,7 @@ Read this file at session start. Load specific topic files only when relevant.
 | `general.md` | Cross-project conventions and preferences | 2026-04-28 |
 | `user.md` | David — user profile, setup, working style | 2026-04-28 |
 | `tools/claude-hud.md` | claude-hud statusLine setup quirks (GNU grep `\t` workaround) | 2026-04-28 |
-| `tools/gh.md` | gh CLI: rebuild with CGO_ENABLED=0 to bypass macOS Security.framework TLS bug (OSStatus -26276) | 2026-04-29 |
+| `tools/gh.md` | macOS Security.framework TLS bug (OSStatus -26276): rebuild gh with CGO_ENABLED=0; git-lfs hits the same bug on push, fix via per-remote `lfs.locksverify=false` | 2026-04-29 |
 
 ## Cross-Memory Sync Rule
 

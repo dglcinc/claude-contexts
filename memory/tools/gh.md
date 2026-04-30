@@ -49,3 +49,25 @@ gh auth login --hostname github.com --with-token --insecure-storage \
 ## Network context
 
 This Mac runs Claude Code's session proxy at `http://localhost:<ephemeral>` (set as `HTTPS_PROXY` in the env). It's a passthrough proxy — `openssl s_client -proxy` through it sees the real GitHub Sectigo cert. So the proxy is *not* the source of the TLS failure; only Go's cgo cert path is.
+
+## Related: git-lfs hits the same bug on `git push`
+
+Homebrew's `git-lfs` is also cgo-built, so even though `git push` itself uses the OpenSSL path that works, the LFS pre-push hook runs `git-lfs pre-push` which calls `https://<remote>/info/lfs/locks/verify` through the same broken Security.framework cert path. Symptom on push:
+
+```
+Remote "origin" does not support the Git LFS locking API. Consider disabling it with:
+  $ git config lfs.https://.../info/lfs.locksverify false
+Post "https://.../info/lfs/locks/verify": tls: failed to verify certificate: x509: OSStatus -26276
+error: failed to push some refs to '...'
+```
+
+For repos that don't actually use LFS (most of them — the LFS hook is global once `git lfs install` is run), the targeted fix is to disable lock verification per remote:
+
+```
+[lfs "https://github.com/<owner>/<repo>.git/info/lfs"]
+	locksverify = false
+```
+
+**Don't try `git config lfs.<url>.locksverify false`** in a Claude Code session — writes to `.git/config` and `~/.gitconfig` fail with `Operation not permitted` even though git is in `sandbox.excludedCommands`. Edit `.git/config` directly with the Edit tool instead.
+
+The full fix would be to rebuild git-lfs with `CGO_ENABLED=0` like gh, but the per-remote config workaround is enough for repos that don't push LFS objects.
