@@ -9,9 +9,37 @@ Load full context for a project. Usage: `/set-context <project-name>`
 
 ## Input
 
-The argument is the repo directory name under `~/github/` (e.g. `bowling-league-tracker`). If no argument was given, ask for it before proceeding.
+The argument is the repo directory name under `~/github/` (e.g. `bowling-league-tracker`), or any unambiguous partial of one (e.g. `bowling`, `nas`). If no argument was given, ask for it before proceeding.
 
 ## Steps
+
+### 0. Resolve the project name
+
+The argument may be partial. Resolve it to a full project name before doing anything else.
+
+```bash
+ARG="<argument>"
+# Candidate set: directories under ~/github/ and ~/github/claude-contexts/
+# (excluding claude-contexts itself, which is the infrastructure repo)
+CANDIDATES=$(
+  { ls -1 ~/github/ 2>/dev/null; ls -1 ~/github/claude-contexts/ 2>/dev/null; } \
+    | grep -v '^claude-contexts$' \
+    | sort -u
+)
+# Match rules, in order:
+# 1. Exact match (case-insensitive) → use it.
+# 2. Prefix match (case-insensitive) → if exactly one, use it.
+# 3. Substring match (case-insensitive) → if exactly one, use it.
+MATCHES=$(echo "$CANDIDATES" | grep -i -- "$ARG")
+```
+
+Decision:
+- **Exact match** (case-insensitive) on a directory name: use it silently, preserving the on-disk casing.
+- **Single prefix or substring match**: use it, and note the autocomplete in the summary (e.g. "Resolved `bowling` → `bowling-league-tracker`").
+- **Multiple matches**: do not guess. Use `AskUserQuestion` to present the matches and let the user pick. Then proceed with the chosen name.
+- **No matches anywhere locally**: treat the argument as a literal repo name. It may be a fresh clone — step 5 will handle that. Mention in the summary that no local match was found, so a typo doesn't silently produce a wrong clone.
+
+Use the resolved name in place of `<project>` everywhere below.
 
 ### 1. Pull claude-contexts
 ```bash
