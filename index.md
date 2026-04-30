@@ -21,7 +21,7 @@ Central navigation for all active projects. The vault root is `~/github/` — ev
 
 - **Mac Mini** `utilityserver@10.0.0.84` — hosts bowling app (gunicorn), mlb.dglc.com
 - **Raspberry Pi** `pi@10.0.0.82` — nginx TLS proxy for mlb.dglc.com, pivac HVAC monitoring, Grafana
-- **MacBook** — primary development machine
+- **MacBook** `david@10.0.0.109` — primary development machine
 - **GitHub** account: `dglcinc`
 
 ## Archived / Dormant
