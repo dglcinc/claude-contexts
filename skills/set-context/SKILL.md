@@ -19,11 +19,12 @@ The argument may be partial. Resolve it to a full project name before doing anyt
 
 ```bash
 ARG="<argument>"
-# Candidate set: directories under ~/github/ and ~/github/claude-contexts/
-# (excluding claude-contexts itself, which is the infrastructure repo)
+# Candidate set: directories under ~/github/ and ~/github/claude-contexts/.
+# claude-contexts itself is included — it's a valid target (e.g. `/set-context claude`
+# resolves to claude-contexts). The steps below are no-ops or harmless redundancy when
+# the target is claude-contexts itself.
 CANDIDATES=$(
   { ls -1 ~/github/ 2>/dev/null; ls -1 ~/github/claude-contexts/ 2>/dev/null; } \
-    | grep -v '^claude-contexts$' \
     | sort -u
 )
 # Match rules, in order:
