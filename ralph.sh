@@ -32,7 +32,7 @@ work from its summary. Don't read large files or grep widely yourself
 unless the target is already known.
 
 Follow the loop rules at the bottom of PLAN.md. When the task is done
-(PR opened, box checked, PLAN.md committed to main), stop. If no
+(PR opened, box checked in PLAN.md per that file's rules), stop. If no
 unchecked tasks remain, say "DONE" and stop. Don't ask questions —
 make the call yourself and note the decision in the PR description.
 EOF
