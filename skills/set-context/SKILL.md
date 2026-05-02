@@ -79,7 +79,7 @@ If the file exists, read it — last session's branch, open PRs, next steps, and
 
 Check whether `~/github/<project>/` exists.
 
-- **If it exists**: run `git pull` in `~/github/<project>/` with `dangerouslyDisableSandbox: true`.
+- **If it exists**: run `git pull` in `~/github/<project>/`.
 - **If it does not exist**: clone it. The token lives at `~/OneDrive - DGLC/Claude/.github-token`:
   ```bash
   TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token)
