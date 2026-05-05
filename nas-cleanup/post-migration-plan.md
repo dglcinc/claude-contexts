@@ -152,11 +152,19 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
    - Format detected (iPhoto / Photos.app / migrated)
    - Originals path layout (dated `Masters/YYYY/MM/DD/` vs hash-bucketed `originals/<HH>/<UUID>`)
    - Edits storage (iPhoto: `Modified/<path>.jpg` real files; Photos.app: rendered files under `resources/renders/<HH>/` paired with `.AAE` adjustment plists or DB rows)
-   - Whether `originals/` looks complete or has iCloud-only placeholders (any photos in DB with no local file → flag, those won't extract without re-syncing iCloud first)
+   - **iCloud-only count** — photos with a `Photos.sqlite` record but no local file at the expected path, or local file <100 KB when expected size is megabytes. These were optimized to placeholders; full quality lives in iCloud.
    - Live Photos pairing detected (`.HEIC`/`.JPG` + matching-basename `.MOV`)
    - Album count, photo count, **multi-album photo count** (photos in 2+ albums)
-   - Sample paths: 5 originals, 5 edits, 5 multi-album photos
-   - Pause for user review before continuing.
+   - HEIC vs JPG breakdown
+   - Sample paths: 5 originals, 5 edits, 5 multi-album, 5 iCloud-only (if any)
+   - SQLite opened read-only with `?mode=ro&immutable=1` flags.
+   - **Pauses for user review** with three iCloud-handling options (the user picks based on the actual count):
+     - **(a) Re-sync from iCloud first** — sign in on a Mac, wait for download, then restart migration. Best for full quality if the iCloud-only count is significant.
+     - **(b) Extract whatever's local, tag as low-resolution** — proceeds with what's on disk; iCloud-only items are extracted as placeholders into `photos/low-resolution/` and flagged in `album_map.csv`.
+     - **(c) Skip iCloud-only assets entirely** — only full-quality photos make it into the curated layout; iCloud-only items are listed in `cleanup_photos_iclond_skipped.md` for the audit trail.
+   - Recommended default by count: <1% → (c) is fine, 1–20% → (b), >20% → (a) is worth the wait. User confirms.
+
+   **Things explicitly NOT extracted** (no flag, no review): slideshows/books/cards/calendar projects, AAE adjustment plists, Faces/People tags, Memories. All metadata-only constructs that don't translate to files.
 
 2. **Locate sources** — every `*.photoslibrary`, `*.migratedphotolibrary`, `iPhoto_Library*`, plus loose photo dirs from inventory.
 
@@ -446,6 +454,8 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - **Bursts kept as-is** — all frames survive dedup; thinning is a deferred separate operation.
 - **Non-camera-EXIF photos** (screenshots, scans, web, AirDropped no-EXIF) → lump into `david/images/<YYYY>/<filename>`. Spot-check via `cleanup_photos_no_exif.md`.
 - **Re-import caveat documented**: re-importing into a new Photos.app library doesn't auto-restore album associations; `album_map.csv` is the recovery path for script-based reconstruction.
+- **iCloud handling**: spike detects iCloud-only placeholders, pauses for user decision (re-sync / low-res-tag / skip). Decision is data-driven — depends on the actual placeholder count.
+- **Drop without review:** slideshows, photo books, cards, calendar projects, AAE adjustment plists, Faces/People, Memories.
 
 **Phase 10 (promote):**
 - btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
