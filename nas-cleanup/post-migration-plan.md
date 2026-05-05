@@ -147,28 +147,70 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 **Why:** 674 GB across three overlapping `.photoslibrary`/iPhoto libraries plus loose photo dirs. User wants originals + edits, no application exhaust, organized by date and album where possible.
 
 **Actions:**
-1. **Locate sources** — every `*.photoslibrary`, `*.migratedphotolibrary`, `iPhoto_Library*`, plus loose photo dirs from inventory
-2. **Per library, extract:**
-   - **Originals** from `Masters/` (iPhoto-era, dated path: `Masters/YYYY/MM/DD/`) and `originals/` (Photos.app-era, hash-bucketed paths)
-   - **Edits** — iPhoto stores in `Modified/`; Photos.app stores rendered edit output under `resources/renders/` or `resources/modelresources/` (paired with adjustment XMPs). **Need spike at start of phase to confirm structure on the actual libraries** before automating.
-   - **Album metadata** — iPhoto: parse `AlbumData.xml` for album → photo associations. Photos.app: read `Photos.sqlite` (read-only) for `ZGENERICALBUM` joins.
-3. **Discard everything else** — Database/, Thumbnails/, resources/proxies/, faces/, ML caches, iCloud sync state. Same intent as the rsync exclude set, applied as a delete after extraction
-4. **Hash-dedup originals** — SHA-256 across all extracted originals. Largest-source wins (most likely canonical). Edits keyed to their original — if original is a duplicate of one in another library, the edit version follows the original's "winner" placement.
-5. **Internet-downloaded heuristic** — files with no camera EXIF (no `Make`/`Model` tags) AND filename matching common web patterns (`image-N.jpg`, `IMG_N.jpg` without camera EXIF, `download-N.png`, etc.) → routed to `david/images/` instead of `photos/`. **Heuristic is fuzzy; emit a `cleanup_photos_web_candidates.md` for user spot-check before final placement.**
-6. **Place winners** at:
-   - `photos/<YYYY>/<YYYY-MM-DD>[ — <Album>]/filename.ext` (date from EXIF `DateTimeOriginal`, fallback to file mtime)
-   - Edits placed alongside the original with `_edit` suffix or in an `edits/` sibling — TBD after the spike in step 2
-   - Web candidates → `david/images/<YYYY>/filename.ext`
+
+1. **Spike first** (`photoslibrary_inspect.py`) — run-once probe before any extraction. For each detected library, sample structure and report to `cleanup_photos_spike.md`:
+   - Format detected (iPhoto / Photos.app / migrated)
+   - Originals path layout (dated `Masters/YYYY/MM/DD/` vs hash-bucketed `originals/<HH>/<UUID>`)
+   - Edits storage (iPhoto: `Modified/<path>.jpg` real files; Photos.app: rendered files under `resources/renders/<HH>/` paired with `.AAE` adjustment plists or DB rows)
+   - Whether `originals/` looks complete or has iCloud-only placeholders (any photos in DB with no local file → flag, those won't extract without re-syncing iCloud first)
+   - Live Photos pairing detected (`.HEIC`/`.JPG` + matching-basename `.MOV`)
+   - Album count, photo count, **multi-album photo count** (photos in 2+ albums)
+   - Sample paths: 5 originals, 5 edits, 5 multi-album photos
+   - Pause for user review before continuing.
+
+2. **Locate sources** — every `*.photoslibrary`, `*.migratedphotolibrary`, `iPhoto_Library*`, plus loose photo dirs from inventory.
+
+3. **Per library, extract:**
+   - **Originals**: iPhoto `Masters/YYYY/MM/DD/<filename>.jpg` (dated paths) or Photos.app `originals/<HH>/<UUID>.<ext>` (hash-bucketed by UUID).
+   - **Edits**: iPhoto `Modified/YYYY/MM/DD/<filename>.jpg` (real JPEG, copy operation). Photos.app: join `ZASSET.ZUUID` to rendered file at `resources/renders/<HH>/<UUID>.<ext>`. Pair each edit with its original.
+   - **Album metadata**: iPhoto `AlbumData.xml`; Photos.app `database/Photos.sqlite` (`ZGENERICALBUM` joined `ZASSETALBUM` joined `ZASSET`). Read-only access.
+   - **Live Photos pairs**: `.HEIC` or `.JPG` + `.MOV` with matching UUID/basename → travel together as a unit; placed alongside each other at the same destination path.
+   - **HEIC kept as-is** — no auto-conversion to JPG. Modern Apple tooling reads them; preserved-data archive doesn't need universal compatibility.
+
+4. **Discard application exhaust** — `Database/`, `Thumbnails/`, `resources/proxies/`, `resources/derivatives/`, `resources/modelresources/`, faces/ML caches, iCloud sync state. Same intent as the rsync exclude set, applied as a non-extraction (we just don't copy them; SSDs are unchanged).
+
+5. **Hash-dedup originals** — SHA-256 across all extracted originals. Largest-source wins (most likely canonical). Edits keyed to their original — if original is a duplicate of one in another library, the edit follows the original's winner placement. Burst photos (`IMG_1234_001.jpg`, `IMG_1234_002.jpg`, ...) are byte-distinct and all survive — no thinning.
+
+6. **Non-camera split (lump-and-defer)** — any file without camera-make/model EXIF gets routed to `david/images/<YYYY>/<filename>` regardless of subtype (screenshots, scans, web downloads, AirDropped photos with stripped EXIF, etc.). Single bucket, user reorganizes later if desired. Emit `cleanup_photos_no_exif.md` so user can spot-check the split.
+
+7. **Date resolution chain** (in order; first hit wins):
+   1. EXIF `DateTimeOriginal`
+   2. EXIF `DateTimeDigitized`
+   3. Filename date pattern (`IMG_20180615_*`, `2018-06-15-*`, `IMG-20180615*`, etc.)
+   4. Parent dir if date-shaped (iPhoto `Masters/2018/06/15/`)
+   5. File mtime (last resort because rsync rewrites it)
+   6. None → `photos/unknown-date/<filename>`
+
+8. **Album resolution** — each photo can be in 0, 1, or many albums in source. Placement strategy: **largest-album wins** for the visible directory; full membership preserved in a sidecar manifest (see step 9). Photos in 0 albums → date dir only.
+
+9. **Album manifest** — emit `photos/album_map.csv` with one row per photo:
+   ```
+   path, original_uuid, all_albums
+   2018/2018-06-15 — Family Trips/IMG_1234.jpg, AB12CD34-..., "Family Trips|Hawaii 2018|2018 highlights"
+   ```
+   Allows reconstruction of any album later via grep/scripting. Lossless metadata preservation without symlinks/hardlinks (which DSM/SMB handle inconsistently).
+
+10. **Place winners**:
+    - `photos/<YYYY>/<YYYY-MM-DD>[ — <Album>]/<filename>.<ext>` (largest album in name; bare date dir if no album)
+    - Edits sidecar with original: `IMG_1234.jpg` (original) + `IMG_1234_edit.jpg` (1st edit) + `IMG_1234_edit2.jpg` (2nd edit if any) at the same dir level
+    - Live Photos: `IMG_1234.HEIC` + `IMG_1234.MOV` together
+    - Non-camera-EXIF files → `david/images/<YYYY>/<filename>.<ext>`
 
 **Critical files:**
 - `post_migration/photos_curate.sh` (new) — orchestrator
 - `post_migration/photos_curate.py` (new) — does the work
-- `post_migration/photoslibrary_inspect.py` (new, run-once spike) — sample structure of each library before automation
+- `post_migration/photoslibrary_inspect.py` (new, run-once spike) — pre-extraction probe; pauses for user review before Phase 4 proper runs
+
+**Output reports:**
+- `cleanup_photos_spike.md` — spike output, reviewed before extraction
+- `cleanup_photos_no_exif.md` — files routed to `david/images/`, for spot-check
+- `photos/album_map.csv` — full multi-album-membership manifest, lives in the curated layout permanently
 
 **Caveats** (documented in dry-run output):
-- Byte-identical dedup only — re-encoded duplicates (re-saved JPEG at different quality) look identical to a human but differ to SHA-256
-- Album metadata extraction may be incomplete for libraries with corrupted `AlbumData.xml` / `Photos.sqlite`
-- The web/camera split is heuristic — anything ambiguous goes in the spot-check report
+- Byte-identical dedup only — re-encoded duplicates (re-saved JPEG at different quality) look identical to humans but differ to SHA-256.
+- Album metadata extraction may be incomplete for libraries with corrupted `AlbumData.xml` / `Photos.sqlite`.
+- Re-importing the curated layout into a new Photos.app library will not auto-restore album associations regardless of how the layout is structured — Photos.app reads metadata, not paths. The `album_map.csv` is the recovery path if you ever want to script-rebuild album organization.
+- iCloud-only photos (in DB but not on disk) will not be extracted — flagged by the spike. Re-syncing iCloud first is a manual prerequisite.
 
 ### Phase 5 — Videos: sort
 
@@ -356,7 +398,7 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 - **Phase 1**: user approves the classification map. No mutation, no verification needed.
 - **Phase 2**: `ls /volume1/staging/{music,photos,movies,documents,david,mmc}` returns six empty dirs.
 - **Phase 3**: spot-check 10 random tracks (playable, correct tags); track count in `staging/music/` matches the dedup CSV's "kept" count.
-- **Phase 4**: spot-check 10 random photos (readable, EXIF preserved); web-candidate spot-check passes user review; album organization sanity check on a known album.
+- **Phase 4**: spike output reviewed and acknowledged before extraction; spot-check 10 random photos (readable, EXIF preserved); spot-check 5 multi-album photos (confirmed in `album_map.csv`); spot-check 5 Live Photos pairs (`.HEIC`+`.MOV` together); spot-check 5 photos in `david/images/`; album-organization sanity check on a known album.
 - **Phase 5**: every project bundle is intact (open in iMovie/FCP if curious); standalone count matches expectation.
 - **Phase 6**: file count under `staging/documents/` ≈ classifier's `document` count; spot-check folder structure preservation.
 - **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's web-candidate set after user review.
@@ -393,6 +435,18 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - **Low-bitrate:** `<128 kbps` dropped automatically; `=128 kbps` reviewed in `cleanup_music_lowbitrate.md`.
 - **Local tags only** — no MusicBrainz/AcoustID lookup.
 
+**Phase 4 (photos):**
+- **Spike first** (`photoslibrary_inspect.py`) — pre-extraction probe per library; reviewed before Phase 4 proper runs.
+- **Date scheme:** `photos/<YYYY>/<YYYY-MM-DD>[ — <Album>]/<filename>`.
+- **Date fallback chain:** EXIF DateTimeOriginal → DateTimeDigitized → filename pattern → date-shaped parent dir → file mtime → `photos/unknown-date/`.
+- **Edits:** sidecar pattern with `_edit` suffix at the same dir level (`IMG_1234.jpg` + `IMG_1234_edit.jpg`).
+- **Albums:** largest-album wins for the path; full multi-album membership preserved in `photos/album_map.csv`.
+- **Live Photos:** `.HEIC`/`.JPG` + paired `.MOV` placed together at the same destination.
+- **HEIC kept as-is** — no auto-conversion.
+- **Bursts kept as-is** — all frames survive dedup; thinning is a deferred separate operation.
+- **Non-camera-EXIF photos** (screenshots, scans, web, AirDropped no-EXIF) → lump into `david/images/<YYYY>/<filename>`. Spot-check via `cleanup_photos_no_exif.md`.
+- **Re-import caveat documented**: re-importing into a new Photos.app library doesn't auto-restore album associations; `album_map.csv` is the recovery path for script-based reconstruction.
+
 **Phase 10 (promote):**
 - btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
 
@@ -400,14 +454,12 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 
 ## Open questions for the user
 
-None gate Phase 1 (inventory) or Phase 2 (scaffold). Resolve before the listed phase:
+None gate Phase 1–4. Resolve before the listed phase:
 
-1. **Photo edits format** *(gates Phase 4)* — for `*.photoslibrary` (Photos.app era), edits aren't stored as a separate JPEG; they're rendered output paired with adjustment XMP-like sidecars under `resources/`. Plan: spike at start of Phase 4 to confirm. Acceptable?
-2. **App-data scope** *(gates Phase 7)* — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
-3. **Documents dedup** *(gates Phase 6)* — preserve folder structure verbatim (default), or also hash-dedup across the documents tree? Path context vs. disk savings.
-4. **Web-photo heuristic threshold** *(gates Phase 4)* — false-positive risk. Default: anything without camera EXIF gets flagged for review. Acceptable?
-5. **DS1512+ decommission timing** *(gates Phase 11)* — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
-6. **Phase 11 reconciliation strictness** *(gates Phase 11)* — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
+1. **App-data scope** *(gates Phase 7)* — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
+2. **Documents dedup** *(gates Phase 6)* — preserve folder structure verbatim (default), or also hash-dedup across the documents tree? Path context vs. disk savings.
+3. **DS1512+ decommission timing** *(gates Phase 11)* — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
+4. **Phase 11 reconciliation strictness** *(gates Phase 11)* — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
 
 ## Out of scope (deferred)
 
