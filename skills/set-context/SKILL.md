@@ -43,10 +43,19 @@ Decision:
 Use the resolved name in place of `<project>` everywhere below.
 
 ### 1. Pull claude-contexts
+
 ```bash
-git -C ~/github/claude-contexts pull
+git -C ~/github/claude-contexts fetch origin
+git -C ~/github/claude-contexts status -sb
 ```
-This updates `global.md`, `pi-CLAUDE.md`, and all skills in place via their symlinks — no restart needed.
+
+Then decide based on what `status -sb` shows:
+- **On `main`, clean tree, behind origin**: run `git -C ~/github/claude-contexts pull --ff-only`.
+- **On `main`, clean tree, up to date**: nothing to do.
+- **On `main`, dirty tree**: do not pull. Note in the summary that local changes are blocking the pull (show the affected paths). Common case: machine-local UI config like `.obsidian/app.json` — harmless but noisy.
+- **On any non-`main` branch**: do not pull. Note the current branch in the summary; the user is mid-edit on the contexts repo and the skill should not interfere.
+
+Pulling updates `global.md`, `pi-CLAUDE.md`, and all skills in place via their symlinks — no restart needed.
 
 If this is the first time using this machine after the memory system was added, also run `~/github/claude-contexts/setup.sh` once to install the memory symlinks (`~/.claude/memory`, `~/.claude/hooks`) and merge the PreToolUse hook block into `~/.claude/settings.json`. Idempotent — safe to re-run any time. Requires `jq`.
 
@@ -79,7 +88,18 @@ If the file exists, read it — last session's branch, open PRs, next steps, and
 
 Check whether `~/github/<project>/` exists.
 
-- **If it exists**: run `git pull` in `~/github/<project>/`.
+- **If it exists**: fetch first, then decide whether to pull based on branch state.
+  ```bash
+  git -C ~/github/<project> fetch origin
+  git -C ~/github/<project> status -sb
+  ```
+  - **On a tracked branch (e.g. `main`), clean tree, behind upstream**: run `git -C ~/github/<project> pull --ff-only`.
+  - **On a tracked branch, clean tree, up to date**: nothing to do.
+  - **On a tracked branch, dirty tree**: skip pull, report the dirty paths.
+  - **On a feature branch with no upstream** (e.g. `retry-until-success` mid-PR): do not pull. A bare `git pull` would fail with "no tracking information for the current branch", and even with an upstream we don't want to interfere with in-progress work. Report current branch + commits-ahead-of-`origin/main` in the summary so the user knows where they are.
+
+  In all cases note in the summary which path was taken (pulled / skipped because dirty / skipped because feature branch / already current).
+
 - **If it does not exist**: clone it. The token lives at `~/OneDrive - DGLC/Claude/.github-token`:
   ```bash
   TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token)
@@ -87,7 +107,7 @@ Check whether `~/github/<project>/` exists.
   git -C ~/github/<project> config user.email "dglcinc@users.noreply.github.com"
   git -C ~/github/<project> config user.name "David Lewis"
   ```
-  If the clone fails (repo doesn't exist on GitHub, auth error, etc.), surface the error and stop — do not proceed to step 5. Note in the final summary whether the repo was pulled or freshly cloned.
+  If the clone fails (repo doesn't exist on GitHub, auth error, etc.), surface the error and stop — do not proceed to step 6. Note in the final summary whether the repo was pulled or freshly cloned.
 
 ### 6. Read project CLAUDE.md
 
