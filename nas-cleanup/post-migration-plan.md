@@ -459,40 +459,68 @@ Under the "read SSD, write curated layout" strategy, content the user wants to d
 **Sub-phases:**
 
 **11a — Inventory DS1512+** (lightweight)
-- SSH to DS1512+, walk `/volume1/snashome/` and `/volume1/users/` (skip the always-skip patterns: graveyards, NAS-internal, games, app installs)
-- Output a manifest: relative path + size + mtime for every file
-- Use `find` with `-printf` rather than reading file content — readdir-only, fastest possible scan on the degraded array
-- Retry-loop wrapper similar to `nas_backup.sh` (Phase 11a may stall multiple times; tolerate it)
+- SSH to DS1512+, walk `/volume1/snashome/` and `/volume1/users/`. Skip the always-skip patterns: same set as Phase 1's `nas-internal` + `app-install` + `game-install` + `download-dump` + the rsync-exclude graveyards (`Library/Caches`, `photoslibrary/resources`, `Mail/V2/<...>/Attachments` in raw form, etc.).
+- **Read** everything else, including the deferred `users/mmc/Library/` and `users/mmc_OldUserFiles/Library/` (DS1512+-only — Phase 1 inventory didn't see them).
+- Output a manifest: relative path + size + mtime for every file.
+- Use `find -printf` (readdir + stat only, no content read) so even degraded-array Mail trees stall once per dir, not per file.
+- Retry-loop wrapper similar to `nas_backup.sh`'s pattern — tolerates repeated stalls, keeps grinding through.
 
 **11b — Inventory DS225+ curated layout**
-- Same shape: relative path + size + mtime for every file under `/volume1/{music,photos,movies,documents,david,mmc}/`
-- Plus a content fingerprint per file (size + first/last 64KB hash, fast — full SHA-256 only if needed)
+- Same shape: relative path + size + mtime for every file under `/volume1/{music,photos,movies,documents,david,mmc}/`.
+- **Content fingerprint** per file: size + first/last 64KB hash. Fast (skips most of the file). Full SHA-256 only on demand for ambiguous cases.
 
 **11c — Reconcile**
-- For each DS1512+ file: is content equivalent represented in DS225+?
-  - **Same filename + size** → assume match (filename collisions across reorganization are tolerable — we're checking presence, not lineage)
-  - **Different name but matching content fingerprint** → assume match (file was renamed during curation)
-  - **No match** → flag in `cleanup_gaps.md` with size, DS1512+ path, suggested category
-- The `users/mmc/Library/` tree is expected to dominate the gap list (deferred during initial backup)
+- Reconciliation strategy: **fingerprint primary, filename secondary**.
+  - **Fingerprint match** (size + first/last 64KB hash) → match regardless of path. The curated layout's renamed file is recognized as the same content.
+  - **Fingerprint mismatch but same filename** → flag as "possible match" (likely re-saved/re-encoded, not gap) for user review rather than gap.
+  - **No fingerprint or filename match** → genuine gap, flagged in `cleanup_gaps.md`.
+- **Sub-classify each gap**:
+  - `mmc-library` — under DS1512+ `users/mmc/Library/` (deferred during initial backup; expected to dominate)
+  - `mmc_oldUserFiles-library` — under `users/mmc_OldUserFiles/Library/` (also deferred)
+  - `excluded-by-pattern` — under a path that an rsync exclude caught too aggressively
+  - `corrupted-on-ssd` — DS1512+ has the file, SSD copy is missing/zero-bytes/unreadable
+  - `truly-missing` — no obvious explanation
+- Default actions per sub-category (used as defaults in 11d):
+  - `mmc-library` / `mmc_oldUserFiles-library` → fetch and route through Phase 7 sub-flow (app-data classification or skip)
+  - `excluded-by-pattern` → fetch and route per the appropriate phase
+  - `corrupted-on-ssd` → fetch into curated layout with `_recovered` suffix; SSD remains untouched (Hard Guard #1 holds)
+  - `truly-missing` → review per file
 
 **11d — Selective gap-fill**
-- User reviews `cleanup_gaps.md`, marks each entry `[ ] fetch / [ ] skip`
-- Fetch: rsync from DS1512+ → DS225+ staging area (re-using the daemon-mode trick to bypass DS1512+'s SSH AES-NI ceiling), then run the appropriate cleanup phase script on the fetched content to integrate into the curated layout
-- Skip: noted in the manifest as intentionally-not-on-DS225+
+- User reviews `cleanup_gaps.md`, marks each entry `[ ] fetch / [ ] skip` (with default per sub-category).
+- **Fetch path**: daemon-mode rsync from DS1512+ → DS225+ to bypass the Atom D2700's SSH-AES-NI throughput ceiling.
+  - Set up `/etc/rsyncd.conf` on DS1512+ defining a module (e.g., `[snashome]` → `/volume1/snashome`, `[users]` → `/volume1/users`).
+  - Source URI: `rsync://10.0.0.2/snashome/<path>` and `rsync://10.0.0.2/users/<path>`.
+  - Unencrypted but on wired LAN — acceptable per CLAUDE.md.
+  - Daemon stopped post-Phase-11d; not needed for the long-term coexistence.
+- After fetch, route the new content through the appropriate cleanup phase script (Phase 3/4/5/6/7) so it lands in the curated layout consistent with everything else.
+- **Skip**: noted in the manifest as intentionally-not-on-DS225+.
 
-**11e — DS1512+ decommission**
-- After 11d completes and user signs off on the gap-fill outcome:
-  - DS1512+ powered down, drives wiped or repurposed
-  - Final state: DS225+ has the curated layout, SSDs remain as belt-and-suspenders archive
+**11e — Post-verification snapshot**
+- Once 11d completes and the user signs off on the gap-fill outcome:
+  - **Release the pre-promote snapshot** from Phase 10: `btrfs subvolume delete /volume1/.snapshots/volume1-pre-promote-<TS>` (path varies by DSM).
+  - **Take a new baseline snapshot**: `volume1-archive-baseline-<YYYYMMDD>` — captures the "complete and verified" state of the archive. Btrfs copy-on-write means this consumes nearly zero disk; lives forever as a known-good anchor.
+  - **Enable DSM Snapshot Replication** on the curated dirs with a light schedule: weekly, 4-week retention. Catches accidental modifications within a week without significant disk burden.
+
+**11f — DS1512+ decommission** (user-paced, no script-driven decision)
+- DS1512+ shutdown is **at the user's discretion** — no fixed grace period, no auto-shutdown.
+- Drive disposition (wipe + dispose vs. wipe + cold-spare) is also a manual decision post-shutdown.
+- Final state once user decides: DS225+ has the curated layout (with baseline snapshot + replication), SSDs remain as belt-and-suspenders archive, DS1512+ powered down.
 
 **Critical files:**
 - `post_migration/verify_ds1512.sh` (new) — orchestrator running 11a–11c, produces gap report
 - `post_migration/inventory_ds1512.py` (new) — does the manifest walk with retry logic
-- `post_migration/reconcile.py` (new) — DS1512+ vs DS225+ reconciliation
-- `post_migration/gap_fill.sh` (new) — actions the user-marked gap decisions
+- `post_migration/reconcile.py` (new) — DS1512+ vs DS225+ reconciliation; fingerprint primary, filename secondary
+- `post_migration/gap_fill.sh` (new) — actions the user-marked gap decisions; routes fetched content through the appropriate cleanup phase
+- `post_migration/post_verify_snapshot.sh` (new) — releases pre-promote snapshot, takes baseline, configures DSM Snapshot Replication
+
+**Output reports:**
+- `cleanup_gaps.md` — sub-classified gaps with default actions; user-driven fetch/skip decision.
+- `cleanup_gaps_corrupted.md` — `corrupted-on-ssd` sub-category broken out (Hard-Guard-#1-relevant)
 
 **Verification:**
 - After 11d, re-run `verify_ds1512.sh`; expected output: only entries the user explicitly marked `skip`. Anything else means gap-fill missed something.
+- **Final paranoia check**: `verify_ds1512.sh --strict` on a 100-file random sample — full SHA-256 on both sides for those 100. If any mismatch, surface for manual review.
 
 ## Critical files (summary)
 
@@ -553,7 +581,7 @@ Under the "read SSD, write curated layout" strategy, content the user wants to d
 - **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's no-EXIF set; spot-check 5 mbox files (open in Thunderbird or `mutt -f`); review `cleanup_mail_conversion.md` for any raw-fallback mailboxes; review `cleanup_personal_assignment.md` and confirm no user-uid subtrees were left unrouted.
 - **Phase 9**: after applying anomaly decisions, every row in `cleanup_anomalies.md` is either marked `drop` or has a destination under `staging/`. Phase 8's coverage cross-tab now shows zero unhandled fall-throughs. `apply_anomaly_decisions.sh` rerun is a no-op (idempotency check).
 - **Phase 10**: pre-promote sanity-check summary passed; btrfs snapshot exists; `ls /volume1/staging` reports empty (or no longer exists); `ls /volume1/{music,photos,movies,documents,david,mmc}` matches expectation; spot-check 3 random files in each curated dir readable; `cleanup_post_promote_steps.md` generated; DSM indexing confirmed disabled for curated dirs.
-- **Phase 11**: re-run `verify_ds1512.sh` after gap-fill; expected output is only entries the user explicitly marked `skip`. DS1512+ powered down once that holds.
+- **Phase 11**: re-run `verify_ds1512.sh` after gap-fill; expected output is only entries the user explicitly marked `skip`. Strict-mode 100-file sample passes. Pre-promote snapshot released; baseline snapshot taken; DSM Snapshot Replication enabled. DS1512+ shutdown is at user's discretion (no auto-decommission).
 
 Roll-back path for any phase: restore from the SSDs (untouched, read-only throughout the build) or the DS1512+ (until decommissioned). Document SSD-path → DS225+-path mapping so partial restores are easy.
 
@@ -643,14 +671,19 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - Permission re-application reminder included in the post-promote steps doc.
 - Snapshot retention is manual; release with `btrfs subvolume delete` after Phase 11 confirms.
 
+**Phase 11 (verification + gap-fill + decommission):**
+- **Reconciliation strategy**: fingerprint primary (size + first/last 64KB hash) + filename secondary. Default mode for the archive's scale and the degraded array.
+- **Gap sub-classifier**: mmc-library, mmc_oldUserFiles-library, excluded-by-pattern, corrupted-on-ssd, truly-missing — each with a per-category default action.
+- **Corrupted-on-SSD handling**: fetched into curated layout with `_recovered` suffix; SSD never touched (Hard Guard #1 preserved).
+- **Daemon-mode rsync** from DS1512+ for gap-fill (bypasses Atom SSH-AES-NI ceiling). Daemon stopped post-11d.
+- **DS1512+ decommission**: user-paced, no fixed grace period, no auto-shutdown. Drive disposition is a manual decision post-shutdown.
+- **Post-verification snapshot**: release pre-promote snapshot, take new baseline `volume1-archive-baseline-<YYYYMMDD>`, enable DSM Snapshot Replication weekly with 4-week retention.
+
 **Hard Guard #1 reaffirmed:** SSDs are never modified. Build is copy-only from SSD → DS225+. User can clean up SSD sources later, separately.
 
 ## Open questions for the user
 
-None gate Phase 1–7. Two questions remain, both for Phase 11:
-
-1. **DS1512+ decommission timing** *(gates Phase 11)* — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
-2. **Phase 11 reconciliation strictness** *(gates Phase 11)* — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
+All resolved. Plan is fully specified.
 
 ## Out of scope (deferred)
 
