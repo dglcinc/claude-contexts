@@ -92,7 +92,11 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 
 **Actions:**
 - `mkdir -p /volume1/staging/{music,photos,movies,documents,david,mmc}`
-- Set ownership to a single canonical user (per CLAUDE.md, the new NAS uses `admin` or a dedicated user; UID mapping from DS1512+ is not preserved)
+- `chown -R nasadmin:nasadmin /volume1/staging` — single owner during the build. UID mapping from DS1512+ is not preserved.
+- Idempotent: re-running the script reapplies ownership cleanly even if some dirs already exist.
+- Staging is visible at `/volume1/staging/` (no hiding) — single-user operation, easier to debug, Phase 10 removes it anyway.
+
+**Post-build re-permissioning (deferred, optional):** once the curated layout is promoted in Phase 10, ownership/perms can be tightened per-dir without rebuilding — `chown -R` on Synology is metadata-only, takes minutes for a TB-scale tree. Suggested later: `david:dglc 770` for the shared dirs (`music`, `photos`, `movies`, `documents`), `david:dglc 750` for `david/`, `mmc:dglc 750` for `mmc/`. Not blocking; can wait until SMB browsing is set up.
 
 **Critical files:**
 - `post_migration/scaffold.sh` (new) — trivial; could be inlined
@@ -236,13 +240,15 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 **Why:** until now, the curated layout was being built under `/volume1/staging/` to keep Hard Guard #2 (never modify `/volume1/{music,photos,...}` once built) trivially enforceable during the build. After Phase 9 sign-off, staging is promoted to the final layout.
 
 **Actions:**
-- Verify staging matches expectation (rough size, top-level dir count)
+- Verify staging matches expectation (rough size, top-level dir count).
+- **btrfs snapshot** of `/volume1/` immediately before the `mv` — DS225+ runs btrfs, snapshots are instant and metadata-only. Gives a one-command rollback if Phase 10 goes wrong. Synology DSM exposes this via `btrfs subvolume snapshot` (or Snapshot Replication). Suggested name: `volume1-pre-promote-<YYYYMMDD-HHMM>`.
 - `mv /volume1/staging/{music,photos,movies,documents,david,mmc} /volume1/`
-- `rm -rf /volume1/staging` (only if empty)
+- `rm -rf /volume1/staging` (only if empty).
 - From this point on, the curated layout dirs are read-only by convention; reruns of any cleanup phase refuse to write to them.
+- Snapshot can be retained for a grace period (e.g., until Phase 11 verification + gap-fill clears) and then released to reclaim metadata space.
 
 **Critical files:**
-- `post_migration/promote_staging.sh` (new) — single-purpose mover with size sanity check
+- `post_migration/promote_staging.sh` (new) — single-purpose mover with snapshot-then-move-then-verify; aborts before the `mv` if the snapshot creation fails.
 
 ### Phase 11 — DS1512+ verification cross-check, gap-fill, decommission
 
