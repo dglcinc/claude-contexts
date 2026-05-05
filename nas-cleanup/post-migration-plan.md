@@ -333,18 +333,36 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 - `cleanup_personal_assignment.md` — ambiguous user-uid mappings for david/mmc/drop decision.
 - `cleanup_mail_conversion.md` — per-mailbox conversion outcome.
 
-### Phase 8 — Skip-by-construction (no destructive phase needed)
+### Phase 8 — Skip-by-construction (audit phase, no mutation)
 
-Under the new "read SSD, write curated layout" strategy, content the user wants to drop is simply **never copied** into the curated layout in the first place. There's no retroactive-delete pass:
+Under the "read SSD, write curated layout" strategy, content the user wants to drop is simply **never copied** into the curated layout in the first place. There's no retroactive-delete pass. Phase 8 is the **audit step** that documents what was skipped — generated from the Phase 1 inventory rather than maintained by hand, so it can never drift from reality.
 
-- **Game installs** (Minecraft, Steam, Battle.net, Unreal Tournament, etc.) — Phase 1 inventory classifies as `game-install` → not read by Phases 3–7
-- **Old app installs** in user `Applications/` dirs — classified as `app-install` → not read
-- **Download dumps** — classified as `download-dump` → not read
-- **Application "exhaust"** (Caches, PubSub, SyncServices, Database/Faces, photoslibrary/resources & Thumbnails) — same as the rsync exclude set → not read
-- **NAS-internal directories** — `nas-internal` classification → not read
-- **`/volume1/rsync`** — Pi backup target on the OLD NAS only; not on SSDs. User recreates the Pi backup job pointing at DS225+ post-cleanup.
+**Categories typically skipped:**
+- **Game installs** (Minecraft, Steam, Battle.net, Unreal Tournament, etc.) — `game-install` classification
+- **Old app installs** in user `Applications/` dirs — `app-install` classification
+- **Download dumps** — `download-dump` classification
+- **Application exhaust** (Caches, PubSub, SyncServices, Database/Faces, photoslibrary/resources, Thumbnails) — covered by classifier; matches the rsync exclude set
+- **NAS-internal directories** — `nas-internal` classification — `@appstore`, `@database`, `#recycle` (Synology trash)
+- **`/volume1/rsync`** — Pi backup target on the OLD NAS only, not on SSDs. Pi backup job is recreated pointing at DS225+ post-cleanup.
 
-The classification map from Phase 1 is the audit trail showing what was excluded and why. Nothing is deleted from the SSDs (per Hard Guard #1).
+**Actions:**
+
+1. **Auto-derive the skip list** from Phase 1 inventory: any classification not consumed by Phases 3–7 is by definition skipped. Phase 3 reads `music`, Phase 4 reads `photo-library`, Phase 5 reads `video` and `video-project`, Phase 6 reads `documents`, Phase 7 reads `app-data`, `bw`, and unclassified-as-user-misc. Anything else (`game-install`, `app-install`, `download-dump`, `nas-internal`, application-exhaust subdirs flagged inside other classifications, `unknown` if not yet handled) lands in the skip list.
+
+2. **Emit `cleanup_skip_audit.md`** — one row per source dir that wasn't read, with classification, size, and SSD origin. Becomes the permanent audit trail for "why isn't X in the curated layout?"
+
+3. **Coverage check** — emit `phase_3_to_7_input_coverage.md` cross-tabulating: for each Phase 1 classification, the list of source dirs that fed each phase. The total dir count across {Phases 3–7 inputs} ∪ {Phase 8 skip list} must equal Phase 1's total classified dir count. If there's a gap, something fell through silently (likely an `unknown` that no phase claimed) — flagged for Phase 9 attention.
+
+4. **`nas_cleanup.sh` is a separate concern** — the existing `~/github/nas-cleanup/nas_cleanup.sh` handles file-level macOS junk (`.DS_Store`, `@eaDir`, AppleDouble `._*`) that snuck through during the original rsync. Phase 8 is about classification-driven exclusion of whole categories. They don't overlap; both stay in scope but Phase 8 doesn't replace `nas_cleanup.sh`.
+
+**Critical files:**
+- `post_migration/skip_audit.sh` (new) — derives the skip list from inventory; emits both reports.
+
+**Output reports:**
+- `cleanup_skip_audit.md` — every skipped dir with classification, size, SSD origin.
+- `phase_3_to_7_input_coverage.md` — coverage cross-tab; flags any classification that didn't reach a phase.
+
+**Hard Guard #1 reaffirmed:** Phase 8 is read-only against the inventory CSV. Nothing is deleted from the SSDs, nothing is touched in staging. Pure audit reporting.
 
 ### Phase 9 — Anomaly review
 
@@ -548,6 +566,12 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - **App-data internal structure preserved verbatim** — apps expect specific paths.
 - **Mail conversion to mbox** (best-effort) via `mail_emlx_to_mbox.py`. Per-mailbox: convert if all .emlx files parse cleanly, else raw fallback at `david/app-data/Mail/raw/<...>`. Result reported in `cleanup_mail_conversion.md`.
 - **Ambiguous user-uid assignment** — flagged in `cleanup_personal_assignment.md` for david/mmc/drop decision; nothing placed until user decides.
+
+**Phase 8 (skip audit):**
+- Skip list **auto-derived from Phase 1 inventory** — anything not consumed by Phases 3–7 is by definition skipped. Eliminates drift between hand-maintained list and reality.
+- `cleanup_skip_audit.md` — permanent audit trail of every skipped dir.
+- `phase_3_to_7_input_coverage.md` — coverage cross-tab; flags silent fall-throughs for Phase 9 review.
+- Phase 8 is read-only (Hard Guard #1 reaffirmed). Doesn't replace `nas_cleanup.sh` (file-level macOS junk handler — separate concern).
 
 **Phase 10 (promote):**
 - btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
