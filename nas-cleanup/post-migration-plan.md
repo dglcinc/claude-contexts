@@ -107,29 +107,40 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 
 **Actions:**
 1. **Find** all audio files under inventoried `music` sources: `.mp3`, `.m4a`, `.m4p`, `.m4b`, `.flac`, `.alac`, `.aac`, `.ogg`, `.opus`, `.aif`, `.aiff`, `.wav`, `.wma`, `.ape`. Also collect **non-audio companion files** in those same dirs (`.mp4` music videos, `.pdf` liner notes, `.jpg`/`.png` cover art, `.txt`/`.nfo` track listings) — they travel with the album per the Phase 1 sticky-classification rule.
-2. **Read tags** (artist, album, title, track #, bitrate) — Python `mutagen`. Filename/path fallback for missing tags.
-3. **Group by (artist, album, title)** — case-insensitive, normalized.
-4. **Within each group, keep the highest bitrate**; ties broken by file size (larger wins).
-5. **Comedy filter** — emit a `cleanup_music_artists.md` listing every distinct artist found. User marks each `[ ] keep / [ ] comedy`. `--apply` removes everything tagged comedy.
-6. **Low-bitrate review** — after dedup, list every surviving track at ≤128 kbps. User reviews `cleanup_music_lowbitrate.md` and marks `[ ] keep / [ ] drop`.
-7. **Place winners**:
-   - Audio tracks → `music/<Artist>/<Album>/<NN Title>.<ext>` (track number zero-padded; missing track # → omit prefix)
-   - Companion files → `music/<Artist>/<Album>/<original-filename>` (original name preserved; no track-number prefix)
-8. **Sources unchanged** — copy not move during dry run; `--apply` deletes source after place succeeds.
+2. **Drop without review:** iTunes library metadata files (`.itl`, `.xml`, `.musiclibrary` bundles) and all playlists (any `.m3u`/`.m3u8`/`.pls` plus the playlist data inside `.itl`). Useless without iTunes; user does not need them preserved.
+3. **Read tags** (artist, album artist, album, title, track #, genre, bitrate, codec) — Python `mutagen`. Filename/path fallback for missing tags. **Local tags only** — no MusicBrainz / AcoustID lookups.
+4. **Group by (album artist || artist, album, title)** — case-insensitive, normalized. Album Artist takes precedence over Artist for grouping AND for directory placement, so compilation albums don't fragment across the tree.
+5. **Dedup within group** — preference order: **lossless** (`.flac`/`.alac`/`.ape`/`.wav`) > **lossy ≥192 kbps** > **lossy <192 kbps**. Within a tier, highest bitrate wins; final tiebreak = larger file size.
+6. **Napster-source filter** — flag any file with `nappy` or `napster` (case-insensitive) anywhere in its source path or any tag (artist/album/title/genre/comment/etc.) for user review. Emit `cleanup_music_napster.md`. User marks each `[ ] keep / [X] drop`. Default action on `--apply` = drop. These were imported from Napster in the early 2000s; user keeps only the ones not currently available on streaming.
+7. **Comedy filter** — auto-pre-mark using genre tag: any track whose genre matches `Comedy`/`Spoken Word`/`Stand-Up` (case-insensitive) counts as a comedy track. For each artist, if >50% of their tracks are comedy-tagged, the artist is auto-checked `[X] comedy`. Emit `cleanup_music_artists.md` listing every distinct artist with the auto-mark and a track count. User reviews and flips overrides. `--apply` removes everything still marked comedy.
+8. **Low-bitrate handling:**
+   - Tracks **<128 kbps** (strictly less than) → dropped automatically without review. Default-low-quality early-2000s rips, generally available better elsewhere.
+   - Tracks **=128 kbps** → emit `cleanup_music_lowbitrate.md` for user review. User marks `[ ] keep / [X] drop` (default drop). Keep only what's not on streaming services.
+9. **Place winners**:
+   - Audio tracks → `music/<Album Artist>/<Album>/<NN Title>.<ext>` (track number zero-padded; missing track # → omit prefix; falls back to Artist if no Album Artist tag)
+   - Companion files → `music/<Album Artist>/<Album>/<original-filename>` (original name preserved; no track-number prefix)
+10. **Sources unchanged** — build is copy-only from SSDs to DS225+. SSDs are never modified per Hard Guard #1. User can clean up SSD sources later, separately, if desired.
 
 **Filename normalization:**
-- Strip iTunes "Track 1" / "Track 2" suffixes (already seen in `iTunes Music/A Paris/`)
+- Strip iTunes "Track 1" / "Track 2" duplicate-import suffixes (already seen in `iTunes Music/A Paris/` — see CLAUDE.md normalization-clashes note)
 - Resolve NFC/NFD normalization to NFC
 - Sanitize filesystem-illegal chars
+- Preserve leading numbers that are part of the actual title (e.g. `01-01-bonus.mp3` keeps both numbers — only strip the iTunes-generated " N" / " Track N" suffixes, not legitimate numeric prefixes)
 
 **Critical files:**
-- `post_migration/music_curate.sh` (new) — orchestrator with `--phase tag-scan|dedup|comedy|lowbitrate|place`
+- `post_migration/music_curate.sh` (new) — orchestrator with `--phase tag-scan|dedup|napster|comedy|lowbitrate|place`
 - `post_migration/music_curate.py` (new) — does the work
 
+**Output reports for user review (all dry-run, all checkbox-driven):**
+- `cleanup_music_napster.md` — Napster-tagged files, default drop, user can flip to keep.
+- `cleanup_music_artists.md` — distinct artists with auto-marked comedy column, user reviews.
+- `cleanup_music_lowbitrate.md` — 128 kbps tracks (only) for keep/drop decision.
+
 **Verification:**
-- After `--apply`, source music trees should be empty (or contain only files the user excluded)
-- Spot-check 10 random tracks — playable, correct tags
-- DS225+ free space should increase by approximately the dedup CSV's reported reclamation
+- SSDs are unchanged after run (per Hard Guard #1 — verified by `find /Volumes/ds_backup* -newer <run-start-marker>` returning empty for files under inventoried music sources).
+- Spot-check 10 random tracks at `staging/music/<Album Artist>/<Album>/...` — playable, tags intact.
+- Track count at `staging/music/` matches the dedup CSV's "kept" count.
+- No `.itl`/`.xml`/`.musiclibrary`/playlist files anywhere under `staging/music/`.
 
 ### Phase 4 — Photos: extract originals + edits, dedup, organize
 
@@ -355,24 +366,48 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 
 Roll-back path for any phase: restore from the SSDs (untouched, read-only throughout the build) or the DS1512+ (until decommissioned). Document SSD-path → DS225+-path mapping so partial restores are easy.
 
-## Decisions made (during plan walkthrough, 2026-05-04)
+## Decisions made (during plan walkthrough, 2026-05-04+)
 
+**Layout / scope:**
 - **User dirs:** keep `david/` and `mmc/` (not `maureen/`). Any "maureen"-tagged content treated as `mmc` via normal dedup.
 - **`www/`:** deferred — not in active scope. Revisit only if Phase 9 surfaces something.
 - **`users/<other-uid>/` UIDs:** all such content belongs to david or mmc. Phase 7 flags the ambiguous ones for user review rather than guessing.
 
+**Phase 1 (inventory):**
+- Single-pass merged inventory across both SSDs, tagged per row with origin.
+- Depth 3 + escape-hatch descent (cap at depth 6) for known-marker subtrees.
+- Music classification is **sticky** — non-audio files in a music dir travel with the album.
+- Symlinks recorded but not followed.
+
+**Phase 2 (scaffold):**
+- Build everything as `nasadmin:nasadmin`. User-specific ownership/perms is a post-build optional step.
+- Staging visible at `/volume1/staging/`, single-user operation.
+
+**Phase 3 (music):**
+- **Group/place** by Album Artist (fall back to Artist) + Album + Title.
+- **Format preference** for dedup ties: lossless > lossy ≥192 kbps > lossy <192 kbps; bitrate within tier; file size as final tiebreak.
+- **Drop without review:** iTunes Library files (`.itl`/`.xml`/`.musiclibrary`) and all playlists.
+- **Keep as-is:** `.m4p` DRM AAC files (no special handling).
+- **Napster filter:** any "nappy"/"napster" string in path/tags → flagged in `cleanup_music_napster.md` (default drop, user can flip).
+- **Comedy filter:** auto-marked using genre tag (`Comedy`/`Spoken Word`/`Stand-Up`); >50% of an artist's tracks comedy-tagged → artist auto-checked. User reviews `cleanup_music_artists.md`.
+- **Low-bitrate:** `<128 kbps` dropped automatically; `=128 kbps` reviewed in `cleanup_music_lowbitrate.md`.
+- **Local tags only** — no MusicBrainz/AcoustID lookup.
+
+**Phase 10 (promote):**
+- btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
+
+**Hard Guard #1 reaffirmed:** SSDs are never modified. Build is copy-only from SSD → DS225+. User can clean up SSD sources later, separately.
+
 ## Open questions for the user
 
-These are best resolved before Phase 3, but none gate Phase 1 (inventory):
+None gate Phase 1 (inventory) or Phase 2 (scaffold). Resolve before the listed phase:
 
-1. **Comedy artist list** — confirm the workflow (enumerate → user marks each artist) is OK, or do you want to seed an initial list (e.g., specific artists from "Nappy Tunes" you remember)?
-2. **Photo edits format** — for `*.photoslibrary` (Photos.app era), edits aren't stored as a separate JPEG; they're rendered output paired with adjustment XMP-like sidecars under `resources/`. Plan: spike at start of Phase 4 to confirm. Acceptable?
-3. **App-data scope** — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
-4. **Documents dedup** — preserve folder structure verbatim (default), or also hash-dedup across the documents tree? Path context vs. disk savings.
-5. **Web-photo heuristic threshold** — false-positive risk. Default: anything without camera EXIF gets flagged for review. Acceptable?
-6. **DS1512+ decommission timing** — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
-7. **iTunes Music Library files** (`iTunes Library.itl`, `iTunes Music Library.xml`) — application metadata that could regenerate iTunes' view of the library, but useless without iTunes. Default: drop. Confirm.
-8. **Phase 11 reconciliation strictness** — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
+1. **Photo edits format** *(gates Phase 4)* — for `*.photoslibrary` (Photos.app era), edits aren't stored as a separate JPEG; they're rendered output paired with adjustment XMP-like sidecars under `resources/`. Plan: spike at start of Phase 4 to confirm. Acceptable?
+2. **App-data scope** *(gates Phase 7)* — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
+3. **Documents dedup** *(gates Phase 6)* — preserve folder structure verbatim (default), or also hash-dedup across the documents tree? Path context vs. disk savings.
+4. **Web-photo heuristic threshold** *(gates Phase 4)* — false-positive risk. Default: anything without camera EXIF gets flagged for review. Acceptable?
+5. **DS1512+ decommission timing** *(gates Phase 11)* — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
+6. **Phase 11 reconciliation strictness** *(gates Phase 11)* — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
 
 ## Out of scope (deferred)
 
