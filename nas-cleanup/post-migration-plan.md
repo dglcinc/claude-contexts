@@ -63,22 +63,24 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 **Why:** before touching anything, produce a single classification map of every top-level subtree on the SSD source. The user reviews the map and approves before any phase ≥ 3 runs.
 
 **Actions:**
-- Walk the SSD source paths `/Volumes/ds_backup/` and `/Volumes/ds_backup_2/` on the Mac to depth 3
-- For each dir at depth 1–3, classify by heuristic:
+- Walk both SSD source paths `/Volumes/ds_backup/` and `/Volumes/ds_backup_2/` in a single pass; emit one merged inventory tagged with each row's SSD origin.
+- Walk to **depth 3** from each SSD root, with an **escape hatch**: at depth 3, if a dir is unclassifiable but contains known structural markers (`*.photoslibrary`, `*.fcpbundle`, `Masters/`+`Database/` siblings, `Pictures/`, `Music/`, etc.), descend further until classification resolves. Cap descent at depth 6 to avoid runaway walks.
+- For each classified dir, classify by heuristic:
   - **photo-library**: contains `*.photoslibrary`, `*.migratedphotolibrary`, `iPhoto Library*`, or `Masters/`+`Database/` siblings
-  - **music**: predominantly `.mp3`/`.m4a`/`.flac`/`.aif`/`.wav`
-  - **video**: predominantly `.mov`/`.mp4`/`.avi`/`.dv`
+  - **music**: dominated by audio files — `.mp3`/`.m4a`/`.m4p`/`.m4b`/`.flac`/`.alac`/`.aac`/`.ogg`/`.opus`/`.aif`/`.aiff`/`.wav`/`.wma`/`.ape`. **Sticky classification**: a dir classified as `music` has ALL its contents (including non-audio files like `.mp4` music videos, `.pdf` liner notes, `.jpg` cover art, `.txt` track listings) treated as part of that album bundle and routed to the music destination at Phase 3 — they travel with the album, not separately.
+  - **video**: predominantly `.mov`/`.mp4`/`.avi`/`.dv`/`.m4v` AND not classified as `music` (music videos that live inside a music dir stay with that album per the sticky rule above)
   - **video-project**: `*.iMovieProject`, `*.fcpbundle`, `*.imovielibrary`
-  - **documents**: predominantly `.pdf`/`.doc{,x}`/`.xls{,x}`/`.txt`/`.rtf`/`.pages`/`.numbers`/`.key`/`.md`
+  - **documents**: predominantly `.pdf`/`.doc{,x}`/`.xls{,x}`/`.ppt{,x}`/`.txt`/`.rtf`/`.pages`/`.numbers`/`.key`/`.md`/`.odt`. (iWork bundles like `.pages` are macOS package directories — classifier treats them as files, does not descend.)
   - **app-install**: `.app` bundles or installer pkg/dmg trees outside system Applications
-  - **download-dump**: dirs literally named `Downloads`, or containing only browser-cache-shaped content
+  - **download-dump**: dirs literally named `Downloads` or `My Downloads`, or containing only browser-cache-shaped content
   - **game-install**: known patterns (Minecraft `*.jar` + `versions/`, Unreal Tournament `Engine/`, Steam `steamapps/`, etc.)
   - **app-data**: known per-app dirs (Skype chat DBs, GarageBand projects, OmniFocus, Quicken, TurboTax, 1Password, AddressBook, Mail Maildir/, etc.)
   - **bw**: any path matching `**/.bw/**`
   - **nas-internal**: `@appstore`, `@database`, `#recycle`, etc.
-  - **unknown**: everything else
-- Output: `cleanup_inventory.md` — Markdown table per top-level subtree, with size, classification, and a `[ ] approve / [ ] flag` column
-- **No mutation.** User reviews the map and either approves or annotates. Subsequent phases consume this map.
+  - **unknown**: everything else (Phase 9 handles these)
+- Symlinks: do not follow (record the link target in the inventory but classify by the link itself, not its destination — avoids double-counting and infinite-loop risk).
+- Output: `cleanup_inventory.md` — Markdown table with one row per classified subtree. Columns: `path`, `ssd`, `depth`, `classification`, `size`, `file_count`, `modal_extension`, `sample_filenames` (5 random), `[ ] approve` checkbox.
+- **No mutation.** User reviews the map and either approves or annotates each row. Subsequent phases consume this map. When in doubt, the classifier marks `unknown` and lets Phase 9 catch it — false `unknown` is cheaper than misclassification.
 
 **Critical files:**
 - `post_migration/inventory.sh` (new) — orchestrator
@@ -100,14 +102,16 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 **Why:** ~792 GB of iTunes media has heavy internal duplication and now-unwanted content. The user's rules: keep CD rips at higher bitrate, organize Artist/Album/Track, drop comedy artists, optionally drop ≤128 kbps survivors.
 
 **Actions:**
-1. **Find** all music files under inventoried music sources: `.mp3`, `.m4a`, `.m4p`, `.aif`, `.wav`, `.flac`
-2. **Read tags** (artist, album, title, track #, bitrate) — Python `mutagen`. Filename/path fallback for missing tags
-3. **Group by (artist, album, title)** — case-insensitive, normalized
-4. **Within each group, keep the highest bitrate**; ties broken by file size (larger wins)
+1. **Find** all audio files under inventoried `music` sources: `.mp3`, `.m4a`, `.m4p`, `.m4b`, `.flac`, `.alac`, `.aac`, `.ogg`, `.opus`, `.aif`, `.aiff`, `.wav`, `.wma`, `.ape`. Also collect **non-audio companion files** in those same dirs (`.mp4` music videos, `.pdf` liner notes, `.jpg`/`.png` cover art, `.txt`/`.nfo` track listings) — they travel with the album per the Phase 1 sticky-classification rule.
+2. **Read tags** (artist, album, title, track #, bitrate) — Python `mutagen`. Filename/path fallback for missing tags.
+3. **Group by (artist, album, title)** — case-insensitive, normalized.
+4. **Within each group, keep the highest bitrate**; ties broken by file size (larger wins).
 5. **Comedy filter** — emit a `cleanup_music_artists.md` listing every distinct artist found. User marks each `[ ] keep / [ ] comedy`. `--apply` removes everything tagged comedy.
 6. **Low-bitrate review** — after dedup, list every surviving track at ≤128 kbps. User reviews `cleanup_music_lowbitrate.md` and marks `[ ] keep / [ ] drop`.
-7. **Place winners** at `music/<Artist>/<Album>/<NN Title>.<ext>` (track number zero-padded; missing track # → omit prefix)
-8. **Sources unchanged** — copy not move during dry run; `--apply` deletes source after place succeeds
+7. **Place winners**:
+   - Audio tracks → `music/<Artist>/<Album>/<NN Title>.<ext>` (track number zero-padded; missing track # → omit prefix)
+   - Companion files → `music/<Artist>/<Album>/<original-filename>` (original name preserved; no track-number prefix)
+8. **Sources unchanged** — copy not move during dry run; `--apply` deletes source after place succeeds.
 
 **Filename normalization:**
 - Strip iTunes "Track 1" / "Track 2" suffixes (already seen in `iTunes Music/A Paris/`)
