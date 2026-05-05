@@ -4,16 +4,19 @@
 
 The cleanup builds a curated content archive on the DS225+ by **reading from the SSDs** (`/Volumes/ds_backup{,_2}/`) and writing the new layout to the DS225+ internal volume. The DS1512+ is **not** a source — it's used at the end as a **verification cross-check** to catch anything the SSD copy might have missed.
 
-Strategy shift from earlier plan: the original plan migrated the messy source tree onto DS225+ first (NAS-to-NAS rsync) and then cleaned in place. The new plan skips the messy intermediate copy entirely. SSDs are the read source; DS225+ gets the curated output directly. Cleaner, faster, and avoids stressing the degraded DS1512+ for a second full read pass.
+**Strategy shift (2026-04-29)**: the original plan migrated the messy source tree onto DS225+ first (NAS-to-NAS rsync) and then cleaned in place. The revised plan skips the messy intermediate copy entirely. SSDs are the read source; DS225+ gets the curated output directly. Avoids stressing the degraded DS1512+ for a second full read pass.
+
+**Architecture adjustment (2026-05-04)**: the SSDs are APFS-formatted. DSM 7 has no reliable APFS mount support, so plugging the SSDs into DS225+ via USB isn't viable. Cleanup orchestration moves to the Mac: it reads SSDs locally at ~400 MB/s and writes output to DS225+ via **rsync over SSH** (DS225+ has AES-NI, so SSH isn't a bottleneck the way it was on the DS1512+ Atom). Network mounts (SMB/NFS) are avoided — metadata-heavy operations (`open`/`stat`/`close` per file) get bogged down on RPC latency, while rsync batches efficiently and gives atomic transfer + resume semantics. Phase 11 gap-fill from DS1512+ → DS225+ was already network-rsync; that part is unchanged.
 
 The user explicitly does **not** need to restore the data to a Mac, phone, or iPhoto/Photos.app — this is a preserved-data archive (photos, music, video, documents). That assumption simplifies several decisions: it's OK to break a `.photoslibrary` bundle's internal references because we'll never reopen it.
 
 **Where things live:**
-- **Source (read-only):** SSDs `/Volumes/ds_backup/` + `/Volumes/ds_backup_2/`, mounted into DS225+ via USB so the cleanup runs locally on the NAS at SSD speed (~400 MB/s)
-- **Destination (write):** the curated layout on DS225+ internal volume
+- **Source (read-only):** SSDs `/Volumes/ds_backup/` + `/Volumes/ds_backup_2/`, mounted on the Mac (APFS — stays on Mac)
+- **Cleanup orchestration:** runs on the Mac. Local SSD read, network write to DS225+ via rsync over SSH.
+- **Destination (write):** the curated layout on the DS225+ internal volume — built under `/volume1/staging/` first, promoted to `/volume1/{music,...}` at Phase 10
 - **DS1512+:** stays online for verification only; not a source for the build
 
-Cleanup runs **on the DS225+** with the SSDs USB-mounted there. All scripts are dry-run by default with explicit `--apply` to mutate. **Cleanup never deletes from the SSDs and never modifies the curated layout dirs once built** — see Hard Guards below.
+All scripts are dry-run by default with explicit `--apply` to mutate. **Cleanup never deletes from the SSDs and never modifies the curated layout dirs once built** — see Hard Guards below. Mutating commands on DS225+ (mkdir, mv, rm) execute via `ssh` from the Mac.
 
 **Source scope (on the SSDs):** the full backup as it stood when migration began — `snashome/{david,mmc,mmc_archive,OldPhotoDirectories,mp3,old_fileserver_stuff,users,www}` plus the deferred trees on DS1512+ that get gap-filled in Phase 11. NAS-specific directories (DSM internals like `@appstore`, `@database`, etc.) are not preserved.
 
@@ -60,7 +63,7 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 **Why:** before touching anything, produce a single classification map of every top-level subtree on the SSD source. The user reviews the map and approves before any phase ≥ 3 runs.
 
 **Actions:**
-- Walk the SSD-mounted source paths (`/volumeUSB1/usbshare/...` etc., final path depends on how DSM mounts the SSDs) to depth 3
+- Walk the SSD source paths `/Volumes/ds_backup/` and `/Volumes/ds_backup_2/` on the Mac to depth 3
 - For each dir at depth 1–3, classify by heuristic:
   - **photo-library**: contains `*.photoslibrary`, `*.migratedphotolibrary`, `iPhoto Library*`, or `Masters/`+`Database/` siblings
   - **music**: predominantly `.mp3`/`.m4a`/`.flac`/`.aif`/`.wav`
@@ -314,7 +317,7 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 
 ## Ordering
 
-1. SSDs USB-mounted on DS225+ (read-only source); curated layout target volume ready
+1. SSDs mounted on Mac as today (read-only source — APFS, stays on Mac); DS225+ ready as the rsync-over-SSH destination
 2. **Phase 1** — inventory of SSD source; user reviews and approves classification
 3. **Phase 2** — scaffold under `/volume1/staging/`
 4. **Phase 3** — music
