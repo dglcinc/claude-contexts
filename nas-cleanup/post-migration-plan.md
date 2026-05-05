@@ -18,7 +18,7 @@ The user explicitly does **not** need to restore the data to a Mac, phone, or iP
 
 All scripts are dry-run by default with explicit `--apply` to mutate. **Cleanup never deletes from the SSDs and never modifies the curated layout dirs once built** — see Hard Guards below. Mutating commands on DS225+ (mkdir, mv, rm) execute via `ssh` from the Mac.
 
-**Source scope (on the SSDs):** the full backup as it stood when migration began — `snashome/{david,mmc,mmc_archive,OldPhotoDirectories,mp3,old_fileserver_stuff,users,www}` plus the deferred trees on DS1512+ that get gap-filled in Phase 11. NAS-specific directories (DSM internals like `@appstore`, `@database`, etc.) are not preserved.
+**Source scope (on the SSDs):** the full backup as it stood when migration began — `snashome/{david,mmc,mmc_archive,OldPhotoDirectories,mp3,old_fileserver_stuff,users}` plus the deferred trees on DS1512+ that get gap-filled in Phase 11. NAS-specific directories (DSM internals like `@appstore`, `@database`, etc.) are not preserved. `www/` is **deferred** — old static-web content not relevant to the curated archive; revisit only if Phase 9 anomaly review surfaces something interesting there.
 
 ## Final target layout
 
@@ -38,19 +38,19 @@ The cleanup produces a new top-level layout on the DS225+:
     images/                        — non-camera (web-downloaded) photos
     app-data/                      — preserved application context (per-app)
     [other personal content the rules don't cover]
-  maureen/
+  mmc/
     [same shape as david/]
   staging/                         — work dir during cleanup; removed at end
 ```
 
-`maureen` ≡ `mmc` in the source tree — confirm before renaming.
+User dirs are `david/` and `mmc/` — match the source tree's naming. Any content tagged "maureen" anywhere (folder names, metadata) is treated as `mmc` content for dedup purposes — same person, historical naming variation.
 
 ## Hard guards
 
 Every cleanup script enforces these guards. A guard violation aborts the run.
 
 1. **Never write under SSD source paths.** `/Volumes/ds_backup` and `/Volumes/ds_backup_2` are read-only sources — cleanup never deletes or modifies files there. The SSDs remain a third-copy archive forever.
-2. **Never delete or modify the curated layout dirs.** `/volume1/{music,photos,movies,documents,david,maureen}` on DS225+ are write-once-by-the-cleanup-build, then read-only. Subsequent reruns of any phase compare against existing content but never overwrite or delete.
+2. **Never delete or modify the curated layout dirs.** `/volume1/{music,photos,movies,documents,david,mmc}` on DS225+ are write-once-by-the-cleanup-build, then read-only. Subsequent reruns of any phase compare against existing content but never overwrite or delete.
 3. **Destructive operations refuse to run** unless given an explicit `--apply` AND a path argument under the expected source root for that phase. No defaults that could land somewhere unexpected.
 4. **Staging-only deletes.** Anything destructive runs against `/volume1/staging/` during build; the curated layout is constructed there and *moved* into final position only after verification.
 
@@ -86,10 +86,10 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 
 ### Phase 2 — Staging-dir scaffold
 
-**Why:** create the empty curated layout under `/volume1/staging/{music,photos,movies,documents,david,maureen}` with the right ownership. Everything is built under `staging/` and only promoted to its final position at Phase 10. This keeps Hard Guard #2 trivial: `/volume1/{music,...}` doesn't exist as a target during the build, so scripts can't accidentally write to the final layout.
+**Why:** create the empty curated layout under `/volume1/staging/{music,photos,movies,documents,david,mmc}` with the right ownership. Everything is built under `staging/` and only promoted to its final position at Phase 10. This keeps Hard Guard #2 trivial: `/volume1/{music,...}` doesn't exist as a target during the build, so scripts can't accidentally write to the final layout.
 
 **Actions:**
-- `mkdir -p /volume1/staging/{music,photos,movies,documents,david,maureen}`
+- `mkdir -p /volume1/staging/{music,photos,movies,documents,david,mmc}`
 - Set ownership to a single canonical user (per CLAUDE.md, the new NAS uses `admin` or a dedicated user; UID mapping from DS1512+ is not preserved)
 
 **Critical files:**
@@ -188,9 +188,9 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 **Actions:**
 - **`.bw` content** — find every `**/.bw/**` path under david-owned source trees. Hash-dedup. Place under `david/.bw/<original-relative-path-after-.bw>`. Maureen's trees are not expected to have `.bw` — confirm in inventory.
 - **`images/`** — receives web-downloaded photos identified in Phase 4 (already routed there)
-- **`app-data/`** — application data the user wants kept for possible future recovery. From the rsync exclude analysis, the kept-by-default categories are: 1Password vaults, Quicken / TurboTax records, OmniFocus / Things DBs, Skype chats, Bento DBs, AddressBook, Mail (Maildir/mbox), GarageBand loops & projects, Steam saves, Minecraft saves. Each gets a subdir under `david/app-data/<app>/` or `maureen/app-data/<app>/`.
-- **Miscellaneous personal content** — anything categorized as user-data but not matching above (random user-created folders, scripts, dotfiles) → `david/<original-relative-path>` or `maureen/<original-relative-path>` preserving the in-user folder structure
-- **Per-user assignment**: source path under `david/` or `mmc/` → respective user. Source path under `users/<other-user>/` → flag for review (might be old David/Maureen content under a different LDAP UID).
+- **`app-data/`** — application data the user wants kept for possible future recovery. From the rsync exclude analysis, the kept-by-default categories are: 1Password vaults, Quicken / TurboTax records, OmniFocus / Things DBs, Skype chats, Bento DBs, AddressBook, Mail (Maildir/mbox), GarageBand loops & projects, Steam saves, Minecraft saves. Each gets a subdir under `david/app-data/<app>/` or `mmc/app-data/<app>/`.
+- **Miscellaneous personal content** — anything categorized as user-data but not matching above (random user-created folders, scripts, dotfiles) → `david/<original-relative-path>` or `mmc/<original-relative-path>` preserving the in-user folder structure
+- **Per-user assignment**: source path under `david/` or `mmc/` → respective user. Source path under `users/<other-uid>/` → all such content ultimately belongs to either david or mmc (this NAS only ever had two real users, plus historical LDAP UIDs). When the right answer isn't obvious from path or content, flag for user review rather than guessing.
 
 **Critical files:**
 - `post_migration/personal_collect.sh` (new) — per-user pass
@@ -218,7 +218,7 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 - Categories of anomaly to expect:
   - **VM disk images** — `.pvm`, `.hdd`, `.vmdk`, `.vdi`, `.vhd`. Per the original plan inventory, ~3 GB of VM/installer files. User likely wants to keep specific images and drop installers. Manual decision per file.
   - **DMG / ISO** — `.dmg`, `.iso`. Mix of OS install media (drop) and user-created images (keep). Manual decision.
-  - **Source code / scripts** — small but contextual. Default: route to `david/code/` or `maureen/code/` preserving structure.
+  - **Source code / scripts** — small but contextual. Default: route to `david/code/` or `mmc/code/` preserving structure.
   - **Email** — Apple Mail Maildir/mbox lives under `Library/Mail/`. Already routed to `app-data/Mail/` in Phase 7.
   - **Truly unknown** — flagged.
 - User fills in actions; `apply_anomaly_decisions.sh` actions them.
@@ -233,7 +233,7 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 
 **Actions:**
 - Verify staging matches expectation (rough size, top-level dir count)
-- `mv /volume1/staging/{music,photos,movies,documents,david,maureen} /volume1/`
+- `mv /volume1/staging/{music,photos,movies,documents,david,mmc} /volume1/`
 - `rm -rf /volume1/staging` (only if empty)
 - From this point on, the curated layout dirs are read-only by convention; reruns of any cleanup phase refuse to write to them.
 
@@ -253,7 +253,7 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 - Retry-loop wrapper similar to `nas_backup.sh` (Phase 11a may stall multiple times; tolerate it)
 
 **11b — Inventory DS225+ curated layout**
-- Same shape: relative path + size + mtime for every file under `/volume1/{music,photos,movies,documents,david,maureen}/`
+- Same shape: relative path + size + mtime for every file under `/volume1/{music,photos,movies,documents,david,mmc}/`
 - Plus a content fingerprint per file (size + first/last 64KB hash, fast — full SHA-256 only if needed)
 
 **11c — Reconcile**
@@ -333,17 +333,23 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 ## Verification plan
 
 - **Phase 1**: user approves the classification map. No mutation, no verification needed.
-- **Phase 2**: `ls /volume1/staging/{music,photos,movies,documents,david,maureen}` returns six empty dirs.
+- **Phase 2**: `ls /volume1/staging/{music,photos,movies,documents,david,mmc}` returns six empty dirs.
 - **Phase 3**: spot-check 10 random tracks (playable, correct tags); track count in `staging/music/` matches the dedup CSV's "kept" count.
 - **Phase 4**: spot-check 10 random photos (readable, EXIF preserved); web-candidate spot-check passes user review; album organization sanity check on a known album.
 - **Phase 5**: every project bundle is intact (open in iMovie/FCP if curious); standalone count matches expectation.
 - **Phase 6**: file count under `staging/documents/` ≈ classifier's `document` count; spot-check folder structure preservation.
 - **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's web-candidate set after user review.
 - **Phase 9**: after applying anomaly decisions, the classifier's `unknown` set has been resolved (kept-with-target, dropped, or fetch-from-DS1512+).
-- **Phase 10**: `ls /volume1/staging` reports empty; `ls /volume1/{music,photos,movies,documents,david,maureen}` matches expectation; staging dir removed.
+- **Phase 10**: `ls /volume1/staging` reports empty; `ls /volume1/{music,photos,movies,documents,david,mmc}` matches expectation; staging dir removed.
 - **Phase 11**: re-run `verify_ds1512.sh` after gap-fill; expected output is only entries the user explicitly marked `skip`. DS1512+ powered down once that holds.
 
 Roll-back path for any phase: restore from the SSDs (untouched, read-only throughout the build) or the DS1512+ (until decommissioned). Document SSD-path → DS225+-path mapping so partial restores are easy.
+
+## Decisions made (during plan walkthrough, 2026-05-04)
+
+- **User dirs:** keep `david/` and `mmc/` (not `maureen/`). Any "maureen"-tagged content treated as `mmc` via normal dedup.
+- **`www/`:** deferred — not in active scope. Revisit only if Phase 9 surfaces something.
+- **`users/<other-uid>/` UIDs:** all such content belongs to david or mmc. Phase 7 flags the ambiguous ones for user review rather than guessing.
 
 ## Open questions for the user
 
@@ -351,15 +357,12 @@ These are best resolved before Phase 3, but none gate Phase 1 (inventory):
 
 1. **Comedy artist list** — confirm the workflow (enumerate → user marks each artist) is OK, or do you want to seed an initial list (e.g., specific artists from "Nappy Tunes" you remember)?
 2. **Photo edits format** — for `*.photoslibrary` (Photos.app era), edits aren't stored as a separate JPEG; they're rendered output paired with adjustment XMP-like sidecars under `resources/`. Plan: spike at start of Phase 4 to confirm. Acceptable?
-3. **`maureen` ≡ `mmc`** — confirm. The source uses `mmc`; you wrote `maureen` in the instructions. I'll rename `mmc/` → `maureen/` at placement time unless you want to keep `mmc` as the dirname.
-4. **`users/<other-user>/` UIDs** — the older LDAP-era `users/` dir likely contains UIDs for david and mmc plus possibly others. Each non-david/non-mmc UID's content needs a manual call: assign to one of david/maureen, drop, or treat as separate.
-5. **App-data scope** — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
-6. **Documents dedup** — preserve folder structure verbatim (default), or also hash-dedup across the documents tree? Path context vs. disk savings.
-7. **Web-photo heuristic threshold** — false-positive risk. Default: anything without camera EXIF gets flagged for review. Acceptable?
-8. **DS1512+ decommission timing** — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
-9. **`www/` and any other untouched source dirs** — these aren't in any backup script and weren't classified by the original work. Treat per Phase 1 inventory output (default: classify and ask) — confirm.
-10. **iTunes Music Library files** (`iTunes Library.itl`, `iTunes Music Library.xml`) — application metadata that could regenerate iTunes' view of the library, but useless without iTunes. Default: drop. Confirm.
-11. **Phase 11 reconciliation strictness** — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
+3. **App-data scope** — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
+4. **Documents dedup** — preserve folder structure verbatim (default), or also hash-dedup across the documents tree? Path context vs. disk savings.
+5. **Web-photo heuristic threshold** — false-positive risk. Default: anything without camera EXIF gets flagged for review. Acceptable?
+6. **DS1512+ decommission timing** — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
+7. **iTunes Music Library files** (`iTunes Library.itl`, `iTunes Music Library.xml`) — application metadata that could regenerate iTunes' view of the library, but useless without iTunes. Default: drop. Confirm.
+8. **Phase 11 reconciliation strictness** — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
 
 ## Out of scope (deferred)
 
