@@ -366,22 +366,48 @@ Under the "read SSD, write curated layout" strategy, content the user wants to d
 
 ### Phase 9 — Anomaly review
 
-**Why:** anything not classified by Phase 1, or anything Phases 3–8 couldn't decide on, surfaces here for user case-by-case decision.
+**Why:** anything not classified by Phase 1, or anything Phases 3–8 couldn't decide on, surfaces here for user case-by-case decision. Phase 9 is the catchall — once it finishes, the curated layout is ready for promotion in Phase 10.
 
 **Actions:**
-- After Phases 3–8 run, what remains in `snashome/`, `users/`, etc. should be empty or near-empty. Whatever survives is the anomaly set.
-- Walk what's left, emit `cleanup_anomalies.md` — one entry per surviving file/dir > 10 MB, with size, path, suggested action
-- Categories of anomaly to expect:
-  - **VM disk images** — `.pvm`, `.hdd`, `.vmdk`, `.vdi`, `.vhd`. Per the original plan inventory, ~3 GB of VM/installer files. User likely wants to keep specific images and drop installers. Manual decision per file.
-  - **DMG / ISO** — `.dmg`, `.iso`. Mix of OS install media (drop) and user-created images (keep). Manual decision.
-  - **Source code / scripts** — small but contextual. Default: route to `david/code/` or `mmc/code/` preserving structure.
-  - **Email** — Apple Mail Maildir/mbox lives under `Library/Mail/`. Already routed to `app-data/Mail/` in Phase 7.
-  - **Truly unknown** — flagged.
-- User fills in actions; `apply_anomaly_decisions.sh` actions them.
+
+1. **Walk what's left** — after Phases 3–8 run, walk all source paths and identify content that wasn't placed by any phase or surfaced by Phase 8's coverage cross-tab as a fall-through.
+
+2. **Sub-classify anomalies** by extension/content rather than relying on the broad `unknown` bucket:
+   - `vm-disk` — `.pvm`, `.hdd`, `.vmdk`, `.vdi`, `.vhd`, `.qcow2`, `.ova`, `.ovf`
+   - `disk-image` — `.dmg`, `.iso`, `.img`, `.cdr`
+   - `source-code` — `.py`, `.sh`, `.rb`, `.js`, `.ts`, `.go`, `.c`/`.cpp`/`.h`, `.swift`, `.java`, `.rs`, `.lua`, `.pl`, plus `.git/`, `.hg/`, `Makefile`, `Cargo.toml`, `package.json`
+   - `large-binary` — single file >100 MB with no other classification
+   - `loose-text` — `.txt`/`.md`/`.log` outside any documents source-context
+   - `unknown` — truly nothing identified
+
+3. **Inclusion threshold** — surface in `cleanup_anomalies.md`:
+   - Every file or top-level subdir **>1 MB**
+   - PLUS anything sub-classified as `unknown`, `vm-disk`, `disk-image`, or `large-binary` regardless of size
+   - **Below the threshold and not flagged as suspicious**: default-keep at `david/<source-context>/<original-relative-path>` or `mmc/<source-context>/<original-relative-path>` so nothing is silently lost. The threshold filters what to surface for review, not what to drop.
+
+4. **Default actions per sub-category** (each row in `cleanup_anomalies.md` has a default the user can override):
+   - `vm-disk` → keep, route to `david/vms/<source-context>/<filename>` (new subdir under user)
+   - `disk-image` → review (mix of OS installers to drop and user images to keep)
+   - `source-code` → keep, route to `david/code/<source-context>/<original-relative-path>` (or `mmc/code/...`); whole top-level source-code dir routed as a unit (e.g., a git repo with all its files), not just loose `.py` files. **`.git/`/`.hg/` dirs flagged separately** in the report so user can decide per-repo whether to keep the history.
+   - `large-binary` → review
+   - `loose-text` → keep, route to `david/text/<source-context>/<filename>`
+   - `unknown` → review
+
+5. **`apply_anomaly_decisions.sh` semantics:**
+   - User-marked `keep` with a destination → copy SSD source → `staging/<destination>`. Hard Guard #1 still holds (SSD never modified).
+   - User-marked `drop` → no action; the file just isn't placed in the curated layout.
+   - **Destination must be under `staging/`**; the script validates and refuses any path under `/volume1/{music,photos,...}` (Hard Guard #2).
+   - **Idempotent**: safe to rerun. Files already placed are skipped; newly-keep'd rows get placed; `drop` rows stay un-placed. User can iterate freely.
+   - **Cross-category rerouting allowed**: if the user marks an anomaly's destination as `staging/music/<artist>/<album>/...` because it's actually music we missed, the script honors it. The full curated layout is reachable as a destination.
+
+6. **Phase ordering**: Phase 9 must complete (all anomaly decisions applied) **before** Phase 10 promotes staging. Once staging is moved to final position at Phase 10, Hard Guard #2 kicks in and the layout becomes read-only.
 
 **Critical files:**
-- `post_migration/anomalies.sh` (new) — produces the review doc
-- `post_migration/apply_anomaly_decisions.sh` (new) — actions the user-marked decisions
+- `post_migration/anomalies.sh` (new) — produces the review doc with sub-classified rows
+- `post_migration/apply_anomaly_decisions.sh` (new) — actions user-marked decisions; idempotent; staging-only writes
+
+**Output reports:**
+- `cleanup_anomalies.md` — one row per surviving file/dir >1 MB or with a suspicious sub-classification, with size, path, sub-category, default action, destination.
 
 ### Phase 10 — Move staging into final position
 
@@ -497,7 +523,7 @@ Under the "read SSD, write curated layout" strategy, content the user wants to d
 - **Phase 5**: every project bundle is intact (open in iMovie/FCP if curious); standalone count matches expectation; spot-check 5 standalone videos in `movies/other/<YYYY>/<source-context>/` (date sane, file plays); DV review report (`cleanup_videos_dv.md`) reviewed and applied.
 - **Phase 6**: file count under `staging/documents/` ≈ classifier's `document` count minus duplicates in `dedup_map.csv`; spot-check folder structure preservation; spot-check 5 entries in `dedup_map.csv` (canonical path resolves to a real file, all listed source paths actually existed); review `cleanup_documents_archives.md` for any archives needing manual extraction.
 - **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's no-EXIF set; spot-check 5 mbox files (open in Thunderbird or `mutt -f`); review `cleanup_mail_conversion.md` for any raw-fallback mailboxes; review `cleanup_personal_assignment.md` and confirm no user-uid subtrees were left unrouted.
-- **Phase 9**: after applying anomaly decisions, the classifier's `unknown` set has been resolved (kept-with-target, dropped, or fetch-from-DS1512+).
+- **Phase 9**: after applying anomaly decisions, every row in `cleanup_anomalies.md` is either marked `drop` or has a destination under `staging/`. Phase 8's coverage cross-tab now shows zero unhandled fall-throughs. `apply_anomaly_decisions.sh` rerun is a no-op (idempotency check).
 - **Phase 10**: `ls /volume1/staging` reports empty; `ls /volume1/{music,photos,movies,documents,david,mmc}` matches expectation; staging dir removed.
 - **Phase 11**: re-run `verify_ds1512.sh` after gap-fill; expected output is only entries the user explicitly marked `skip`. DS1512+ powered down once that holds.
 
@@ -572,6 +598,13 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - `cleanup_skip_audit.md` — permanent audit trail of every skipped dir.
 - `phase_3_to_7_input_coverage.md` — coverage cross-tab; flags silent fall-throughs for Phase 9 review.
 - Phase 8 is read-only (Hard Guard #1 reaffirmed). Doesn't replace `nas_cleanup.sh` (file-level macOS junk handler — separate concern).
+
+**Phase 9 (anomaly review):**
+- Sub-classifier breaks anomalies into: `vm-disk`, `disk-image`, `source-code`, `large-binary`, `loose-text`, `unknown` (rather than one fat `unknown` bucket).
+- Surface threshold for review: >1 MB, OR any suspicious sub-classification (`unknown`, `vm-disk`, `disk-image`, `large-binary`) regardless of size.
+- Below-threshold files default-kept at `david/<source-context>/<...>` or `mmc/<source-context>/<...>` — nothing silently lost.
+- Default actions: vm-disks → `david/vms/`; source code → `david/code/<source-context>/` (whole repo as a unit, `.git/` flagged separately for keep/drop); loose-text → `david/text/`.
+- `apply_anomaly_decisions.sh` is idempotent; staging-only writes (Hard Guard #2 enforced); cross-category rerouting allowed (user can route an anomaly into `staging/music/`, etc.).
 
 **Phase 10 (promote):**
 - btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
