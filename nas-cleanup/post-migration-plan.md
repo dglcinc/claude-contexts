@@ -284,17 +284,54 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 
 ### Phase 7 — Personal trees: `.bw`, `images`, `app-data`, miscellaneous
 
-**Why:** content that's clearly David's or Maureen's but doesn't fit a global category goes in their personal folders.
+**Why:** content that's clearly David's or mmc's but doesn't fit a global category goes in their personal folders.
 
 **Actions:**
-- **`.bw` content** — find every `**/.bw/**` path under david-owned source trees. Hash-dedup. Place under `david/.bw/<original-relative-path-after-.bw>`. Maureen's trees are not expected to have `.bw` — confirm in inventory.
-- **`images/`** — receives web-downloaded photos identified in Phase 4 (already routed there)
-- **`app-data/`** — application data the user wants kept for possible future recovery. From the rsync exclude analysis, the kept-by-default categories are: 1Password vaults, Quicken / TurboTax records, OmniFocus / Things DBs, Skype chats, Bento DBs, AddressBook, Mail (Maildir/mbox), GarageBand loops & projects, Steam saves, Minecraft saves. Each gets a subdir under `david/app-data/<app>/` or `mmc/app-data/<app>/`.
-- **Miscellaneous personal content** — anything categorized as user-data but not matching above (random user-created folders, scripts, dotfiles) → `david/<original-relative-path>` or `mmc/<original-relative-path>` preserving the in-user folder structure
-- **Per-user assignment**: source path under `david/` or `mmc/` → respective user. Source path under `users/<other-uid>/` → all such content ultimately belongs to either david or mmc (this NAS only ever had two real users, plus historical LDAP UIDs). When the right answer isn't obvious from path or content, flag for user review rather than guessing.
+
+1. **`.bw/` content** — David's personal archive of photos and videos downloaded from the internet, stored as a hidden dot-dir.
+   - Find every `**/.bw/**` path under david-owned source trees.
+   - Hash-dedup across versions (different backups may have copied the same content; structure within `.bw/` is unlikely to change between backups).
+   - Preserve as hidden: place under `david/.bw/<original-relative-path-after-.bw>`.
+   - mmc trees are not expected to have `.bw`; confirm in inventory and treat as anomaly if found.
+
+2. **`images/`** — non-camera-EXIF photos identified in Phase 4 are already routed there. Phase 7 doesn't re-process; just confirms the dir exists at `david/images/<YYYY>/`.
+
+3. **`app-data/`** — application data preserved for possible future recovery. Each app gets a subdir under `david/app-data/<app>/` or `mmc/app-data/<app>/`. Internal structure preserved verbatim — applications expect specific paths. **No dedup within `app-data/`** — fragile data, byte-identical copies may still differ in their relationship to a parent app, and disk savings would be small.
+
+   **Default-keep app-data categories:**
+   - **Personal data**: 1Password vaults, Quicken / TurboTax records, OmniFocus / Things DBs, Bento DBs, AddressBook
+   - **Communications**: Mail (special-handled — see step 4), Skype chats, **Messages history** (`chat.db`)
+   - **Calendars**: `.calendar` dirs from `~/Library/Calendars/` (NOT the `.caldav` server caches, which are excluded)
+   - **Notes / Stickies**: Notes.app DBs (`group.com.apple.notes/`), `StickiesDatabase`
+   - **Media**: Voice Memos, Photo Booth Library, GarageBand loops & projects
+   - **Browser bookmarks**: Safari (`Bookmarks.plist`), Chrome (`Bookmarks`), Firefox (`places.sqlite`). Bookmarks only — NOT history, cookies, cache, or session data.
+   - **Game progress**: Steam saves (under `Documents/`, not `Application Support/Steam/` install dir), Minecraft saves (`saves/` subdirs only, not the install or `assets/objects/`)
+
+   Anything else from `Application Support/` not on this list is dropped as exhaust (consistent with Phase 8 skip-by-construction).
+
+4. **Mail conversion to mbox (best-effort)** — Apple Mail's V2-V9 storage format is a directory hierarchy with one `.emlx` file per message. Pure preservation works but means millions of tiny files in the curated layout (the same readdir-stall pain that hit the original backup). Conversion plan:
+   - For each `*.mbox` package dir in source (e.g., `Mail/V2/<account>/<mailbox>.mbox/`), walk all `.emlx` files inside.
+   - Parse each `.emlx` (RFC 822 message with appended Apple binary plist). Strip the plist, keep the message bytes.
+   - Concatenate into a single mbox-format file at `david/app-data/Mail/<account>/<mailbox>.mbox` with traditional `From ` line separators.
+   - Importable by Thunderbird, mutt, or any modern email client.
+   - **Fallback on failure**: if any `.emlx` fails to parse (corruption, missing data, encoding issues), the entire mailbox falls back to verbatim raw preservation at `david/app-data/Mail/raw/<original-relative-path>/`. Per-mailbox decision so partial successes don't block.
+   - Emit `cleanup_mail_conversion.md` reporting per-mailbox: source path, message count, conversion status (`converted` / `raw_fallback`), output path, any warnings.
+
+5. **Miscellaneous personal content** — anything Phase 1 inventory tagged as user-data-misc that didn't match the above buckets (random user-created folders, scripts, dotfiles) → `david/<original-relative-path>` or `mmc/<original-relative-path>` preserving the in-user folder structure.
+
+6. **Per-user assignment**:
+   - Source path under `david/` or `mmc/` → respective user (no review needed).
+   - Source path under `users/<other-uid>/` → all such content ultimately belongs to david or mmc, but the right answer isn't always obvious from path/content.
+   - For ambiguous cases: emit `cleanup_personal_assignment.md` listing each unresolved subtree with size + sample contents. User marks each row `david / mmc / drop`. Default: nothing placed for that subtree until the user decides.
 
 **Critical files:**
-- `post_migration/personal_collect.sh` (new) — per-user pass
+- `post_migration/personal_collect.sh` (new) — orchestrator
+- `post_migration/personal_collect.py` (new) — does the work
+- `post_migration/mail_emlx_to_mbox.py` (new) — Apple Mail conversion utility
+
+**Output reports:**
+- `cleanup_personal_assignment.md` — ambiguous user-uid mappings for david/mmc/drop decision.
+- `cleanup_mail_conversion.md` — per-mailbox conversion outcome.
 
 ### Phase 8 — Skip-by-construction (no destructive phase needed)
 
@@ -441,7 +478,7 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 - **Phase 4**: spike output reviewed and acknowledged before extraction; spot-check 10 random photos (readable, EXIF preserved); spot-check 5 multi-album photos (confirmed in `album_map.csv`); spot-check 5 Live Photos pairs (`.HEIC`+`.MOV` together); spot-check 5 photos in `david/images/`; album-organization sanity check on a known album.
 - **Phase 5**: every project bundle is intact (open in iMovie/FCP if curious); standalone count matches expectation; spot-check 5 standalone videos in `movies/other/<YYYY>/<source-context>/` (date sane, file plays); DV review report (`cleanup_videos_dv.md`) reviewed and applied.
 - **Phase 6**: file count under `staging/documents/` ≈ classifier's `document` count minus duplicates in `dedup_map.csv`; spot-check folder structure preservation; spot-check 5 entries in `dedup_map.csv` (canonical path resolves to a real file, all listed source paths actually existed); review `cleanup_documents_archives.md` for any archives needing manual extraction.
-- **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's web-candidate set after user review.
+- **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's no-EXIF set; spot-check 5 mbox files (open in Thunderbird or `mutt -f`); review `cleanup_mail_conversion.md` for any raw-fallback mailboxes; review `cleanup_personal_assignment.md` and confirm no user-uid subtrees were left unrouted.
 - **Phase 9**: after applying anomaly decisions, the classifier's `unknown` set has been resolved (kept-with-target, dropped, or fetch-from-DS1512+).
 - **Phase 10**: `ls /volume1/staging` reports empty; `ls /volume1/{music,photos,movies,documents,david,mmc}` matches expectation; staging dir removed.
 - **Phase 11**: re-run `verify_ds1512.sh` after gap-fill; expected output is only entries the user explicitly marked `skip`. DS1512+ powered down once that holds.
@@ -504,6 +541,14 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - **Hidden files** copied except macOS noise denylist (`.DS_Store`, `.Spotlight-V100/`, `.fseventsd/`, `.Trashes`, `._*` AppleDouble).
 - **Archives** (.zip/.7z/.tar*) placed in natural location AND flagged in `cleanup_documents_archives.md` with sampled content listings; user manually extracts any they want before Phase 10. No automatic recursion.
 
+**Phase 7 (personal):**
+- **`.bw/`** is David's hidden archive of internet-downloaded photos/videos. Hash-dedup across backup versions, preserve hidden as `david/.bw/<original-relative-path>`.
+- **App-data keep-list** finalized: 1Password, Quicken/TurboTax, OmniFocus/Things, Bento, AddressBook, Mail, Skype, Messages history, .calendar dirs, Notes/Stickies DBs, Voice Memos, Photo Booth, GarageBand, browser bookmarks (Safari/Chrome/Firefox — bookmarks only, no history/cookies/cache), Steam saves (under Documents only), Minecraft saves. Everything else in Application Support is exhaust.
+- **No dedup within app-data** — fragile, small savings.
+- **App-data internal structure preserved verbatim** — apps expect specific paths.
+- **Mail conversion to mbox** (best-effort) via `mail_emlx_to_mbox.py`. Per-mailbox: convert if all .emlx files parse cleanly, else raw fallback at `david/app-data/Mail/raw/<...>`. Result reported in `cleanup_mail_conversion.md`.
+- **Ambiguous user-uid assignment** — flagged in `cleanup_personal_assignment.md` for david/mmc/drop decision; nothing placed until user decides.
+
 **Phase 10 (promote):**
 - btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
 
@@ -511,11 +556,10 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 
 ## Open questions for the user
 
-None gate Phase 1–6. Resolve before the listed phase:
+None gate Phase 1–7. Two questions remain, both for Phase 11:
 
-1. **App-data scope** *(gates Phase 7)* — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
-2. **DS1512+ decommission timing** *(gates Phase 11)* — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
-3. **Phase 11 reconciliation strictness** *(gates Phase 11)* — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
+1. **DS1512+ decommission timing** *(gates Phase 11)* — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
+2. **Phase 11 reconciliation strictness** *(gates Phase 11)* — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
 
 ## Out of scope (deferred)
 
