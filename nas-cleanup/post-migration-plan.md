@@ -414,15 +414,43 @@ Under the "read SSD, write curated layout" strategy, content the user wants to d
 **Why:** until now, the curated layout was being built under `/volume1/staging/` to keep Hard Guard #2 (never modify `/volume1/{music,photos,...}` once built) trivially enforceable during the build. After Phase 9 sign-off, staging is promoted to the final layout.
 
 **Actions:**
-- Verify staging matches expectation (rough size, top-level dir count).
-- **btrfs snapshot** of `/volume1/` immediately before the `mv` — DS225+ runs btrfs, snapshots are instant and metadata-only. Gives a one-command rollback if Phase 10 goes wrong. Synology DSM exposes this via `btrfs subvolume snapshot` (or Snapshot Replication). Suggested name: `volume1-pre-promote-<YYYYMMDD-HHMM>`.
-- `mv /volume1/staging/{music,photos,movies,documents,david,mmc} /volume1/`
-- `rm -rf /volume1/staging` (only if empty).
-- From this point on, the curated layout dirs are read-only by convention; reruns of any cleanup phase refuse to write to them.
-- Snapshot can be retained for a grace period (e.g., until Phase 11 verification + gap-fill clears) and then released to reclaim metadata space.
+
+1. **Pre-promote sanity checks** — script runs all of these, emits a summary, waits for explicit `yes` to proceed:
+   - Top-level dir count under `staging/` equals 6 (`music`, `photos`, `movies`, `documents`, `david`, `mmc`). Anything else → abort.
+   - Total `staging/` size > 100 GB (sanity floor — rules out an empty build).
+   - Per-dir minimums: `music/` ≥1000 audio files, `photos/` ≥1000 image files, `documents/` ≥100 files. Zero in any category → abort (would indicate a phase didn't run).
+   - All expected manifests exist: `photos/album_map.csv`, `documents/dedup_map.csv`.
+   - All expected reports were generated and reviewed (the `cleanup_*.md` set).
+
+2. **Existing-destination check** — if any of `/volume1/{music,photos,movies,documents,david,mmc}` already exists (shouldn't happen on first run; can happen if the script is rerun), script **pauses and asks** rather than auto-deciding. User specifies whether to abort, rename existing → backup name, or merge. No silent overwrites.
+
+3. **btrfs snapshot** of `/volume1/` immediately before the `mv` — DS225+ runs btrfs, snapshots are instant and metadata-only. Snapshot name: `volume1-pre-promote-<YYYYMMDD-HHMM>`. **Aborts the script if snapshot creation fails** — no rollback path = no `mv`.
+
+4. **Promote each top-level dir** in a loop:
+   ```
+   for dir in music photos movies documents david mmc; do
+     mv "/volume1/staging/$dir" "/volume1/$dir" || { echo "FAILED at $dir"; exit 1; }
+   done
+   ```
+   On first failure: **abort and ask the user**. Output what completed, what failed, the failure reason. The btrfs snapshot is the rollback path. Do not auto-roll-back, do not auto-retry, do not auto-clean — let the user decide based on context.
+
+5. **Post-promote verification** — `ls /volume1/` shows the 6 curated dirs + no `staging/`. Spot-check 3 random files in each curated dir to confirm they're readable. If any check fails, surface to user before declaring success.
+
+6. **Cleanup**: `rm -rf /volume1/staging` only if empty.
+
+7. **Disable DSM indexing for the new curated dirs** — DSM's Indexing Service auto-indexes content for Photo Station / Audio Station / Video Station. Heavy CPU during initial indexing; not needed during post-cleanup. Script ensures the curated dirs are NOT in `/var/packages/Universal Search/etc/index_path.json` (or equivalent DSM 7 config). Emit a reminder in `cleanup_post_promote_steps.md`: "Re-enable indexing later via DSM Control Panel → Indexing Service → Indexed Folder List when you want Photo/Audio/Video Station browsing to work."
+
+8. **Permission re-application reminder** — `cleanup_post_promote_steps.md` also reminds: "Curated layout is currently `nasadmin:nasadmin`. To switch to user-specific perms run: `chown -R david:dglc /volume1/{music,photos,movies,documents,david} && chown -R mmc:dglc /volume1/mmc && chmod -R 770 /volume1/{music,photos,movies,documents} && chmod -R 750 /volume1/{david,mmc}`."
+
+9. **Snapshot retention** — manual cleanup. Script does NOT auto-delete the snapshot. Reminder in `cleanup_post_promote_steps.md`: "After Phase 11 verification + gap-fill confirms the curated layout is complete, release the snapshot with `btrfs subvolume delete /volume1/.snapshots/volume1-pre-promote-<YYYYMMDD-HHMM>` (path varies by DSM)." Snapshot disk impact is minimal until you start mutating things post-promote (copy-on-write).
+
+10. **Hard Guard #2 takes effect** from this point on. The curated layout dirs are read-only by convention; any subsequent cleanup-phase rerun refuses to write to them.
 
 **Critical files:**
-- `post_migration/promote_staging.sh` (new) — single-purpose mover with snapshot-then-move-then-verify; aborts before the `mv` if the snapshot creation fails.
+- `post_migration/promote_staging.sh` (new) — single-purpose mover with sanity-check → snapshot → mv → verify; aborts on any failure.
+
+**Output reports:**
+- `cleanup_post_promote_steps.md` — manual reminders: re-enable indexing, re-permission, release snapshot. Generated by the script with placeholder values filled in.
 
 ### Phase 11 — DS1512+ verification cross-check, gap-fill, decommission
 
@@ -524,7 +552,7 @@ Under the "read SSD, write curated layout" strategy, content the user wants to d
 - **Phase 6**: file count under `staging/documents/` ≈ classifier's `document` count minus duplicates in `dedup_map.csv`; spot-check folder structure preservation; spot-check 5 entries in `dedup_map.csv` (canonical path resolves to a real file, all listed source paths actually existed); review `cleanup_documents_archives.md` for any archives needing manual extraction.
 - **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's no-EXIF set; spot-check 5 mbox files (open in Thunderbird or `mutt -f`); review `cleanup_mail_conversion.md` for any raw-fallback mailboxes; review `cleanup_personal_assignment.md` and confirm no user-uid subtrees were left unrouted.
 - **Phase 9**: after applying anomaly decisions, every row in `cleanup_anomalies.md` is either marked `drop` or has a destination under `staging/`. Phase 8's coverage cross-tab now shows zero unhandled fall-throughs. `apply_anomaly_decisions.sh` rerun is a no-op (idempotency check).
-- **Phase 10**: `ls /volume1/staging` reports empty; `ls /volume1/{music,photos,movies,documents,david,mmc}` matches expectation; staging dir removed.
+- **Phase 10**: pre-promote sanity-check summary passed; btrfs snapshot exists; `ls /volume1/staging` reports empty (or no longer exists); `ls /volume1/{music,photos,movies,documents,david,mmc}` matches expectation; spot-check 3 random files in each curated dir readable; `cleanup_post_promote_steps.md` generated; DSM indexing confirmed disabled for curated dirs.
 - **Phase 11**: re-run `verify_ds1512.sh` after gap-fill; expected output is only entries the user explicitly marked `skip`. DS1512+ powered down once that holds.
 
 Roll-back path for any phase: restore from the SSDs (untouched, read-only throughout the build) or the DS1512+ (until decommissioned). Document SSD-path → DS225+-path mapping so partial restores are easy.
@@ -607,7 +635,13 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - `apply_anomaly_decisions.sh` is idempotent; staging-only writes (Hard Guard #2 enforced); cross-category rerouting allowed (user can route an anomaly into `staging/music/`, etc.).
 
 **Phase 10 (promote):**
+- Pre-promote sanity checks: top-level dir count = 6, size floor 100 GB, per-dir file-count minimums, manifests exist, user types `yes`.
+- Existing-destination check pauses and asks (won't normally happen; only on rerun).
 - btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
+- Per-dir `mv` loop. On first failure: abort and ask; don't auto-rollback. Snapshot is the recovery path.
+- DSM indexing **disabled** for curated dirs initially. `cleanup_post_promote_steps.md` reminds the user to re-enable when Photo/Audio/Video Station browsing is desired.
+- Permission re-application reminder included in the post-promote steps doc.
+- Snapshot retention is manual; release with `btrfs subvolume delete` after Phase 11 confirms.
 
 **Hard Guard #1 reaffirmed:** SSDs are never modified. Build is copy-only from SSD → DS225+. User can clean up SSD sources later, separately.
 
