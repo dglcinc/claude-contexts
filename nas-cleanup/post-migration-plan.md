@@ -222,20 +222,33 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 
 ### Phase 5 — Videos: sort
 
-**Why:** videos appear in three contexts that need different placement rules.
+**Why:** videos appear in three contexts that need different placement rules. Phase 5 handles the standalone-video case; project bundles get preserved atomic; iPhoto/Photos library videos are handled in Phase 4.
+
+**Video extensions in scope:** `.mov`, `.mp4`, `.m4v`, `.avi`, `.dv`, `.mkv`, `.wmv`, `.mts`, `.m2ts`, `.3gp`, `.flv`, `.webm`. Exclude `.mov` files that are part of a Live Photos pair (those are paired with their `.HEIC`/`.JPG` and routed by Phase 4).
 
 **Actions:**
-- For each video file (`.mov`, `.mp4`, `.avi`, `.dv`, `.m4v`) found anywhere in scope:
-  - **Inside a `.photoslibrary` / iPhoto library** (extracted in Phase 4) → `photos/` alongside other extracted media (Phase 4 handles)
-  - **Inside an iMovie project bundle** (`*.iMovieProject` or `*.imovielibrary`) → `movies/iMovie/<project-name>/` (preserve the bundle wholesale)
-  - **Inside a Final Cut bundle** (`*.fcpbundle`) → `movies/FinalCut/<project-name>/` (preserve the bundle wholesale)
-  - **Standalone (loose)** → `movies/other/<source-context>/<filename>` where source-context is the original parent dir name (e.g., `mmc_archive_2020_beyers_vid/`)
-- Inside project bundles: do NOT strip rendered proxies, even though they're regeneratable — they're part of the bundle and stripping risks breaking the project. Bundle is an atomic unit.
-- The 164 GB `mmc_archive/2020_beyers_vid/` wedding video case: classification depends on what's in there — if it's a project bundle, treat as such; if it's source DV + finished mp4, place under `movies/other/2020_beyers_vid/` and emit a review note about whether to keep DV originals + finished render or just the finished render.
+1. **Route by context** — for each video file in scope:
+   - **Inside a `.photoslibrary` / iPhoto library** → handled by Phase 4 (placed alongside other extracted media). Phase 5 ignores.
+   - **Inside an iMovie project bundle** (`*.iMovieProject`, `*.imovielibrary`) → `movies/iMovie/<project-name>/` (preserve the bundle wholesale, including rendered proxies — bundle is atomic)
+   - **Inside a Final Cut bundle** (`*.fcpbundle`) → `movies/FinalCut/<project-name>/` (preserve the bundle wholesale)
+   - **Standalone (loose)** → date-organized placement (see step 2)
+2. **Standalone video placement** — extract capture date via metadata, organize by year while preserving the source-context cluster:
+   - **Date extraction**: `ffprobe` (FFmpeg) for QuickTime/MP4/MKV `creation_time` atoms, AVI RIFF metadata, DV tape timecode. Fallback chain: container metadata → filename date pattern (`VID_20180615_*`, `2018-06-15_*`) → file mtime → `unknown-date`.
+   - **Path**: `movies/other/<YYYY>/<source-context>/<filename>` where `<source-context>` is the slugified original parent dir (e.g., `mmc_archive_2020_beyers_vid` from `mmc_archive/2020_beyers_vid/`). Preserves provenance; related files in the same dir stay grouped.
+   - **No-date fallback**: `movies/other/unknown-date/<source-context>/<filename>`.
+3. **Project-bundle name collisions** — strip extension for the dir name (`Vacation 2018.iMovieProject` → `Vacation 2018/`). On collision, append counter: `Vacation 2018 (2)/`, `Vacation 2018 (3)/`.
+4. **DV review report** — `.dv` files are huge (~13 GB/hour) and often only useful as project source. Emit `cleanup_videos_dv.md` listing every `.dv` file with: size, source path, year, and any same-dir sibling video files (likely the rendered output). User marks each `[ ] keep / [X] drop` (default drop for files where a rendered sibling exists; default keep otherwise). Run AFTER initial placement so the user reviews against the actual placed layout, not the source.
+5. **No video dedup** — multi-GB files rarely have byte-identical duplicates; the cost of hashing is high relative to expected savings. If Phase 9 surfaces anything, run a one-off dedup script then.
+6. **The 164 GB `mmc_archive/2020_beyers_vid/` case** — classification depends on contents:
+   - If project bundle → treat per rule 1.
+   - If source DV + finished mp4 → land under `movies/other/2020/mmc_archive_2020_beyers_vid/` per rule 2; the DV will be flagged in step 4's report for keep/drop.
 
 **Critical files:**
 - `post_migration/videos_sort.sh` (new) — orchestrator
-- `post_migration/videos_sort.py` (new) — does the work
+- `post_migration/videos_sort.py` (new) — does the work; uses `ffprobe` (system dependency) for metadata.
+
+**Output reports:**
+- `cleanup_videos_dv.md` — DV files with size + sibling-render candidates for keep/drop review.
 
 ### Phase 6 — Documents
 
@@ -407,7 +420,7 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 - **Phase 2**: `ls /volume1/staging/{music,photos,movies,documents,david,mmc}` returns six empty dirs.
 - **Phase 3**: spot-check 10 random tracks (playable, correct tags); track count in `staging/music/` matches the dedup CSV's "kept" count.
 - **Phase 4**: spike output reviewed and acknowledged before extraction; spot-check 10 random photos (readable, EXIF preserved); spot-check 5 multi-album photos (confirmed in `album_map.csv`); spot-check 5 Live Photos pairs (`.HEIC`+`.MOV` together); spot-check 5 photos in `david/images/`; album-organization sanity check on a known album.
-- **Phase 5**: every project bundle is intact (open in iMovie/FCP if curious); standalone count matches expectation.
+- **Phase 5**: every project bundle is intact (open in iMovie/FCP if curious); standalone count matches expectation; spot-check 5 standalone videos in `movies/other/<YYYY>/<source-context>/` (date sane, file plays); DV review report (`cleanup_videos_dv.md`) reviewed and applied.
 - **Phase 6**: file count under `staging/documents/` ≈ classifier's `document` count; spot-check folder structure preservation.
 - **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's web-candidate set after user review.
 - **Phase 9**: after applying anomaly decisions, the classifier's `unknown` set has been resolved (kept-with-target, dropped, or fetch-from-DS1512+).
@@ -456,6 +469,13 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - **Re-import caveat documented**: re-importing into a new Photos.app library doesn't auto-restore album associations; `album_map.csv` is the recovery path for script-based reconstruction.
 - **iCloud handling**: spike detects iCloud-only placeholders, pauses for user decision (re-sync / low-res-tag / skip). Decision is data-driven — depends on the actual placeholder count.
 - **Drop without review:** slideshows, photo books, cards, calendar projects, AAE adjustment plists, Faces/People, Memories.
+
+**Phase 5 (videos):**
+- **Extension list:** mov, mp4, m4v, avi, dv, mkv, wmv, mts, m2ts, 3gp, flv, webm. Live Photos `.MOV` files excluded (handled by Phase 4 as paired media).
+- **Standalone placement:** date-organized by year via `ffprobe` capture-date extraction. Path: `movies/other/<YYYY>/<source-context>/<filename>`. Source-context preserved as slugified parent-dir name; related files stay grouped within their year.
+- **Project bundles** (iMovie, FCP) preserved wholesale, including rendered proxies — bundle is atomic. Name collisions get a `(2)`, `(3)` counter suffix.
+- **No video dedup** — multi-GB files rarely byte-duplicate; hashing cost high vs. expected savings.
+- **DV review** (`cleanup_videos_dv.md`) — every `.dv` file flagged for keep/drop, default drop where a rendered sibling exists, default keep otherwise.
 
 **Phase 10 (promote):**
 - btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
