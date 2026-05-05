@@ -254,14 +254,33 @@ All phases produce CSV/Markdown reports on dry run. `--apply` performs the destr
 
 **Why:** documents should keep their original folder structure (the user's organization) under a `documents/` root, with source-context preserved.
 
+**Document extensions in scope:** `.pdf`, `.doc`/`.docx`, `.xls`/`.xlsx`, `.ppt`/`.pptx`, `.txt`, `.rtf`, `.pages`, `.numbers`, `.key`, `.md`, `.odt`, `.tex`, `.csv`, `.tsv`, `.html`/`.htm`, `.epub`, `.mobi`, `.djvu`, `.ps`, `.eps`, `.opml`, `.fdx`. iWork bundles (`.pages`/`.numbers`/`.key`) are macOS package dirs at the filesystem level — treated as files (no descend), copied as units.
+
 **Actions:**
-- Find all document files (`.pdf`, `.doc{,x}`, `.xls{,x}`, `.ppt{,x}`, `.txt`, `.rtf`, `.pages`, `.numbers`, `.key`, `.md`, `.odt`, `.tex`)
-- Place under `documents/<source-context>/<original-relative-path>`
-  - `source-context` = top-level source dir slug (`snashome_david_Documents`, `users_mmc_Desktop`, etc.)
-- Optional: hash-dedup across the documents/ tree — defer pending user decision (small disk footprint vs. losing path context)
+1. **Find** all in-scope document files under inventoried `documents` and `unknown` sources (anywhere a Phase 1 classifier put a `documents` tag, plus loose docs in user dirs).
+2. **Hash-dedup with manifest**:
+   - SHA-256 every doc.
+   - Largest-source wins as canonical placement (consistent with the photos rule).
+   - Emit `documents/dedup_map.csv` listing every doc + every source path that pointed at the same hash:
+     ```
+     canonical_path, sha256, all_source_paths
+     documents/snashome_david_Documents/Bank/2018-Statement.pdf, abc123..., "snashome/david/Documents/Bank/2018-Statement.pdf|users/david/Documents/old/2018-Statement.pdf"
+     ```
+3. **Place winners** at `documents/<source-context>/<original-relative-path>`:
+   - `<source-context>` = slugified top-level source dir (path separators, dots, spaces, special chars all → `_`). Examples: `snashome/david/Documents/` → `snashome_david_Documents`; `users/mmc/Desktop/` → `users_mmc_Desktop`.
+   - Original relative path under that dir is preserved verbatim.
+4. **Hidden files** — copy hidden dotfiles in source dirs (often user content: `.notes/`, project metadata, etc.) **except** macOS noise denylist: `.DS_Store`, `.Spotlight-V100/`, `.fseventsd/`, `.Trashes`, `.TemporaryItems/`, `._*` AppleDouble files.
+5. **Symlinks** — record in dedup manifest, do not follow (consistent with Phase 1).
+6. **Empty dirs** — not preserved. Source dirs whose contents all filter out simply don't appear under `documents/`.
+7. **Archives flagged separately** — `.zip`, `.7z`, `.tar`, `.tar.gz`/`.tgz`, `.tar.bz2`/`.tbz`, `.rar` placed at their natural `documents/<source-context>/<original-relative-path>` like other docs (default: keep as-is), AND listed in `cleanup_documents_archives.md` with size, source path, and a sampled top-level content listing (`unzip -l` / `tar -tf` first 20 entries). User can extract any they want manually before Phase 10 promotes staging — automatic recursion into archives is out of scope.
 
 **Critical files:**
-- `post_migration/documents_collect.sh` (new) — straightforward rsync with file-type filter
+- `post_migration/documents_collect.sh` (new) — orchestrator
+- `post_migration/documents_collect.py` (new) — does the dedup + manifest
+
+**Output reports:**
+- `documents/dedup_map.csv` — canonical → all-source-paths mapping, lives in the curated layout permanently.
+- `cleanup_documents_archives.md` — archives discovered, with sampled content listings, for manual review.
 
 ### Phase 7 — Personal trees: `.bw`, `images`, `app-data`, miscellaneous
 
@@ -421,7 +440,7 @@ The classification map from Phase 1 is the audit trail showing what was excluded
 - **Phase 3**: spot-check 10 random tracks (playable, correct tags); track count in `staging/music/` matches the dedup CSV's "kept" count.
 - **Phase 4**: spike output reviewed and acknowledged before extraction; spot-check 10 random photos (readable, EXIF preserved); spot-check 5 multi-album photos (confirmed in `album_map.csv`); spot-check 5 Live Photos pairs (`.HEIC`+`.MOV` together); spot-check 5 photos in `david/images/`; album-organization sanity check on a known album.
 - **Phase 5**: every project bundle is intact (open in iMovie/FCP if curious); standalone count matches expectation; spot-check 5 standalone videos in `movies/other/<YYYY>/<source-context>/` (date sane, file plays); DV review report (`cleanup_videos_dv.md`) reviewed and applied.
-- **Phase 6**: file count under `staging/documents/` ≈ classifier's `document` count; spot-check folder structure preservation.
+- **Phase 6**: file count under `staging/documents/` ≈ classifier's `document` count minus duplicates in `dedup_map.csv`; spot-check folder structure preservation; spot-check 5 entries in `dedup_map.csv` (canonical path resolves to a real file, all listed source paths actually existed); review `cleanup_documents_archives.md` for any archives needing manual extraction.
 - **Phase 7**: `staging/david/.bw/` deduped (no two files with same hash); `staging/david/images/` matches Phase 4's web-candidate set after user review.
 - **Phase 9**: after applying anomaly decisions, the classifier's `unknown` set has been resolved (kept-with-target, dropped, or fetch-from-DS1512+).
 - **Phase 10**: `ls /volume1/staging` reports empty; `ls /volume1/{music,photos,movies,documents,david,mmc}` matches expectation; staging dir removed.
@@ -477,6 +496,14 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 - **No video dedup** — multi-GB files rarely byte-duplicate; hashing cost high vs. expected savings.
 - **DV review** (`cleanup_videos_dv.md`) — every `.dv` file flagged for keep/drop, default drop where a rendered sibling exists, default keep otherwise.
 
+**Phase 6 (documents):**
+- **Hash-dedup with manifest** — same pattern as photos. `documents/dedup_map.csv` records canonical path + all source paths.
+- **Extension list extended:** csv, tsv, html, htm, epub, mobi, djvu, ps, eps, opml, fdx (in addition to the original PDF/doc/xls/ppt/txt/rtf/pages/numbers/key/md/odt/tex set).
+- **Placement:** `documents/<source-context>/<original-relative-path>` where `<source-context>` is slugified source-tree path.
+- **iWork bundles** treated as files (no descend), copied as units.
+- **Hidden files** copied except macOS noise denylist (`.DS_Store`, `.Spotlight-V100/`, `.fseventsd/`, `.Trashes`, `._*` AppleDouble).
+- **Archives** (.zip/.7z/.tar*) placed in natural location AND flagged in `cleanup_documents_archives.md` with sampled content listings; user manually extracts any they want before Phase 10. No automatic recursion.
+
 **Phase 10 (promote):**
 - btrfs snapshot of `/volume1/` immediately before the `mv`. `promote_staging.sh` aborts before the `mv` if snapshot fails.
 
@@ -484,12 +511,11 @@ Roll-back path for any phase: restore from the SSDs (untouched, read-only throug
 
 ## Open questions for the user
 
-None gate Phase 1–4. Resolve before the listed phase:
+None gate Phase 1–6. Resolve before the listed phase:
 
 1. **App-data scope** *(gates Phase 7)* — the keep-by-default list (1Password, Quicken/TurboTax, OmniFocus/Things, Skype, Bento, AddressBook, Mail, GarageBand projects, Steam saves, Minecraft saves) — anything to add or drop?
-2. **Documents dedup** *(gates Phase 6)* — preserve folder structure verbatim (default), or also hash-dedup across the documents tree? Path context vs. disk savings.
-3. **DS1512+ decommission timing** *(gates Phase 11)* — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
-4. **Phase 11 reconciliation strictness** *(gates Phase 11)* — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
+2. **DS1512+ decommission timing** *(gates Phase 11)* — power down DS1512+ as soon as Phase 11 verification + gap-fill succeeds, or hold for a grace period (e.g., 30 days) in case something surfaces later?
+3. **Phase 11 reconciliation strictness** *(gates Phase 11)* — match by filename+size (looser, fewer false-gap-flags) or by content fingerprint (stricter, catches renamed-on-import cases)? Default: fingerprint with size as a fast pre-filter.
 
 ## Out of scope (deferred)
 
