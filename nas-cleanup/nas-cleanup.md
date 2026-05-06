@@ -6,22 +6,24 @@ Backing up a failing Synology DS1512+ NAS (10.0.0.2) to a local SSD (`/Volumes/d
 
 ## Current State
 
-**Phases 1–4 complete** (2026-05-06). 261 GB / 75,903 files now in `/volume1/snashome/staging/`:
+**Phases 1–10 complete; Phase 11d in progress** (2026-05-06). Curated layout is **live at `/volume1/snashome/{music,photos,movies,documents,david,mmc}`** (~1.11 TB):
 
 ```
-music/      64 GB / 28,154 entries (Phase 3)
-photos/    115 GB / 43,676 files (Phase 4b)
-david/      82 GB / 4,073 files (Phase 4b non-camera-EXIF)
-movies/      0  documents/  0  mmc/  0
+music/      64 GB
+photos/    115 GB
+movies/    206 GB
+documents/  38 GB  (Phase 6 26 GB + Phase 11d fallthrough fetch +12 GB)
+david/     159 GB  (Phase 4b 82 GB + Phase 7 .bw/misc/app-data 77 GB)
+mmc/       531 GB  (Phase 7 misc 391 GB + Phase 11d Library +140 GB)
 ```
 
-**Phase 4a photoslibrary spike**: 14 libraries detected, only 4 have content (the rest are abandoned recovery shells). Combined ~126k originals across the 4 real libraries; 3,676 iCloud-only placeholders (~2.9%). User chose option (b) low-res-tag.
+**Phase 10 promote** completed in 8 seconds (2026-05-06): `NAS_SSH_USER=root ./promote_staging.sh --apply --yes` → btrfs snapshot + 6 atomic same-volume mvs. Pre-promote rollback snapshot at `/volume1/.snapshots/volume1-pre-promote-20260506-1330` (Subvolume ID 261), kept until Phase 11e sign-off.
 
-**Phase 4b photos curate**: 95,374 records scanned → 38,365 unique after dedup. Place dropped 5,707 orphan iPhoto edits (originals re-imported into newer Photos.app library; cross-library UUID linker can't bridge). 4,074 non-camera-EXIF lumped to `david/images/<YYYY>/`. Throughput consistent 117 MB/s on 1 GbE.
+**Phase 11d gap-fill** is partial. Bypassed the script's per-file design (619k SSH connections / multi-day) for two batched SSH-mode rsyncs per Library tree. `users/mmc/Library` complete (62.8 GB / 376k files in 1h1m). `users/mmc_OldUserFiles/Library` partial — stuck on TurboTax 2012 download archive containing an Xcode bundle with `XCContentsDir` dir↔symlink replacement conflict; needs `--exclude='Application Support/TurboTax*'` to resume. `nasadmin@DS225+ → root@DS1512+` SSH key installed during this session.
 
-**Architecture finalized**: single `/volume1/snashome` DSM shared folder for both staging and final layout; PR #29 (snashome refactor) merged. Earlier `/volume1/staging` shared folder is now empty — user can delete via DSM Control Panel when convenient.
+**Fall-through audit + recovery** (2026-05-06): user noticed `david/demi/*.jpg` (6 images) didn't reach the curated layout because Phase 1 classified the dir as `video` (one .mp4 inside) and Phase 5 only takes video files. Bulk-fix recovered +12 GB across 62 documents-classified rows (SPGI screenshots/diagrams +8 GB, Real_Estate, etc.). Comprehensive audit confirmed no other silent data loss outside intentional drops (Phase 3 lowbitrate filter, AppleDouble exclusion, `rsync/` never-backed-up, iPhoto migrated library duplicates collapsed by SHA-256).
 
-**All 17 build-phase scripts merged** (PRs #7–#23 plus follow-up fixes #25, #26, #29).
+**8 PRs merged this session** (PR-#29 fallout + Phase 7b bug discoveries): #31 (docs scan UTF-8 crash), #32–34 (Phase 7b: dotfile mangling, dst collisions, symlink loop), #35–36 (promote validator + --yes flag), #37–38 (reconcile snashome paths).
 
 ## Open PRs (small, post-discovery fixes; not blocking)
 - **#27** — inventory: sanitize newlines+pipes from markdown table cells
@@ -29,11 +31,10 @@ movies/      0  documents/  0  mmc/  0
 
 ## Next Steps
 
-1. **Spot-check** photos staging — pick 10 random files in `/volume1/snashome/staging/photos/<YYYY>/...` and verify they open as images with correct EXIF.
-2. **Phase 5 videos**: install `ffmpeg` first (`brew install ffmpeg`), then run `videos_sort.sh` for capture-date-organized placement. Probably small volume.
-3. **Phase 6 documents**: hash-dedup with manifest.
-4. **Phase 7a/b mail + personal**: emlx→mbox conversion plus app-data/.bw/misc collection.
-5. **Phase 8 skip audit**: read-only cross-tab against Phase 1 inventory.
-8. **Phase 10** promote — `mv staging/<X> ../<X>` within snashome shared folder (atomic).
-9. **Phase 11a–e** DS1512+ verification + gap-fill + post-verify baseline snapshot + DS1512+ decommission (user-paced).
-10. (Optional) Re-run Phase 3 lowbitrate sub-phase after user reviews `cleanup_music_lowbitrate_orphan_albums.md` (700 albums classified cd-rip / mixed / download). Top cd-rip picks: Beatles compilations, Tom Waits — Mule Variations, NIN — The Fragile, Vivaldi Four Seasons.
+1. **Resume `users/mmc_OldUserFiles/Library` fetch** with `--exclude='Application Support/TurboTax*'` to skip the Xcode-bundle conflict.
+2. (Optional) **Music lowbitrate review** — `cleanup_music_lowbitrate_orphan_albums.md` has 700 albums classified cd-rip/mixed/download. Top picks: Beatles compilations, Tom Waits — Mule Variations, NIN — The Fragile, Vivaldi Four Seasons. Re-run `music_curate.sh --phase lowbitrate` to keep marked albums.
+3. (Optional) **`old_fileserver_stuff/public` selective fetch** — 40 GB / 15k files mostly samba source code + Windows installers; 76 real jpgs inside.
+4. **Re-run reconcile** after gap-fill completes (current report is pre-fetch snapshot; everything just fetched still appears as "missing").
+5. **Phase 11e — Post-verify snapshot**: `post_verify_snapshot.sh` releases pre-promote snapshot, takes `volume1-archive-baseline-20260506`, configures DSM Snapshot Replication weekly with 4-week retention.
+6. **Post-promote followup** (manual, per `cleanup_post_promote_steps.md`): re-enable DSM indexing for the 6 curated dirs, re-apply user perms (`chown -R david:dglc .../{music,photos,movies,documents,david}`, `chown -R mmc:dglc .../mmc`, `chmod -R 770/750`).
+7. After Phase 11e + sign-off: DS1512+ decommissioning (user-paced).
