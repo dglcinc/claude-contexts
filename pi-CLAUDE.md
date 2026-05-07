@@ -15,7 +15,8 @@ ln -sf ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 - Python venv for pivac: `~/pivac-venv/` — always activate before running pivac scripts
 - Storage: 128GB SD card (swapped 2026-04-19); ~42 MB/s buffered read, 60GB free
 - Swap: 1 GB (`CONF_SWAPSIZE=1024` in `/etc/dphys-swapfile`, file at `/var/swap`)
-- journald: capped at 500 MB (`SystemMaxUse=500M` in `/etc/systemd/journald.conf`)
+- journald: persistent, capped at 200 MB. Raspberry Pi OS ships `/usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf` which forces `Storage=volatile` (logs in RAM only, lost on reboot). We override it with `/etc/systemd/journald.conf.d/50-persistent.conf` setting `Storage=persistent` and `SystemMaxUse=200M`. Without that override, post-mortem diagnosis of any hang is impossible because tmpfs is wiped on the power-cycle.
+- rsyslog: installed as a parallel log sink writing `/var/log/syslog`, `/var/log/kern.log`, `/var/log/auth.log`. Belt-and-braces backup in case journald wedges again like it did from Mar 22 to May 7, 2026.
 - xterm font: FiraCode Nerd Font Mono 11pt (installed to `~/.local/share/fonts/`; configured in `~/.Xresources`)
 - Kernel quirk: RPi kernel package carries a `~bookworm` build label (e.g. `1:6.12.62-1+rpt1~bookworm`) even though userland is Debian trixie. This appears in `platform.version()` and pip install logs — it is cosmetic and not a misconfiguration.
 
@@ -48,3 +49,4 @@ Use `/set-context <project>` to load full project context at session start. Use 
 - **pivac architecture diagram** (PR #38 merged 2026-03-28): Added Mermaid architecture diagram to README showing data flow from sensors through pivac modules, Signal K, InfluxDB, and Grafana. No outstanding work.
 - **bowling-league-tracker** (mlb.dglc.com, app on Mac Mini `10.0.0.84`): 2025-2026 season fully entered (22 regular + 4 post-season tournament weeks). 2026-2027 season roster and schedule seeded. No open PRs. Pi hosts nginx reverse proxy only — app and DB are on the Mac Mini (`~/bowling-data/league.db`). No outstanding Pi-side work.
 - **SD card swap** (2026-04-19): Upgraded to 128GB card. Partition auto-expanded to fill card (~117GB, 60GB free). FiraCode Nerd Font Mono installed for xterm Unicode symbol rendering.
+- **Pi hang and journald fix** (2026-05-07): Pi hung at 14:23 EDT, 4½ days into uptime; recovered via power-cycle. Root cause unknown — diagnosis was impossible because Raspberry Pi OS's `40-rpi-volatile-storage.conf` drop-in had silently switched journald to volatile mode, so all logs were in `/run` (tmpfs) and lost on the power-cycle. The orphaned `/var/log/journal/` data from before the switch (Mar 22) was archived to `/var/log/journal-broken-2026-05-07/`. Persistent journal is now restored via `/etc/systemd/journald.conf.d/50-persistent.conf` (200 MB cap), and rsyslog is installed as a parallel log sink. Next hang should leave forensic evidence.
