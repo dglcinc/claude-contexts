@@ -41,7 +41,7 @@ mmc/       531 GB  (Phase 7 391 GB + Phase 11d Library +140 GB)
 2. **Verify weekly cron fires** — first scheduled run is Sunday 2026-05-10 02:00 EDT. Check `/var/log/snashome-snapshot.log` and `synosharesnapshot list snashome` after.
 3. **Manual followups** (user-paced):
    - **DSM indexing**: Control Panel → Indexing Service → Indexed Folder List → add `/volume1/snashome/{music,photos,movies,documents,david,mmc}`. Initial indexing is hours; queue overnight.
-   - **Re-apply user perms**: `chown -R david:dglc /volume1/snashome/{music,photos,movies,documents,david}; chown -R mmc:dglc /volume1/snashome/mmc; chmod -R 770/750`.
    - **DS1512+ decommission**: stop rsync daemon (`pkill rsync`), power down via DSM, dispose drives at user discretion.
+   - **NOT NEEDED**: per-user `chown`/`chmod`. User mounts via SMB as `nasadmin` (no longer NFS, where uid/gid mattered). SMB access is governed by DSM share permissions, not unix perms.
 4. (Optional) **Music lowbitrate review** — 700 albums in `cleanup_music_lowbitrate_orphan_albums.md`. Top picks: Beatles compilations, Tom Waits — Mule Variations, NIN — The Fragile, Vivaldi Four Seasons. Re-run `music_curate.sh --phase lowbitrate`.
 5. (Optional) **`old_fileserver_stuff/public/` selective fetch** — 40 GB / 15k files mostly samba src + Windows installers; 76 real jpgs inside.
