@@ -10,22 +10,24 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-05-08*
+*Updated 2026-05-08 (later in the day)*
 
-**Last worked on**: NAS backup architecture is now operational. Resumed yesterday's stalled bootstrap (D-state NFS procs cleared after reboot), validated SSH+dd as the bootstrap path, and completed the full 55 GB sparse `.img` to `/volume1/pi-backups/pivac.img` in ~2h 8min. Benchmarked the first NAS-direct incremental at **127 seconds**, which validates the original BAU plan (NFS-direct incrementals don't hit the rsync sparse-file pathology — only initial bulk copy does). Built and installed `nas-image-backup.{service,timer}` for monthly automated runs (1st of month @ 03:00 EDT). Updated pi-CLAUDE.md (architecture marked running, bootstrap caveat preserved for future NAS rebuilds) and pivac/CLAUDE.md (brief Backup Automation subsection). **PR #44 open** for the timer code.
+**Last worked on**: Both backup-architecture layers are now running. PR #44 (NAS image-backup timer) merged earlier in the session as `a80e251`. The USB SD reader + spare 128 GB card finally arrived, so the hot-recovery layer was wired up: installed billw2/rpi-clone to `/usr/local/sbin`, validated end-to-end with a full clone (29m 19s) plus an automated incremental (2m 7s), shipped `scripts/sd-clone.{sh,service,timer}` via PR #52 (squash-merged as `725b26e`). Updated pi-CLAUDE.md (direct push to claude-contexts main) and pivac/CLAUDE.md (in PR #52). Also resolved a separate OpenSprinkler-not-connecting issue — turned out to be an app-side config problem, not Pi-side.
 
 **Next steps**:
-1. Merge PR #44 (`feature/nas-backup-timer`) — backup automation script + service + timer + brief CLAUDE.md mention
-2. Verify the first scheduled run on 2026-06-01 ~03:00 EDT via `journalctl -u nas-image-backup.service` and confirm the .img mtime advances on the NAS
-3. (deferred) Hot-recovery rpi-clone layer pending USB SD reader + spare card purchase
-4. (deferred) Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m
+1. **Physical card-swap boot test** — pull the live SD, drop the cloned spare in, confirm it boots. Needs hands at the Pi.
+2. Verify the first scheduled SD clone run — Sun **2026-05-10** ~02:06 EDT via `journalctl -u sd-clone.service`. Should be incremental, ~2 min.
+3. Verify the first scheduled NAS image-backup run — **2026-06-01** ~03:00 EDT via `journalctl -u nas-image-backup.service` and confirm `pivac.img` mtime advances on the NAS.
+4. *(deferred)* Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m.
 
 **Notes**:
-- BAU validated: rsync-over-NFS sparse pathology only bites on initial bulk copy of the sparse .img. Incrementals into a loop-mounted .img are normal block writes and finish in 2 minutes.
-- Fresh-bootstrap recipe (for NAS rebuild): `image-backup -i` to local SSD, then `cat src.img | ssh root@10.0.0.3 'dd of=/volume1/pi-backups/pivac.img conv=sparse bs=4M status=progress'`. Now documented in pi-CLAUDE.md.
-- Local SSD copy at `/mnt/tempssd/pivac.img` retained as a cold spare. The SSD is unmounted by default (no fstab entry).
-- NAS SSH access: `root@10.0.0.3` works via key for ad-hoc commands. `nasadmin` key not configured — wasn't needed once SSH+dd worked.
-- Tooling memory updated this week in `~/.claude/memory/tools/`: `synology.md`, `rsync.md`, `nfs.md`, `m365-graph.md` — relevant for the next backup-side incident.
+- **Both timers installed and enabled.** `nas-image-backup.timer` (monthly, 1st @ 03:00 EDT) and `sd-clone.timer` (weekly, Sun @ 02:00 EDT +/− 15m jitter). 1h gap prevents collision when the 1st of a month falls on a Sunday.
+- **rpi-clone is live-safe** — no service stop, unlike `image-backup` which requires service quiesce. A weekly clone that captures live state is fine for hot-recovery; the monthly NAS image is the consistent backup.
+- **Insignia NS-DCR30A2 reader is 4-LUN.** All four slots share the same model string; only the slot with media has non-zero size. The script picks by model + size > 0, refuses if multiple slots populated, refuses if target == booted disk.
+- **rpi-clone install:** source at `~/github/rpi-clone/` (billw2/rpi-clone), copied to `/usr/local/sbin/` — see pi-CLAUDE.md.
+- **Stacked-PR gotcha hit during PR #44 merge:** squash-merging a parent with `--delete-branch` auto-closes child PRs and blocks reopen. Recovery is cherry-pick onto new master + new PR. Documented globally in `~/.claude/memory/tools/gh-stacked-prs.md`.
+- **OpenSprinkler `/sprinkler/` proxy** has no Basic Auth despite CLAUDE.md claiming it does — docs drifted, not blocking anything. Native OS app only works at root URL, not under a path prefix; if mobile-app access becomes important, set up `sprinkler.dglc.com` subdomain mirroring the bowling-app pattern.
+- **Local SSD copy** at `/mnt/tempssd/pivac.img` retained as a cold spare; SSD unmounted by default.
 
 ---
 
