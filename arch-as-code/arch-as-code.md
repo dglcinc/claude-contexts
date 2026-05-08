@@ -15,8 +15,11 @@ Decisions baked in: hybrid operating model; Structurizr DSL + Mermaid + PlantUML
 
 Phasing anchored to May 2026 kickoff: Phase 0 May 2026 → Phase 1 Jun–Nov 2026 → Phase 2 Dec 2026–Aug 2027 → Phase 3 Sep 2027–Aug 2028.
 
+**Open work — branch `workforce-transition-docs` (PR #3):** three solution-architect transition documents extending Strategic Plan R9 — a one-pager for the architecture leader, a Phase 0 workstream charter (deliverables, RACI, role-definition skeletons, FAQ), and a Q&A doc capturing the leader's ten questions with plan-grounded answers. Awaiting leader review.
+
 ## Next Steps
 
-1. **Pass 2** — produce the Reference Architecture and How-To Guide using the now-locked tooling/operating-model decisions as inputs. Originally agreed as a separate downstream pass.
-2. Optional re-run of `/ultraplan` against the mature brief.
-3. Optional refresh of budget and risk register once DTCC's actual rate-card and Kiro enterprise pricing are confirmed.
+1. Land PR #3 (workforce-transition docs) after leader / AAC Platform Lead / HR / Backstage workstream-lead review.
+2. **Pass 2** — produce the Reference Architecture and How-To Guide using the now-locked tooling/operating-model decisions as inputs. Originally agreed as a separate downstream pass.
+3. Optional re-run of `/ultraplan` against the mature brief.
+4. Optional refresh of budget and risk register once DTCC's actual rate-card and Kiro enterprise pricing are confirmed.
