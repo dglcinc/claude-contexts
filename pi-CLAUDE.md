@@ -60,12 +60,16 @@ After that, `sudo` operations on the Pi see the share as `drwxrwxrwx+`. Non-root
 | Versioned recovery | `image-backup` → `.img` on NFS-mounted `pi-backups`, snapshotted by DSM | Monthly | Late-discovered corruption (rolls back N weeks via DSM snapshots) |
 | Off-device disaster | (same — NAS is off-device) | Same | Fire/theft/flood |
 
-The hot-recovery layer is on hold pending the SD reader + spare card purchase. The versioned-recovery layer runs automatically on the 1st of each month at 03:00 EDT via `nas-image-backup.timer` (in `pivac/scripts/systemd/`), which runs `pivac/scripts/nas-image-backup.sh` — mounts NFS, stops disk-writing services, runs `image-backup` against `/mnt/nas-pi-backups/pivac.img`, restarts services even on failure. Typical incremental: ~2 minutes of downtime.
+The hot-recovery layer runs automatically every Sunday at 02:00 EDT via `sd-clone.timer` (in `pivac/scripts/systemd/`), which runs `pivac/scripts/sd-clone.sh` — auto-discovers the populated slot of the Insignia NS-DCR30A2 USB SD reader by model name, then runs `rpi-clone <target> -U` against it. `rpi-clone` is designed for live cloning — no service stop. First clone repartitions and takes ~30 min; subsequent incrementals are ~2 min. The clone is directly bootable: pull the live SD, drop the spare in, reboot. Install dependency: `rpi-clone` is from billw2/rpi-clone, source at `~/github/rpi-clone/`, copied to `/usr/local/sbin/`.
+
+The versioned-recovery layer runs automatically on the 1st of each month at 03:00 EDT via `nas-image-backup.timer`, which runs `pivac/scripts/nas-image-backup.sh` — mounts NFS, stops disk-writing services, runs `image-backup` against `/mnt/nas-pi-backups/pivac.img`, restarts services even on failure. Typical incremental: ~2 minutes of downtime.
 
 ```bash
-systemctl list-timers nas-image-backup.timer       # next scheduled run
-journalctl -u nas-image-backup.service -f          # watch a run
-sudo systemctl start nas-image-backup.service      # manual ad-hoc run
+systemctl list-timers sd-clone.timer nas-image-backup.timer   # next scheduled runs
+journalctl -u sd-clone.service -f                             # watch the SD clone
+journalctl -u nas-image-backup.service -f                     # watch the NAS image
+sudo systemctl start sd-clone.service                         # manual ad-hoc clone
+sudo systemctl start nas-image-backup.service                 # manual ad-hoc image
 ```
 
 **Underlying command** (used by the script; useful for manual bootstrap):
