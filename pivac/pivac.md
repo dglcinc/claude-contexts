@@ -12,21 +12,20 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 *Updated 2026-05-08*
 
-**Last worked on**: Completed Phase 1 of the Pi backup (`image-backup -i` → `/mnt/tempssd/pivac.img`, 52 GB / 58 GB sparse, ext4+vfat verified). Phase 2 (NAS copy) attempted four ways and all stalled — rsync-over-NFS slow, SSH rsync blocked by Synology's modified rsync gate, cp slow, cat|ssh|dd slow with stuck NFS procs accumulating. Pi has D-state processes left over that survive SIGKILL — needs a reboot before retrying. Built and merged PR #40: webhook→Microsoft Graph email bridge so Grafana alerts can deliver email through the Azure AD app the bowling-league-tracker uses; first alert (`redlink-stale`) fires after 30 min of no MASTER_BR.temperature samples.
+**Last worked on**: NAS backup architecture is now operational. Resumed yesterday's stalled bootstrap (D-state NFS procs cleared after reboot), validated SSH+dd as the bootstrap path, and completed the full 55 GB sparse `.img` to `/volume1/pi-backups/pivac.img` in ~2h 8min. Benchmarked the first NAS-direct incremental at **127 seconds**, which validates the original BAU plan (NFS-direct incrementals don't hit the rsync sparse-file pathology — only initial bulk copy does). Built and installed `nas-image-backup.{service,timer}` for monthly automated runs (1st of month @ 03:00 EDT). Updated pi-CLAUDE.md (architecture marked running, bootstrap caveat preserved for future NAS rebuilds) and pivac/CLAUDE.md (brief Backup Automation subsection). **PR #44 open** for the timer code.
 
 **Next steps**:
-1. Reboot the Pi to clear kernel NFS hangs
-2. Retry Phase 2 after reboot. DSM "Enable rsync service" is ON; if still failing, try `nasadmin@10.0.0.3` with `--rsync-path='sudo rsync'`
-3. Phase 3 (image-info verify) and Phase 4 (umount + eject /dev/sda)
-4. Monthly cron wrapper at `/usr/local/bin/pivac-monthly-backup.sh` once bootstrap copy is on the NAS
-5. (deferred) Hot-recovery rpi-clone layer pending USB SD reader purchase
-6. (deferred) Verify `redlink-stale` actually fires the next time pivac-redlink is offline >30m
+1. Merge PR #44 (`feature/nas-backup-timer`) — backup automation script + service + timer + brief CLAUDE.md mention
+2. Verify the first scheduled run on 2026-06-01 ~03:00 EDT via `journalctl -u nas-image-backup.service` and confirm the .img mtime advances on the NAS
+3. (deferred) Hot-recovery rpi-clone layer pending USB SD reader + spare card purchase
+4. (deferred) Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m
 
 **Notes**:
-- The Phase 1 .img is verified safe on the temp SSD; if the Pi dies before Phase 2 completes it's still the off-device backup.
-- Synology rsync gate: even with the DSM toggle ON, root-via-SSH rsync still returns `rsync service is no running (code 43)`. There's an extra gating layer; nasadmin path is the next thing to try.
-- Bowling-league-tracker is now cloned on the Pi at `~/github/bowling-league-tracker/`. Pi→Mac SSH set up as `pi@pivac` → `utilityserver@10.0.0.84` via the Pi's RSA key. Bridge credentials at `/etc/pivac/graph.env` (mode 640 root:pi, gitignored) — reused from the bowling app's Azure AD app.
-- The 21:20 "back up" notification David got was Mac-side `check_health.py` recovering its LOCAL probe (Mac bowling app), unrelated to the Pi backup work. Coincidental timing.
+- BAU validated: rsync-over-NFS sparse pathology only bites on initial bulk copy of the sparse .img. Incrementals into a loop-mounted .img are normal block writes and finish in 2 minutes.
+- Fresh-bootstrap recipe (for NAS rebuild): `image-backup -i` to local SSD, then `cat src.img | ssh root@10.0.0.3 'dd of=/volume1/pi-backups/pivac.img conv=sparse bs=4M status=progress'`. Now documented in pi-CLAUDE.md.
+- Local SSD copy at `/mnt/tempssd/pivac.img` retained as a cold spare. The SSD is unmounted by default (no fstab entry).
+- NAS SSH access: `root@10.0.0.3` works via key for ad-hoc commands. `nasadmin` key not configured — wasn't needed once SSH+dd worked.
+- Tooling memory updated this week in `~/.claude/memory/tools/`: `synology.md`, `rsync.md`, `nfs.md`, `m365-graph.md` — relevant for the next backup-side incident.
 
 ---
 
