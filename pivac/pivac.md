@@ -8,6 +8,28 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ---
 
+## Current State
+
+*Updated 2026-05-08*
+
+**Last worked on**: Completed Phase 1 of the Pi backup (`image-backup -i` → `/mnt/tempssd/pivac.img`, 52 GB / 58 GB sparse, ext4+vfat verified). Phase 2 (NAS copy) attempted four ways and all stalled — rsync-over-NFS slow, SSH rsync blocked by Synology's modified rsync gate, cp slow, cat|ssh|dd slow with stuck NFS procs accumulating. Pi has D-state processes left over that survive SIGKILL — needs a reboot before retrying. Built and merged PR #40: webhook→Microsoft Graph email bridge so Grafana alerts can deliver email through the Azure AD app the bowling-league-tracker uses; first alert (`redlink-stale`) fires after 30 min of no MASTER_BR.temperature samples.
+
+**Next steps**:
+1. Reboot the Pi to clear kernel NFS hangs
+2. Retry Phase 2 after reboot. DSM "Enable rsync service" is ON; if still failing, try `nasadmin@10.0.0.3` with `--rsync-path='sudo rsync'`
+3. Phase 3 (image-info verify) and Phase 4 (umount + eject /dev/sda)
+4. Monthly cron wrapper at `/usr/local/bin/pivac-monthly-backup.sh` once bootstrap copy is on the NAS
+5. (deferred) Hot-recovery rpi-clone layer pending USB SD reader purchase
+6. (deferred) Verify `redlink-stale` actually fires the next time pivac-redlink is offline >30m
+
+**Notes**:
+- The Phase 1 .img is verified safe on the temp SSD; if the Pi dies before Phase 2 completes it's still the off-device backup.
+- Synology rsync gate: even with the DSM toggle ON, root-via-SSH rsync still returns `rsync service is no running (code 43)`. There's an extra gating layer; nasadmin path is the next thing to try.
+- Bowling-league-tracker is now cloned on the Pi at `~/github/bowling-league-tracker/`. Pi→Mac SSH set up as `pi@pivac` → `utilityserver@10.0.0.84` via the Pi's RSA key. Bridge credentials at `/etc/pivac/graph.env` (mode 640 root:pi, gitignored) — reused from the bowling app's Azure AD app.
+- The 21:20 "back up" notification David got was Mac-side `check_health.py` recovering its LOCAL probe (Mac bowling app), unrelated to the Pi backup work. Coincidental timing.
+
+---
+
 ## Backup Runbook (drivable from a Mac Claude session)
 
 The Pi backs up to LookoutNas (DS225+ at `10.0.0.3`) using RonR's `image-utils` (rsync-based, produces a directly bootable `.img`). Architecture and one-time infrastructure (NFS mount, ACL fix, share setup) are documented in `pi-CLAUDE.md`'s `## Backup` section — that work is already done. What follows is the procedure to actually run a backup.
