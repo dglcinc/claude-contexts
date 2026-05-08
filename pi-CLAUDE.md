@@ -30,6 +30,46 @@ ln -sf ~/github/claude-contexts/pi-CLAUDE.md ~/CLAUDE.md
 
 The Pi also hosts nginx TLS termination for `mlb.dglc.com`, proxying to the Bowling League Tracker app on the Mac Mini (`10.0.0.84:5001`). Config: `/etc/nginx/sites-available/mlb.dglc.com`. The bowling app and its database live on the Mac Mini — the Pi is proxy-only for this service.
 
+## Backup
+
+The Pi backs up to LookoutNas (DS225+, `10.0.0.3`) using **RonR's `image-utils`** — rsync-based, produces a directly bootable `.img` file, supports incremental updates against an existing image, and is safe to run on a live system. Tooling is cloned to `/home/pi/github/RonR-RPi-image-utils/` (upstream `seamusdemora/RonR-RPi-image-utils`). The intended flow is monthly incrementals against an .img stored on the NAS.
+
+**NAS share `pi-backups`** at `/volume1/pi-backups`, snapshotted via DSM (12-week retention to cover late-discovered corruption). Mounted on the Pi over NFSv4:
+
+```
+/etc/fstab:
+10.0.0.3:/volume1/pi-backups  /mnt/nas-pi-backups  nfs4  noauto,vers=4.1,rw,hard,timeo=600,retrans=2,_netdev  0  0
+```
+
+`noauto` keeps boot non-blocking when the NAS is offline; mount on demand with `sudo mount /mnt/nas-pi-backups`.
+
+**Synology NFS+ACL gotcha** (cost an hour to find): a fresh DSM share has only `group:administrators` in its ACL, with traditional unix bits set to `d---------`. The NFS export uses `no_root_squash` so the Pi's root keeps UID 0, but UID 0 is **not** a member of the NAS's `administrators` group, so the share looks empty/permission-denied to the Pi even though writes succeed. Fix on the NAS:
+
+```
+synoacltool -add /volume1/pi-backups user:root:allow:rwxpdDaARWcCo:fd--
+synoacltool -enforce-inherit /volume1/pi-backups
+```
+
+After that, `sudo` operations on the Pi see the share as `drwxrwxrwx+`. Non-root Pi users (e.g. `pi`) are still blocked by the ACL — fine for backup use since image-backup runs as root.
+
+**Architecture (planned, not yet fully running):**
+
+| Layer | Tool | Frequency | Protects against |
+|---|---|---|---|
+| Hot recovery | `rpi-clone` → spare 128 GB SD in USB reader | Weekly | Card death (swap-in recovery) |
+| Versioned recovery | `image-backup` → `.img` on NFS-mounted `pi-backups`, snapshotted by DSM | Monthly | Late-discovered corruption (rolls back N weeks via DSM snapshots) |
+| Off-device disaster | (same — NAS is off-device) | Same | Fire/theft/flood |
+
+The hot-recovery layer is on hold pending the SD reader + spare card purchase. The versioned-recovery layer is being bootstrapped now via a temp 1.8 TB SanDisk Extreme SSD (`/dev/sda` → ext4 → `/mnt/tempssd`) — Phase 1 (initial image-backup to local SSD) and Phase 2 (one-time rsync of the .img to the NAS) avoid the slow first-time random-write-into-NFS-loopback pattern. After bootstrap, monthly incrementals run image-backup directly against `/mnt/nas-pi-backups/pivac.img`.
+
+**Image creation/refresh command** (run inside `tmux` over SSH; xrdp drops will SIGHUP a foreground job):
+```bash
+sudo systemctl stop pivac-1wire pivac-redlink pivac-gpio pivac-arduino-psi pivac-arduino-therm-psi pivac-emporia pivac-sentry signalk influxdb nginx
+sudo /home/pi/github/RonR-RPi-image-utils/image-backup [-i] /path/to/pivac.img
+sudo systemctl start nginx signalk influxdb pivac-1wire pivac-redlink pivac-gpio pivac-arduino-psi pivac-arduino-therm-psi pivac-emporia pivac-sentry
+```
+`-i` for first-time creation; omit for incremental updates against an existing image. Stopping write-heavy services (especially InfluxDB, Signal K, Grafana) before the rsync prevents per-file inconsistency in the resulting image.
+
 ## Keeping Context in Sync
 
 Context is synchronized through GitHub. Since `~/CLAUDE.md` and `~/.claude/CLAUDE.md` are symlinks into the claude-contexts repo, a `git pull` there automatically updates both. Pull claude-contexts at the start of each session (the `/set-context` skill does this).
