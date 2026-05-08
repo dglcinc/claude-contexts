@@ -52,7 +52,7 @@ synoacltool -enforce-inherit /volume1/pi-backups
 
 After that, `sudo` operations on the Pi see the share as `drwxrwxrwx+`. Non-root Pi users (e.g. `pi`) are still blocked by the ACL — fine for backup use since image-backup runs as root.
 
-**Architecture (planned, not yet fully running):**
+**Architecture (running):**
 
 | Layer | Tool | Frequency | Protects against |
 |---|---|---|---|
@@ -60,15 +60,27 @@ After that, `sudo` operations on the Pi see the share as `drwxrwxrwx+`. Non-root
 | Versioned recovery | `image-backup` → `.img` on NFS-mounted `pi-backups`, snapshotted by DSM | Monthly | Late-discovered corruption (rolls back N weeks via DSM snapshots) |
 | Off-device disaster | (same — NAS is off-device) | Same | Fire/theft/flood |
 
-The hot-recovery layer is on hold pending the SD reader + spare card purchase. The versioned-recovery layer is being bootstrapped now via a temp 1.8 TB SanDisk Extreme SSD (`/dev/sda` → ext4 → `/mnt/tempssd`) — Phase 1 (initial image-backup to local SSD) and Phase 2 (one-time rsync of the .img to the NAS) avoid the slow first-time random-write-into-NFS-loopback pattern. After bootstrap, monthly incrementals run image-backup directly against `/mnt/nas-pi-backups/pivac.img`.
+The hot-recovery layer is on hold pending the SD reader + spare card purchase. The versioned-recovery layer runs automatically on the 1st of each month at 03:00 EDT via `nas-image-backup.timer` (in `pivac/scripts/systemd/`), which runs `pivac/scripts/nas-image-backup.sh` — mounts NFS, stops disk-writing services, runs `image-backup` against `/mnt/nas-pi-backups/pivac.img`, restarts services even on failure. Typical incremental: ~2 minutes of downtime.
 
-**Image creation/refresh command** (run inside `tmux` over SSH; xrdp drops will SIGHUP a foreground job):
+```bash
+systemctl list-timers nas-image-backup.timer       # next scheduled run
+journalctl -u nas-image-backup.service -f          # watch a run
+sudo systemctl start nas-image-backup.service      # manual ad-hoc run
+```
+
+**Underlying command** (used by the script; useful for manual bootstrap):
 ```bash
 sudo systemctl stop pivac-1wire pivac-redlink pivac-gpio pivac-arduino-psi pivac-arduino-therm-psi pivac-emporia pivac-sentry signalk influxdb nginx
 sudo /home/pi/github/RonR-RPi-image-utils/image-backup [-i] /path/to/pivac.img
 sudo systemctl start nginx signalk influxdb pivac-1wire pivac-redlink pivac-gpio pivac-arduino-psi pivac-arduino-therm-psi pivac-emporia pivac-sentry
 ```
 `-i` for first-time creation; omit for incremental updates against an existing image. Stopping write-heavy services (especially InfluxDB, Signal K, Grafana) before the rsync prevents per-file inconsistency in the resulting image.
+
+**Bootstrap caveat:** initial creation of the `.img` directly on the NFS-mounted share starves due to rsync's sparse-file handling over NFSv4 (~750 KB/s, ~18 hours for 50 GB). For a fresh bootstrap (e.g. NAS rebuild), run `image-backup -i` to a local SSD first, then SSH-stream the resulting sparse `.img` to the NAS:
+```bash
+cat /path/to/local.img | ssh root@10.0.0.3 'dd of=/volume1/pi-backups/pivac.img conv=sparse bs=4M status=progress'
+```
+Once the .img exists, incrementals into the loop-mounted file don't hit the sparse-file pathology and run fine directly over NFS — that's why the timer's regular operation works.
 
 ## Keeping Context in Sync
 
@@ -93,3 +105,4 @@ Use `/set-context <project>` to load full project context at session start. Use 
 - **bowling-league-tracker** (mlb.dglc.com, app on Mac Mini `10.0.0.84`): 2025-2026 season fully entered (22 regular + 4 post-season tournament weeks). 2026-2027 season roster and schedule seeded. No open PRs. Pi hosts nginx reverse proxy only — app and DB are on the Mac Mini (`~/bowling-data/league.db`). No outstanding Pi-side work.
 - **SD card swap** (2026-04-19): Upgraded to 128GB card. Partition auto-expanded to fill card (~117GB, 60GB free). FiraCode Nerd Font Mono installed for xterm Unicode symbol rendering.
 - **Pi hang and journald fix** (2026-05-07): Pi hung at 14:23 EDT, 4½ days into uptime; recovered via power-cycle. Root cause unknown — diagnosis was impossible because Raspberry Pi OS's `40-rpi-volatile-storage.conf` drop-in had silently switched journald to volatile mode, so all logs were in `/run` (tmpfs) and lost on the power-cycle. The orphaned `/var/log/journal/` data from before the switch (Mar 22) was archived to `/var/log/journal-broken-2026-05-07/`. Persistent journal is now restored via `/etc/systemd/journald.conf.d/50-persistent.conf` (200 MB cap), and rsyslog is installed as a parallel log sink. Next hang should leave forensic evidence.
+- **NAS image backup operational** (2026-05-08): Bootstrap complete — full 55 GB sparse `.img` on NAS at `/volume1/pi-backups/pivac.img`. Bootstrapped via local-SSD `image-backup -i` then SSH+dd stream to NAS (~2 hours; rsync over NFS starved). Monthly automated incrementals run via `nas-image-backup.timer`; benchmark of the first NAS-direct incremental took 127 s. Local SSD copy at `/mnt/tempssd/pivac.img` retained as a cold spare.
