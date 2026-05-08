@@ -29,19 +29,25 @@ mmc/       531 GB  (Phase 7 391 GB + Phase 11d Library +140 GB)
 
 **IP renumber** (2026-05-07). DS225+ moved from 10.0.0.179 → 10.0.0.3 during the server-room move. Bulk-replaced across 18 files in PR #40.
 
-**Session PRs merged**: #39 (post_verify --yes + dedup tooling), #40 (IP change + snapshot cron docs).
+**Session PRs merged** (4 total, none open): #39 (post_verify --yes + dedup tooling), #40 (IP change + snapshot cron docs), #27 (inventory cell sanitize), #28 (legacy rsync progress flags).
 
-## Open PRs (small, post-discovery fixes; not blocking)
-- **#27** — inventory: sanitize newlines+pipes from markdown table cells
-- **#28** — phase 3/4/6/7: use legacy rsync progress flags
+**DSM version** on DS225+: **7.3.2 build 86009** (build date 2026-03-17), kernel 5.10.55+, platform `synology_geminilakenk_ds225+` (Intel J4125, x86_64).
+
+## Open PRs
+
+None.
 
 ## Next Steps
 
-1. **Server-room move + dual network links** — user is finishing this now. NAS is at new IP 10.0.0.3.
-2. **Verify weekly cron fires** — first scheduled run is Sunday 2026-05-10 02:00 EDT. Check `/var/log/snashome-snapshot.log` and `synosharesnapshot list snashome` after.
-3. **Manual followups** (user-paced):
-   - **DS1512+ decommission**: stop rsync daemon (`pkill rsync`), power down via DSM, dispose drives at user discretion.
-   - **NOT NEEDED**: DSM indexing. User doesn't use Audio/Photo/Video Station or Universal Search; accesses files via SMB + Mac apps.
-   - **NOT NEEDED**: per-user `chown`/`chmod`. User mounts via SMB as `nasadmin` (no longer NFS, where uid/gid mattered). SMB access is governed by DSM share permissions, not unix perms.
-4. (Optional) **Music lowbitrate review** — 700 albums in `cleanup_music_lowbitrate_orphan_albums.md`. Top picks: Beatles compilations, Tom Waits — Mule Variations, NIN — The Fragile, Vivaldi Four Seasons. Re-run `music_curate.sh --phase lowbitrate`.
-5. (Optional) **`old_fileserver_stuff/public/` selective fetch** — 40 GB / 15k files mostly samba src + Windows installers; 76 real jpgs inside.
+1. **Verify weekly cron fires** — first scheduled run is Sunday 2026-05-10 02:00 EDT. Check `/var/log/snashome-snapshot.log` and `synosharesnapshot list snashome` after.
+2. **DS1512+ decommission** (user-paced): stop rsync daemon (`pkill rsync`), power down via DSM, dispose drives at user discretion.
+3. (Optional) **Music lowbitrate review** — 700 albums in `cleanup_music_lowbitrate_orphan_albums.md`. Top picks: Beatles compilations, Tom Waits — Mule Variations, NIN — The Fragile, Vivaldi Four Seasons. Re-run `music_curate.sh --phase lowbitrate`.
+4. (Optional) **`old_fileserver_stuff/public/` selective fetch** — 40 GB / 15k files mostly samba src + Windows installers; 76 real jpgs inside.
+
+**NOT NEEDED (dropped from the original cleanup-plan boilerplate):**
+- **DSM indexing** — user doesn't use Audio/Photo/Video Station or Universal Search; accesses files via SMB + Mac apps.
+- **Per-user `chown`/`chmod`** — user mounts via SMB as `nasadmin`. SMB access is governed by DSM share permissions, not unix perms. (Was relevant for the old NFS-mount era.)
+
+## Operational notes
+
+**DaisyDisk reporting bug** (2026-05-07): scanning the SMB mount from the parent dir under-reports at ~620 GB (vs actual 1.07 TiB). Direct subtree scans return correct sizes. Confirmed not a NAS issue (`df`, `du`, `btrfs`, and Mac Finder all agree at 1.07–1.2 TB). Workaround: scan subtrees individually, or use GrandPerspective / `du`.
