@@ -10,21 +10,23 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-05-08 (later in the day)*
+*Updated 2026-05-09*
 
-**Last worked on**: Both backup-architecture layers are now running. PR #44 (NAS image-backup timer) merged earlier in the session as `a80e251`. The USB SD reader + spare 128 GB card finally arrived, so the hot-recovery layer was wired up: installed billw2/rpi-clone to `/usr/local/sbin`, validated end-to-end with a full clone (29m 19s) plus an automated incremental (2m 7s), shipped `scripts/sd-clone.{sh,service,timer}` via PR #52 (squash-merged as `725b26e`). Updated pi-CLAUDE.md (direct push to claude-contexts main) and pivac/CLAUDE.md (in PR #52). Also resolved a separate OpenSprinkler-not-connecting issue — turned out to be an app-side config problem, not Pi-side.
+**Last worked on**: David swapped the USB SD card reader. The spare card was healthy (both partitions from the prior clone intact on `/dev/sdb`), but the new Anker reader advertises a generic SCSI model string (`MassStorageClass`) so the model-name auto-discovery in `sd-clone.sh` no longer matched — Sunday's scheduled run would have failed. Switched discovery from SCSI model to USB VID:PID (`05e3:0764`) matching, walking up sysfs from each block device to the USB device descriptor. Shipped pivac PR #53 (merged as `5901355`) and direct-pushed the pi-CLAUDE.md hardware note to claude-contexts main (`8c7a5d5`).
 
 **Next steps**:
-1. **Physical card-swap boot test** — pull the live SD, drop the cloned spare in, confirm it boots. Needs hands at the Pi.
-2. Verify the first scheduled SD clone run — Sun **2026-05-10** ~02:06 EDT via `journalctl -u sd-clone.service`. Should be incremental, ~2 min.
+1. **Verify the next scheduled SD clone** — Sun **2026-05-10** ~02:02 EDT. `journalctl -u sd-clone.service` should show "target: /dev/sdb" and a successful ~2 min incremental clone.
+2. **Physical card-swap boot test** — still pending. Pull live SD, drop spare in, confirm it boots. Needs hands at the Pi.
 3. Verify the first scheduled NAS image-backup run — **2026-06-01** ~03:00 EDT via `journalctl -u nas-image-backup.service` and confirm `pivac.img` mtime advances on the NAS.
 4. *(deferred)* Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m.
 
 **Notes**:
+- **Reader hardware:** Anker USB 3.0 Micro SD Card Reader, USB `05e3:0764` (Genesys Logic chipset). Replaced the 4-LUN Insignia NS-DCR30A2 on 2026-05-09. The Anker is a 2-LUN device but the same `size > 0` filter handles single- and multi-slot readers identically.
+- **Why VID:PID, not SCSI model:** Anker's SCSI model string is `MassStorageClass` — too generic to match safely (any USB stick reports it). VID:PID is unique to the actual reader.
 - **Both timers installed and enabled.** `nas-image-backup.timer` (monthly, 1st @ 03:00 EDT) and `sd-clone.timer` (weekly, Sun @ 02:00 EDT +/− 15m jitter). 1h gap prevents collision when the 1st of a month falls on a Sunday.
 - **rpi-clone is live-safe** — no service stop, unlike `image-backup` which requires service quiesce. A weekly clone that captures live state is fine for hot-recovery; the monthly NAS image is the consistent backup.
-- **Insignia NS-DCR30A2 reader is 4-LUN.** All four slots share the same model string; only the slot with media has non-zero size. The script picks by model + size > 0, refuses if multiple slots populated, refuses if target == booted disk.
 - **rpi-clone install:** source at `~/github/rpi-clone/` (billw2/rpi-clone), copied to `/usr/local/sbin/` — see pi-CLAUDE.md.
+- **No redeploy needed for sd-clone.sh changes:** `/etc/systemd/system/sd-clone.service` references the in-repo path `/home/pi/github/pivac/scripts/sd-clone.sh` directly, so `git pull` after merge is sufficient.
 - **Stacked-PR gotcha hit during PR #44 merge:** squash-merging a parent with `--delete-branch` auto-closes child PRs and blocks reopen. Recovery is cherry-pick onto new master + new PR. Documented globally in `~/.claude/memory/tools/gh-stacked-prs.md`.
 - **OpenSprinkler `/sprinkler/` proxy** has no Basic Auth despite CLAUDE.md claiming it does — docs drifted, not blocking anything. Native OS app only works at root URL, not under a path prefix; if mobile-app access becomes important, set up `sprinkler.dglc.com` subdomain mirroring the bowling-app pattern.
 - **Local SSD copy** at `/mnt/tempssd/pivac.img` retained as a cold spare; SSD unmounted by default.
