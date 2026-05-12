@@ -10,15 +10,16 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-05-09*
+*Updated 2026-05-12*
 
-**Last worked on**: David swapped the USB SD card reader. The spare card was healthy (both partitions from the prior clone intact on `/dev/sdb`), but the new Anker reader advertises a generic SCSI model string (`MassStorageClass`) so the model-name auto-discovery in `sd-clone.sh` no longer matched — Sunday's scheduled run would have failed. Switched discovery from SCSI model to USB VID:PID (`05e3:0764`) matching, walking up sysfs from each block device to the USB device descriptor. Shipped pivac PR #53 (merged as `5901355`) and direct-pushed the pi-CLAUDE.md hardware note to claude-contexts main (`8c7a5d5`).
+**Last worked on**: RedLink session-stuck bug. After ~2 days of uptime since Sunday's SD-clone window, Honeywell returned 401 *Key Expired?* on every device refresh; all five WilhelmSK thermostat tiles flat-lined simultaneously around 2026-05-12 00:25 EDT. The 401 was being swallowed by `_refresh_one`'s catch-all `except Exception`, so `must_reset` never went True and the dead access token sat in `_client` forever. Shipped pivac PR #54 (merged as `8946234`) — `_refresh_one` now re-raises `UnauthorizedError`, `_refresh_all` surfaces it from gather results, `status()` has a fourth `must_reset = True` clause. Deployed via `systemctl restart pivac-redlink`; first two cycles slow (99.6s discover timeout, then 148.6s recovery cycle) but normal per the documented cold-start path.
 
 **Next steps**:
-1. **Verify the next scheduled SD clone** — Sun **2026-05-10** ~02:02 EDT. `journalctl -u sd-clone.service` should show "target: /dev/sdb" and a successful ~2 min incremental clone.
-2. **Physical card-swap boot test** — still pending. Pull live SD, drop spare in, confirm it boots. Needs hands at the Pi.
-3. Verify the first scheduled NAS image-backup run — **2026-06-01** ~03:00 EDT via `journalctl -u nas-image-backup.service` and confirm `pivac.img` mtime advances on the NAS.
-4. *(deferred)* Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m.
+1. **Verify natural recovery from a token-expiry event** — next time Honeywell's access token expires (~2 days post-restart, target ~2026-05-14). Look for `RedLink token expired (401); resetting session` in `journalctl -u pivac-redlink`, followed by a fresh ~75s login and resumed publishing — instead of indefinite 401 spam.
+2. *(carryover)* Verify Sunday's SD clone — **2026-05-10** ~02:02 EDT should have already run; `journalctl -u sd-clone.service` should show "target: /dev/sdb" and a successful ~2 min incremental clone against the new Anker reader.
+3. *(carryover)* **Physical card-swap boot test** — pull live SD, drop spare in, confirm boot. Still pending; needs hands at the Pi.
+4. *(carryover)* Verify the first scheduled NAS image-backup run — **2026-06-01** ~03:00 EDT via `journalctl -u nas-image-backup.service` and confirm `pivac.img` mtime advances on the NAS.
+5. *(deferred)* Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m.
 
 **Notes**:
 - **Reader hardware:** Anker USB 3.0 Micro SD Card Reader, USB `05e3:0764` (Genesys Logic chipset). Replaced the 4-LUN Insignia NS-DCR30A2 on 2026-05-09. The Anker is a 2-LUN device but the same `size > 0` filter handles single- and multi-slot readers identically.
