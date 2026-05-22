@@ -22,7 +22,7 @@ if [[ ! -f PLAN.md ]]; then
 fi
 
 while :; do
-  output=$(sclaude -p <<'EOF' | tee /dev/tty
+  output=$(sclaude -p <<'EOF' | tee /dev/stderr
 Read PLAN.md. Find the first unchecked `- [ ]` task. Do it.
 
 For anything that would bloat your context — codebase exploration,
