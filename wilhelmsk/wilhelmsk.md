@@ -6,14 +6,18 @@ Marine-instrument display app for iOS/iPadOS/watchOS/tvOS/CarPlay that renders l
 
 ## Current State
 
-- Cloned 2026-05-21 to `~/github/wilhelmsk` from `git@github.com:sbender9/Wilhelm.git` (SSH). Default branch `master`.
-- No work started yet — context just set up.
+- Cloned 2026-05-21 to `~/github/wilhelmsk` from `git@github.com:sbender9/Wilhelm.git` (SSH). Repo default `master`, but **working branch is `new-watch-app`** (the PR base per owner).
 - Local `CLAUDE.md` + `.claude/` excluded via `.git/info/exclude` so they never land in upstream PRs.
-- **Build gotcha:** `Podfile` uses relative-path pods (`../aws-sdk-ios`, `../MarqueeLabel`, etc.) expecting sibling repos checked out next to `wilhelmsk/`. `pod install` fails without them.
+- **Build prerequisites staged (per owner Scott Bender):**
+  - `WilhelmSKLibrary` cloned to sibling `~/github/WilhelmSKLibrary` on `main` — it's a local Swift package (`relativePath = ../WilhelmSKLibrary`).
+  - `git-lfs` installed + initialized. new-watch-app tree has no LFS pointers; ~1855 LFS files across other refs.
+  - CocoaPods relative-path pods (`../aws-sdk-ios`, etc.) NOT yet resolved — new-watch-app moved some deps to SPM, so confirm what's still needed.
+  - Owner's warning: "huge mess… a challenge to build." Real-time chat on the Signal K Discord.
+- No feature work started yet.
 
 ## Next Steps
 
 1. Identify the actual task / feature David intends to contribute.
-2. If building locally: resolve the sibling-repo pod dependencies before `pod install`.
-3. Create a feature branch off `master`; open PR to `sbender9/Wilhelm`.
+2. Attempt a build (Xcode `Wilhelm.xcworkspace`); resolve remaining pod/SPM issues as they surface.
+3. Create a feature branch off `new-watch-app`; open PR back to `sbender9/Wilhelm`.
 </content>
