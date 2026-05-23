@@ -10,7 +10,8 @@ Central navigation for all active projects. The vault root is `~/github/` — ev
 | pivac | [dglcinc/pivac](https://github.com/dglcinc/pivac) | [CLAUDE.md](../pivac/CLAUDE.md) · [Overview](../pivac/overview.md) |
 | MacDownToo | [dglcinc/MacDownToo](https://github.com/dglcinc/MacDownToo) | [Overview](../MacDownToo/overview.md) |
 | Arduino | [dglcinc/Arduino](https://github.com/dglcinc/Arduino) | ad hoc |
-| WilhelmSK | [dglcinc/wilhelm-sk](https://github.com/dglcinc/wilhelm-sk) | ad hoc |
+| Wilhelm (upstream, contributor) | [sbender9/Wilhelm](https://github.com/sbender9/Wilhelm) — local `~/github/wilhelm/` | [CLAUDE.md](../wilhelm/CLAUDE.md) |
+| wilhelm-sk (dglcinc) | [dglcinc/wilhelm-sk](https://github.com/dglcinc/wilhelm-sk) — local `~/github/wilhelm-sk/` | ad hoc |
 
 ## Global Claude Context
 
