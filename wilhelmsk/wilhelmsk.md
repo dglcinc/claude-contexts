@@ -6,26 +6,28 @@ Marine-instrument display app for iOS/iPadOS/watchOS/tvOS that renders live boat
 
 ## Current State
 
-- **Branch:** `docs/user-guide` (ralph loop writing documentation; base is `development`)
-- **Build:** confirmed working on `development` — `xcodebuild -workspace Wilhelm.xcworkspace -scheme Wilhelm -destination 'generic/platform=iOS Simulator'` BUILD SUCCEEDS
-- `.claude/analysis.md` expanded with Reliability, Startup Time, Security, Error Handling, and Build Tooling sections (2026-05-23)
-- Key security findings: cert validation disabled for Venus/MQTT + WebSocket; hardcoded API keys; widget passwords in shared UserDefaults
-- Ralph loop doc status: C1 (prerequisites.md) + C2 (connecting.md) committed; C3–A3 unknown — check `/tmp/ralph-wilhelmsk.log`
+- **Branch:** `docs/user-guide` (pushed to origin, 11 commits, PR to `development` pending)
+- **Build:** confirmed working on both MacBook (Xcode 26.5) and utilityserver (Xcode 26.4)
+- Full documentation in `docs/` — user-guide.md, architecture.md, contributing.md, MkDocs site config
+- `HelpWebViewController` added: Settings → Help / Documentation opens bundled WKWebView docs with remote fallback
+- `.claude/` directory committed to repo (Scott approved): analysis.md, UTILITYSERVER_SETUP.md, setup-utilityserver.sh
+- utilityserver fully configured as dev machine — SSH, repos cloned, simulators installed
 
 ## Next Steps
 
-1. Check ralph loop — verify C3–A3 completed; review doc quality; open PR to `sbender9/Wilhelm` targeting `development`
-2. Fix cert validation bypass in `Venus.m` and `SignalK.m` (most critical security finding)
-3. Move widget passwords from shared UserDefaults to Keychain; remove hardcoded API keys
-4. Add automatic WebSocket reconnect to `SignalK.m`
+1. Open PR to `sbender9/Wilhelm` targeting `development`
+2. Add `Wilhelm/wilhelmsk-docs/` to Xcode as folder reference (rebuild first: `python3 -m mkdocs build --config-file mkdocs.yml --site-dir Wilhelm/wilhelmsk-docs`)
+3. Fix broken MkDocs anchor `#layout-editor` in user-guide.md
+4. Consider `dglcinc/signalk-wsk-docs` plugin — serves docs from SignalK server locally
+5. Code contributions — review Tier 1 from `.claude/analysis.md` with Scott on Discord
 
 ## Key Facts
 
 - **PRs target `development`** (not `master` or `new-watch-app`)
 - **Remote:** `git@github.com:sbender9/Wilhelm.git` (SSH)
+- **Bundle ID:** `com.scottbender.Wilhelm`
 - **Commit identity:** `David Lewis <david@dglc.com>`
-- **Local-only:** `CLAUDE.md`, `.claude/`, `PLAN.md`, `xcuserdata/` excluded via `.git/info/exclude`
-- **WilhelmSKLibrary:** must be cloned at `~/github/WilhelmSKLibrary` on `main` — only external build prerequisite
-- **7 targets:** WilhelmSK (iOS), WilhelmTV, WilhelmSKWatch Watch App, WilhelmSKWatch WidgetsExtension, WilhelmSKWidgetsExtension, WilhelmSKPushProvider, SwiftUIPreviewsWidgetsExtension
-- **Stack:** Objective-C core + Swift/SwiftUI for watch/widgets; CocoaPods + SPM; FFmpeg xcframeworks + NavionicsMobileSDK vendored in repo
-- Real-time coordination with Scott Bender on Signal K Discord
+- **Local-only:** `CLAUDE.md`, `xcuserdata/`, `PLAN.md`, `Wilhelm/wilhelmsk-docs/`, `site/`, `.claude/settings.local.json` in `.git/info/exclude`
+- **WilhelmSKLibrary** at `~/github/WilhelmSKLibrary` on `main` — required on both machines
+- **utilityserver:** `macmini` SSH alias (10.0.0.84), Xcode 26.4, macOS 26.4.1, M-series; git-lfs at `~/.local/bin`; GitHub SSH key ID 152367109; Homebrew not installed (user lacks admin)
+- **LFS fix:** `git config lfs.https://github.com/sbender9/Wilhelm.git/info/lfs.locksverify false`
