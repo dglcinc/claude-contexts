@@ -2,7 +2,7 @@
 
 ## Writing & Naming Conventions
 
-(Populate as you go — add things like: preferred date formats, naming patterns, style preferences)
+- **2026-05-14 — American English spelling and terminology.** Use "program" not "programme", "-ize" endings not "-ise", "-or" not "-our", "modeled" not "modelled", "modernization" not "modernisation". User caught British/Canadian spellings in a doc and asked for American going forward across all projects.
 
 ## Workflow Preferences
 

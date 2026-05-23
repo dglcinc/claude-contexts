@@ -66,6 +66,7 @@ Project MEMORY.md and this index are auto-injected before each tool call via Pre
 Topic files:
 - ~/.claude/memory/general.md — cross-project conventions and preferences
 - ~/.claude/memory/tools/claude-hud.md — claude-hud statusLine setup quirks (GNU grep `\t` workaround)
+- ~/.claude/memory/tools/ralph.md — Ralph loop pattern (PLAN.md + ralph.sh driver for batch task execution)
 
 ## Global Memory Reference Rule
 
