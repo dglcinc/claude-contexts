@@ -8,14 +8,16 @@ Marine-instrument display app for iOS/iPadOS/watchOS/tvOS that renders live boat
 
 - **Branch:** `docs/user-guide` (ralph loop writing documentation; base is `development`)
 - **Build:** confirmed working on `development` — `xcodebuild -workspace Wilhelm.xcworkspace -scheme Wilhelm -destination 'generic/platform=iOS Simulator'` BUILD SUCCEEDS
-- Comprehensive technical analysis in `.claude/analysis.md` covering architecture, security, reliability, and tiered contributor recommendations
-- Ralph loop in progress writing user documentation (C1 prerequisites.md and C2 connecting.md committed; C3–A3 remaining)
+- `.claude/analysis.md` expanded with Reliability, Startup Time, Security, Error Handling, and Build Tooling sections (2026-05-23)
+- Key security findings: cert validation disabled for Venus/MQTT + WebSocket; hardcoded API keys; widget passwords in shared UserDefaults
+- Ralph loop doc status: C1 (prerequisites.md) + C2 (connecting.md) committed; C3–A3 unknown — check `/tmp/ralph-wilhelmsk.log`
 
 ## Next Steps
 
-1. Verify ralph loop completed C3–A3; review doc quality
-2. Open PR to `sbender9/Wilhelm` targeting `development` once all docs are committed
-3. Identify first code contribution — review Tier 1 recommendations from analysis.md with Scott on Discord
+1. Check ralph loop — verify C3–A3 completed; review doc quality; open PR to `sbender9/Wilhelm` targeting `development`
+2. Fix cert validation bypass in `Venus.m` and `SignalK.m` (most critical security finding)
+3. Move widget passwords from shared UserDefaults to Keychain; remove hardcoded API keys
+4. Add automatic WebSocket reconnect to `SignalK.m`
 
 ## Key Facts
 
