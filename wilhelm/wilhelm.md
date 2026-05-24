@@ -6,9 +6,10 @@ Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS
 
 ## Current State
 
+- **Rename complete (2026-05-24):** local clone `~/github/wilhelm`, context id `wilhelm`, memory dir `-Users-david-github-wilhelm`, mirror `claude-contexts/wilhelm/wilhelm.md`. Old `~/github/wilhelmsk` shell dir removed. Kept: `WilhelmSK` product name + in-repo `Wilhelm/wilhelmsk-docs/` path (GitHub Pages URL).
 - **Branch:** `docs/user-guide` (pushed to origin, 11 commits, PR to `development` pending)
 - **Build:** confirmed working on both MacBook (Xcode 26.5) and utilityserver (Xcode 26.4)
-- Full documentation in `docs/` — user-guide.md, architecture.md, contributing.md, MkDocs site config
+- Full documentation in `docs/` — user-guide.md, architecture.md, contributing.md, MkDocs site config; reviewed rendered MkDocs site locally
 - `HelpWebViewController` added: Settings → Help / Documentation opens bundled WKWebView docs with remote fallback
 - `.claude/` directory committed to repo (Scott approved): analysis.md, UTILITYSERVER_SETUP.md, setup-utilityserver.sh
 - utilityserver fully configured as dev machine — SSH, repos cloned, simulators installed
