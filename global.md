@@ -67,6 +67,7 @@ Topic files:
 - ~/.claude/memory/general.md — cross-project conventions and preferences
 - ~/.claude/memory/tools/claude-hud.md — claude-hud statusLine setup quirks (GNU grep `\t` workaround)
 - ~/.claude/memory/tools/ralph.md — Ralph loop pattern (PLAN.md + ralph.sh driver for batch task execution)
+- ~/.claude/memory/tools/mempalace.md — MemPalace auto-mines via plugin Stop/PreCompact hooks (not settings.json); palace = mined own content
 
 ## Global Memory Reference Rule
 
