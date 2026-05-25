@@ -122,6 +122,19 @@ If the bar is met: update `~/OneDrive - DGLC/Claude/<project>.md`. Create it fro
 
 If you wrote new memory files this session (other than `session_state_<project>.md`), add one-line entries for them to the project memory folder's `MEMORY.md`.
 
+### 8.5. Update the knowledge graph (best-effort, only if structural facts changed)
+
+Skip unless this session changed a durable, entity-centric fact — the **same bar as step 5**, but specifically for things you'd query *by entity*: machines, deployments, integrations, people, cross-project status. Routine in-project work does not qualify; the mining hooks already capture that in drawers (`mempalace mine --mode convos`). This step maintains the separate KG **triple** layer, which mining does not populate.
+
+The KG lives in the shared MemPalace palace on the Mac Mini, reached over the SSH MCP wrapper. Treat every call as **best-effort**: if the `mempalace` MCP server is unreachable (e.g. MacBook off-LAN with the remote tunnel dormant), skip this step silently — never block the commit.
+
+For each fact worth recording:
+1. **Query first** — `mempalace_kg_query` the entity (or `mempalace_check_duplicate`) so new triples reuse existing entity names and predicates instead of creating drift or duplicates.
+2. **Invalidate on supersession** — if this session changed the state of an existing fact (e.g. a tunnel going `dormant` → `active`), call `mempalace_kg_invalidate` on the old triple, then `mempalace_kg_add` the new one. Don't stack contradictory facts.
+3. **Add new facts** — `mempalace_kg_add` with subject/predicate/object; set `valid_from` (today) for anything with a start date and `source_file` for provenance. Hang properties off the canonical entity node (e.g. `MemPalace`), not ad-hoc sub-entities, so a single entity query returns the whole picture.
+
+Keep entity names consistent with what's already in the graph. Prefer fewer, well-named entities over many fragmented ones.
+
 ### 9. Handle untracked files
 
 From step 2A's `git status`, if there are untracked files (beyond `.claude/`):
