@@ -100,10 +100,9 @@ Check whether `~/github/<project>/` exists.
 
   In all cases note in the summary which path was taken (pulled / skipped because dirty / skipped because feature branch / already current).
 
-- **If it does not exist**: clone it. The token lives at `~/OneDrive - DGLC/Claude/.github-token`:
+- **If it does not exist**: clone it over SSH:
   ```bash
-  TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token)
-  git clone "https://dglcinc:${TOKEN}@github.com/dglcinc/<project>.git" ~/github/<project>
+  git clone "git@github.com:dglcinc/<project>.git" ~/github/<project>
   git -C ~/github/<project> config user.email "dglcinc@users.noreply.github.com"
   git -C ~/github/<project> config user.name "David Lewis"
   ```

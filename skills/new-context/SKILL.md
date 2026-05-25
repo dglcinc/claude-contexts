@@ -18,8 +18,7 @@ The argument is the new project's folder name under `~/github/` (e.g. `my-new-ap
 If `dglcinc/<name>` already exists on GitHub, the user almost certainly meant `/set-context <name>` (which clones it). Abort `/new-context` rather than scaffolding over an existing remote.
 
 ```bash
-GITHUB_TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token) \
-  gh repo view dglcinc/<name> --json name 2>/dev/null && echo "EXISTS" || echo "NEW"
+gh repo view dglcinc/<name> --json name 2>/dev/null && echo "EXISTS" || echo "NEW"
 ```
 
 If `EXISTS`: stop and tell the user "`dglcinc/<name>` already exists on GitHub — use `/set-context <name>` to clone it locally. Aborting `/new-context`."
@@ -104,8 +103,7 @@ If git was initialized, ask: "Create a GitHub repository under dglcinc? (y/n —
 
 If yes:
 ```bash
-GITHUB_TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token) \
-  gh repo create dglcinc/<name> --<visibility> --source=. --remote=origin --push
+gh repo create dglcinc/<name> --<visibility> --source=. --remote=origin --push
 ```
 
 Where `--<visibility>` is `--private` or `--public` based on the user's answer.

@@ -62,8 +62,7 @@ cd ~/github/<project> && git status
 git -C ~/github/<project> branch --show-current
 
 # C. open PRs
-GITHUB_TOKEN=$(git -C ~/github/<project> remote get-url origin | sed 's/.*:\(.*\)@.*/\1/') \
-  gh pr list --repo dglcinc/<project>
+gh pr list --repo dglcinc/<project>
 
 # D. existing memory files (for the promote-memories nudge in step 12)
 ENCODED=$(echo "$HOME/github/<project>" | tr '/' '-')
@@ -137,8 +136,7 @@ From step 2F: if there is no remote, ask: "Do you want to create a GitHub reposi
 
 If yes:
 ```bash
-GITHUB_TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token) \
-  gh repo create dglcinc/<project> --<visibility> --source=. --remote=origin --push
+gh repo create dglcinc/<project> --<visibility> --source=. --remote=origin --push
 ```
 
 ### 11. Commit and push (in parallel where possible)

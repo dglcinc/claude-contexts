@@ -23,8 +23,7 @@ git -C ~/github/<project> status --short
 ### 3. Check open PRs
 
 ```bash
-GITHUB_TOKEN=$(cat ~/OneDrive\ -\ DGLC/Claude/.github-token) \
-  gh pr list --repo dglcinc/<project> --state open
+gh pr list --repo dglcinc/<project> --state open
 ```
 
 ### 4. Read session state

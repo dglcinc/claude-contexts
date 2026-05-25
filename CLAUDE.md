@@ -60,9 +60,9 @@ Repos live at `~/github/` (outside OneDrive) and are mounted into the VM at `/se
 **Standard workflow on Mac:**
 - At session start, call `mcp__cowork__allow_cowork_file_delete` for the github folder before attempting any git operations
 - Edit files with Edit/Write tools in the VM, then commit and push with Bash git commands
-- Repos are cloned at `~/github/<repo>/` with token auth embedded in the remote URL
-- Token is stored at `~/OneDrive - DGLC/Claude/.github-token`
-- Set up a new clone with: `git clone https://dglcinc:<token>@github.com/dglcinc/<repo>.git`
+- Repos are cloned at `~/github/<repo>/` over SSH — no token embedded in remote URLs
+- Set up a new clone with: `git clone git@github.com:dglcinc/<repo>.git`
+- `gh` (PRs, repo create) authenticates from its own config (`~/.config/gh/hosts.yml`); there is no plaintext token file
 - Use `git config user.email "dglcinc@users.noreply.github.com"` and `user.name "David Lewis"` after cloning
 - Feature branches + PRs for code changes; push directly to main for meta/context files
 

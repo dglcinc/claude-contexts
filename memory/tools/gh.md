@@ -34,9 +34,9 @@ GOPROXY=direct GOSUMDB=off CGO_ENABLED=0 GOBIN=$HOME/go/bin \
 brew unlink gh
 cp $HOME/go/bin/gh /opt/homebrew/bin/gh
 
-# 4. Auth via insecure-storage (skips the bad keychain entry; writes to ~/.config/gh/hosts.yml)
-gh auth login --hostname github.com --with-token --insecure-storage \
-  < ~/OneDrive\ -\ DGLC/Claude/.github-token
+# 4. Auth via insecure-storage (skips the bad keychain entry; writes to ~/.config/gh/hosts.yml).
+#    Paste the PAT at the prompt (or pipe it in); do not keep it in a plaintext file.
+gh auth login --hostname github.com --with-token --insecure-storage
 ```
 
 ## Pitfalls
