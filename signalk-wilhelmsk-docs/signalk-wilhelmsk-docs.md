@@ -37,14 +37,20 @@ bundled help viewer.
   with SignalK / Victron VRM / NMEA gateways as parallel subsections; tvOS, CarPlay, iKommunicate,
   Raymarine references removed.
 
-## Current State (2026-05-24)
+## Current State (2026-05-25)
 
-All 16 repo PRs squash-merged; branch `main` clean. Upstream PR open:
-[sbender9/Wilhelm #99](https://github.com/sbender9/Wilhelm/pull/99) (the iOS picker change).
+Through PR #18 squash-merged; `main` clean. This session: tested the plugin live on the pivac Pi
+(installed + nginx proxy for the docs path); replaced the auth-gated `/plugins/.../info` route with
+a static `public/info.json` (PR #17); documented the picker behavior (PR #18). On the iOS side
+(upstream [sbender9/Wilhelm #99](https://github.com/sbender9/Wilhelm/pull/99), open, awaiting Scott)
+added a reachability probe, fixed the unreachable picker (modal presentation), extracted a
+`WSKDocsSource` resolver for future context-help, and made Help close return to the app.
+
+**Detection:** `/signalk-wilhelmsk-docs/info.json` (static, unauthenticated). **Gotcha:** the
+`signalk-webapp` keyword serves `public/` regardless of plugin enable state.
 
 ## Next Steps
 
 1. Wait for Scott's review of upstream PR #99.
-2. Test the plugin locally on the pivac Pi / a dev SignalK server.
-3. Pre-publish prep for npm / SignalK AppStore (signalk config block, displayName, appIcon, `npm publish`).
-4. Deferred context-help PR in Wilhelm (per-screen "?" deep links) — see wilhelm context.
+2. Pre-publish prep for npm / SignalK AppStore (signalk config block, displayName, appIcon, `npm publish`).
+3. Context-help PR in Wilhelm — use `WSKDocsSource docsURLForAnchor:`, don't show the picker, default to web when source unset/None.
