@@ -37,20 +37,26 @@ bundled help viewer.
   with SignalK / Victron VRM / NMEA gateways as parallel subsections; tvOS, CarPlay, iKommunicate,
   Raymarine references removed.
 
-## Current State (2026-05-25)
+## Current State (2026-05-25, publish session)
 
-Through PR #18 squash-merged; `main` clean. This session: tested the plugin live on the pivac Pi
-(installed + nginx proxy for the docs path); replaced the auth-gated `/plugins/.../info` route with
-a static `public/info.json` (PR #17); documented the picker behavior (PR #18). On the iOS side
-(upstream [sbender9/Wilhelm #99](https://github.com/sbender9/Wilhelm/pull/99), open, awaiting Scott)
-added a reachability probe, fixed the unreachable picker (modal presentation), extracted a
-`WSKDocsSource` resolver for future context-help, and made Help close return to the app.
+Through PR #22 squash-merged; `main` clean. **Published to npm and live in the SignalK App Store.**
+This session's PRs: #19 appstore metadata (`signalk` block displayName/appIcon/appSupport, 256px
+`assets/icon.png`, README reworked as appstore page); #20 documented the doc-plugin in the user-guide
+Server Plugins section; #21 README "Reading the docs" (direct browser access, no app) + appstore-listing
+description; #22 added a clickable docs link to the Plugin Config page via schema `description` (HTML,
+relative href), bumped to **0.1.1**. Published **0.1.0** then **0.1.1** under the new **`dglcinc`** npm
+account; package indexed and appears as "WilhelmSK Documentation".
 
-**Detection:** `/signalk-wilhelmsk-docs/info.json` (static, unauthenticated). **Gotcha:** the
+**Publish auth gotcha:** `dglcinc` npm account has passkey-only 2FA + no classic/automation tokens →
+publish with a **granular access token** inline: `npm publish "--//registry.npmjs.org/:_authToken=npm_…"`.
+Registry read CDN lags ~1–2 min; appstore lags further (npm keyword indexing + SignalK server caches its
+Available list, restart to refresh). **Detection:** static `/signalk-wilhelmsk-docs/info.json`. **Gotcha:**
 `signalk-webapp` keyword serves `public/` regardless of plugin enable state.
 
 ## Next Steps
 
-1. Wait for Scott's review of upstream PR #99.
-2. Pre-publish prep for npm / SignalK AppStore (signalk config block, displayName, appIcon, `npm publish`).
-3. Context-help PR in Wilhelm — use `WSKDocsSource docsURLForAnchor:`, don't show the picker, default to web when source unset/None.
+1. **User: update server to 0.1.1** (`npm install signalk-wilhelmsk-docs@latest` + restart) and **verify
+   the config-page link renders clickable** (not literal HTML). If literal, switch approach.
+2. **User: revoke the granular npm token** pasted in chat.
+3. Wait for Scott's review of upstream PR #99 (in-app docs picker); until merged + shipped, the in-app
+   "Help → SignalK Server" path doesn't exist in the App Store build, but the plugin is useful standalone.
