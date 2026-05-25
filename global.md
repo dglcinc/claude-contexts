@@ -115,3 +115,25 @@ Read ~/.claude/CLAUDE.md for memory rules and topic files.
 
 When an update is needed to a promoted domain, note it in the memory file so an issue
 can be created on the plugin repo.
+
+## MemPalace Consultation
+
+The MemPalace palace is a separate memory system from the file-based `.claude/memory/`
+above. Only the file-based MEMORY.md + index is auto-injected each session; the palace
+(semantic-search drawers and the knowledge-graph triples) is **not** loaded automatically
+and must be queried on demand.
+
+Before answering a question whose answer plausibly lives in stored memory rather than in
+the current conversation, query the palace first instead of guessing. This applies to:
+past-session decisions and history, infrastructure and deployment facts (hosts, IPs,
+topology, commands), and details about specific people or projects. Use `mempalace_search`
+for prose/semantic recall and `mempalace_kg_query` for specific entity facts.
+
+Scope guard: only reach for the palace when the answer is genuinely stored knowledge and
+is not already available in the current context, the auto-injected file memory, the
+codebase in front of you, or general knowledge. Do not search reflexively for things you
+can already answer.
+
+Best-effort: the palace lives on the Mac Mini behind the SSH MCP wrapper. If it is
+unreachable (e.g. off-LAN with the remote tunnel dormant), say so and answer from what is
+available rather than blocking.
