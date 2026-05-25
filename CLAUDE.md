@@ -92,3 +92,13 @@ claude mcp add apple-mail /opt/homebrew/bin/apple-mail-mcp
 This writes to `~/.claude/settings.json`. The standalone `~/.claude/mcp.json` file is **not** read by Claude Code CLI — using that file alone silently fails. After registering and restarting, run `/mcp` to verify `apple-mail` shows as connected.
 
 macOS permission required: Automation access to Mail.app (System Settings → Privacy & Security → Automation). If previously denied, reset with `tccutil reset Automation`.
+
+### MemPalace (AI memory — centralized, deployed 2026-05-25)
+Local AI-memory system (official `MemPalace/mempalace`). **One shared palace on the Mac Mini** (`utilityserver@10.0.0.84`) at `~/.mempalace` (ChromaDB; **never** sync this dir to OneDrive/iCloud — the live HNSW index corrupts). The MacBook and Pi are thin clients — no local palace; their Claude Code runs the host's MCP server over SSH. MCP is **stdio-only** (no HTTP transport), so remote access is SSH, never an nginx HTTP proxy.
+
+- **Host:** `uv tool install mempalace` (→ `~/.local/bin/{mempalace,mempalace-mcp}`) + `claude plugin install mempalace@mempalace` (marketplace `MemPalace/mempalace`) — gives `plugin:mempalace:mempalace` MCP, auto-save Stop/PreCompact hooks, and the proactive skill.
+- **Clients:** MCP via SSH wrapper — `claude mcp add -s user mempalace -- ssh utilityserver /Users/utilityserver/.local/bin/mempalace-mcp` (MacBook uses `bash ~/.ssh/mp-ssh …` to auto-pick LAN vs remote). Auto-capture hook `~/.mempalace-client/mempal-client-save-hook.sh` ships the transcript over SSH and runs `mempalace mine --mode convos` on the host every 15 human msgs. Hooks activate on next session start.
+- **Remote (away) access:** mTLS SSH tunnel via the Pi's nginx `stream` on 8443 → `10.0.0.84:22` (server/client certs + CA in `pi:/etc/nginx/mempalace-tls` and `pi:~/mempalace-tls`; `ufw allow 8443`). Dormant until a router port-forward WAN tcp/8443 → `10.0.0.82:8443` is added; the MacBook uses the LAN path until then.
+- **Backups:** Mac Mini LaunchAgent `com.dglc.mempalace-backup` (daily 03:30) cold-tars `~/.mempalace` and uploads via **cat-over-ssh** to NAS `root@10.0.0.3:/volume1/NetBackup/mempalace/` (14 kept; 3 local in `~/.mempalace-backups`). rsync/scp fail on this Synology's SSH (SFTP disabled, rsync `--server` returns 0 bytes) — cat-over-ssh is the proven method.
+
+Per-machine specifics and verified facts live in this repo's Mac Mini project memory (`project_mempalace.md`); this section is the cross-machine reference.
