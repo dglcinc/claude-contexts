@@ -105,4 +105,11 @@ Local AI-memory system (official `MemPalace/mempalace`). **One shared palace on 
 
 - **Knowledge-graph layer:** the palace has two layers — semantic-search **drawers** (auto-populated by the mining hooks) and **KG triples** (precise, temporal entity facts). **Mining does not populate the KG** — it stays empty until facts are added explicitly. KG ops are **MCP-tool-only** (no `mempalace kg` CLI): `mempalace_kg_add/query/invalidate/stats`; `invalidate` has no hard-delete (sets `valid_to`). Per `global.md`'s **MemPalace Consultation** rule, query the palace before answering about past sessions, infra/deployment facts, or people/projects (best-effort; skip if MCP unreachable).
 
+- **Memory boundaries — keep the three systems non-overlapping (set 2026-05-25):** each system owns one job, so they don't mirror each other.
+  - **Markdown memory** (`~/.claude/memory/` + project `MEMORY.md` + CLAUDE.md) = curated, version-controlled source of truth, loaded into context every session.
+  - **MemPalace** = episodic recall — auto-mined conversation transcripts (`sessions` wing) + diary checkpoints — plus the **KG**, which is canonical for precise/temporal entity-fact queries.
+  - **Beads** = work/task tracking (installed, not yet adopted).
+  - **Do NOT `mempalace mine <repo> --mode projects` on claude-contexts** (or other curated-context repos). Project-mode mining clones version-controlled files into drawers that drift from the git source the moment you edit them. Only convo mining auto-runs (the Stop/PreCompact + client hooks); project-mode mining is a one-off manual action with no recurring job, so the rule is simply: don't run it on curated repos.
+  - The original project-file mirror (`claude_contexts` wing, 321 drawers + 57 closets) was deleted 2026-05-25 — zero info loss, re-mineable from git if ever needed. `wing_contexts`/`wing_docs` were kept: despite the names they're episodic diary checkpoints, not file mirrors.
+
 Per-machine specifics and verified facts live in this repo's Mac Mini project memory (`project_mempalace.md`); this section is the cross-machine reference.
