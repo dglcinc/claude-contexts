@@ -101,4 +101,6 @@ Local AI-memory system (official `MemPalace/mempalace`). **One shared palace on 
 - **Remote (away) access:** mTLS SSH tunnel via the Pi's nginx `stream` on 8443 → `10.0.0.84:22` (server/client certs + CA in `pi:/etc/nginx/mempalace-tls` and `pi:~/mempalace-tls`; `ufw allow 8443`). Dormant until a router port-forward WAN tcp/8443 → `10.0.0.82:8443` is added; the MacBook uses the LAN path until then.
 - **Backups:** Mac Mini LaunchAgent `com.dglc.mempalace-backup` (daily 03:30) cold-tars `~/.mempalace` and uploads via **cat-over-ssh** to NAS `root@10.0.0.3:/volume1/NetBackup/mempalace/` (14 kept; 3 local in `~/.mempalace-backups`). rsync/scp fail on this Synology's SSH (SFTP disabled, rsync `--server` returns 0 bytes) — cat-over-ssh is the proven method.
 
+- **Direct CLI search:** an `mp` shell helper is installed on each machine (`~/.zshrc` on Macs, `~/.bashrc` on Pi, marker-guarded) — `mp "query"` searches, `mp status`/`mp wake-up` pass through; the MacBook/Pi route to the host over SSH (args shell-quoted so multi-word queries survive).
+
 Per-machine specifics and verified facts live in this repo's Mac Mini project memory (`project_mempalace.md`); this section is the cross-machine reference.
