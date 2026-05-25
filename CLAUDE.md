@@ -103,4 +103,6 @@ Local AI-memory system (official `MemPalace/mempalace`). **One shared palace on 
 
 - **Direct CLI search:** an `mp` shell helper is installed on each machine (`~/.zshrc` on Macs, `~/.bashrc` on Pi, marker-guarded) — `mp "query"` searches, `mp status`/`mp wake-up` pass through; the MacBook/Pi route to the host over SSH (args shell-quoted so multi-word queries survive).
 
+- **Knowledge-graph layer:** the palace has two layers — semantic-search **drawers** (auto-populated by the mining hooks) and **KG triples** (precise, temporal entity facts). **Mining does not populate the KG** — it stays empty until facts are added explicitly. KG ops are **MCP-tool-only** (no `mempalace kg` CLI): `mempalace_kg_add/query/invalidate/stats`; `invalidate` has no hard-delete (sets `valid_to`). Per `global.md`'s **MemPalace Consultation** rule, query the palace before answering about past sessions, infra/deployment facts, or people/projects (best-effort; skip if MCP unreachable).
+
 Per-machine specifics and verified facts live in this repo's Mac Mini project memory (`project_mempalace.md`); this section is the cross-machine reference.
