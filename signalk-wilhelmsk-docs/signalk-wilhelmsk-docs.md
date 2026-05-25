@@ -39,24 +39,28 @@ bundled help viewer.
 
 ## Current State (2026-05-25, publish session)
 
-Through PR #22 squash-merged; `main` clean. **Published to npm and live in the SignalK App Store.**
+Through PR #23 squash-merged; `main` clean. **Published to npm (0.1.2) and live in the SignalK App Store.**
 This session's PRs: #19 appstore metadata (`signalk` block displayName/appIcon/appSupport, 256px
 `assets/icon.png`, README reworked as appstore page); #20 documented the doc-plugin in the user-guide
 Server Plugins section; #21 README "Reading the docs" (direct browser access, no app) + appstore-listing
-description; #22 added a clickable docs link to the Plugin Config page via schema `description` (HTML,
-relative href), bumped to **0.1.1**. Published **0.1.0** then **0.1.1** under the new **`dglcinc`** npm
-account; package indexed and appears as "WilhelmSK Documentation".
+description; #22 tried a clickable config-page link via schema `description` (HTML) but it rendered as raw
+tags; #23 reverted to plain text after verifying SignalK can't render links there, bumped to **0.1.2**.
+Published 0.1.0 → 0.1.1 → 0.1.2 under the new **`dglcinc`** npm account; package indexed, appears as
+"WilhelmSK Documentation".
 
 **Publish auth gotcha:** `dglcinc` npm account has passkey-only 2FA + no classic/automation tokens →
 publish with a **granular access token** inline: `npm publish "--//registry.npmjs.org/:_authToken=npm_…"`.
-Registry read CDN lags ~1–2 min; appstore lags further (npm keyword indexing + SignalK server caches its
-Available list, restart to refresh). **Detection:** static `/signalk-wilhelmsk-docs/info.json`. **Gotcha:**
-`signalk-webapp` keyword serves `public/` regardless of plugin enable state.
+Registry read CDN lags ~1–2 min (verify with version-specific GET, not `npm view`); appstore lags further
+(npm keyword indexing + SignalK server caches its Available list, restart to refresh). **Config-page link
+NOT possible:** admin UI (`@rjsf/core` v5, custom `FieldTemplate` → `<p>{description}</p>`) renders the
+schema `description` as plain text (HTML + markdown escaped) — the clickable entry point is the **Webapps
+menu**. **Detection:** static `/signalk-wilhelmsk-docs/info.json`. **Gotcha:** `signalk-webapp` keyword
+serves `public/` regardless of plugin enable state.
 
 ## Next Steps
 
-1. **User: update server to 0.1.1** (`npm install signalk-wilhelmsk-docs@latest` + restart) and **verify
-   the config-page link renders clickable** (not literal HTML). If literal, switch approach.
+1. **User: update server to 0.1.2** (`npm install signalk-wilhelmsk-docs@latest` + restart). Config page
+   now clean plain text; clickable access via **Webapps → WilhelmSK Documentation**.
 2. **User: revoke the granular npm token** pasted in chat.
 3. Wait for Scott's review of upstream PR #99 (in-app docs picker); until merged + shipped, the in-app
    "Help → SignalK Server" path doesn't exist in the App Store build, but the plugin is useful standalone.
