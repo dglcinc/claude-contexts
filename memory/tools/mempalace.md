@@ -25,6 +25,19 @@ tuned via the `mempalace_hook_settings` MCP tool (`silent_save: true` = quiet di
 The Alice/Jordan/Riley/Max/Ben personas seen anywhere are only in the **AAAK dialect
 format example** shipped in the spec — not real drawers.
 
+## Wings & rooms are emergent labels, not created objects — 2026-05-25
+
+There is no `create_wing`/`add_wing` anywhere — a wing is just a metadata field
+stamped on each drawer. `list_wings`/`status` are a GROUP BY over the `wing` field;
+a wing "exists" iff ≥1 drawer carries that label and vanishes when its last drawer is
+deleted (so dedup can shrink/remove a wing). The miner derives the label at mine time
+three ways: auto from source path via `normalize_wing_name(<dir/convo name>)` (→
+path-shaped names like `_users_david_github_wilhelmsk`, `_home_pi_github_pivac`,
+`claude_contexts`; the conversation source → `sessions`); explicit `--wing` override
+(→ `wing_wilhelm`/`wing_docs`); or `config["wing"]` default. Rooms work identically
+(label assigned by the room detector / AAAK halls `technical`/`problems`/`diary`).
+So "hooks only add drawers" and "wings get created" are the same event.
+
 ## Compaction / dedup is MANUAL, not automatic — 2026-05-25
 
 The hooks only ADD drawers; nothing auto-compacts, so the palace grows monotonically
