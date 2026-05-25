@@ -25,6 +25,31 @@ tuned via the `mempalace_hook_settings` MCP tool (`silent_save: true` = quiet di
 The Alice/Jordan/Riley/Max/Ben personas seen anywhere are only in the **AAAK dialect
 format example** shipped in the spec — not real drawers.
 
+## Compaction / dedup is MANUAL, not automatic — 2026-05-25
+
+The hooks only ADD drawers; nothing auto-compacts, so the palace grows monotonically
+and redundancy builds up (same files/conversations re-mined every session, plus
+cross-machine mining shipped into `~/.mempalace/incoming/`). Dedup is a manual
+maintenance op you must run yourself.
+
+- **`dedup.py`** removes near-duplicate drawers *within the same `source_file`*
+  (cosine distance < threshold; keeps the longest/richest, deletes the rest; API-free).
+  In v3.3.6 it is **module-only** — `mempalace dedup` is NOT a CLI subcommand:
+  `~/.local/share/uv/tools/mempalace/bin/python -m mempalace.dedup [--stats|--dry-run] [--threshold 0.15] [--wing W]`
+- **`mempalace compress`** is a *different* thing (AAAK entity compression, takes
+  `--config entities.json`) — not duplicate removal. Don't confuse them.
+- Default threshold **0.15** = near-identical only (~85% sim). Looser `0.3`–`0.4`
+  also catches paraphrased dupes (more removed, small risk of dropping distinct content).
+- `--stats` over-estimates (counts large same-source groups); the **`--dry-run`**
+  cosine pass gives the true removable count.
+- Real run on utilityserver palace (2026-05-25, threshold 0.15): **2,004 → 1,871
+  (-133, ~7%)** in ~21s. `--stats` had guessed ~656. No unique content lost — only
+  redundant re-minings. Re-run periodically; heaviest reclaim is the
+  `~/.mempalace/incoming/` cross-machine mining + big session transcripts.
+
+The CLI also exposes `repair`/`repair-status` (prune corrupt) and `split` (split
+oversized drawers) — likewise manual.
+
 ## Architecture reminders
 
 Palace lives on the **Mac Mini**, reached over the SSH MCP wrapper; it aggregates mining
