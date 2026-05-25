@@ -12,6 +12,7 @@ Central navigation for all active projects. The vault root is `~/github/` — ev
 | Arduino | [dglcinc/Arduino](https://github.com/dglcinc/Arduino) | ad hoc |
 | Wilhelm (upstream, contributor) | [sbender9/Wilhelm](https://github.com/sbender9/Wilhelm) — local `~/github/wilhelm/` | [CLAUDE.md](../wilhelm/CLAUDE.md) |
 | wilhelm-sk (dglcinc) | [dglcinc/wilhelm-sk](https://github.com/dglcinc/wilhelm-sk) — local `~/github/wilhelm-sk/` | ad hoc |
+| signalk-wilhelmsk-docs (dglcinc) | [dglcinc/signalk-wilhelmsk-docs](https://github.com/dglcinc/signalk-wilhelmsk-docs) — local `~/github/signalk-wilhelmsk-docs/` | WilhelmSK docs (MkDocs) + SignalK plugin · [Pages](https://dglcinc.github.io/signalk-wilhelmsk-docs/) |
 
 ## Global Claude Context
 
