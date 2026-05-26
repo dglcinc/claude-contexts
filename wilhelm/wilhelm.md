@@ -4,7 +4,17 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
-## Current State (2026-05-25)
+## Current State (2026-05-26)
+
+- **PR #102 open (settings-menu icons).** Added SF Symbol icons to the two settings rows
+  that lacked them — **Help / Documentation** (`questionmark.circle`) and **Documentation
+  Source** (`book`) — in `SettingsMenuViewController.m`. These rows are code-registered
+  plain cells (not storyboard prototypes like the `gear` rows), so a `configureDocCell:`
+  helper builds icon+label matching the storyboard geometry, with idiom-aware insets
+  (iPhone x=21/64, iPad x=27/70). Verified on iPhone 17 Pro + iPad Pro 11-inch sims.
+  Branch `settings-doc-menu-icons`, base `development`. Awaiting Scott's review.
+
+## Prior State (2026-05-25)
 
 - **App docs fully fixed; everything merged.** Scott **merged [sbender9/Wilhelm #100](https://github.com/sbender9/Wilhelm/pull/100)** into `development` — the permanent fix for a malformed `user-guide//` (double-slash) URL in `WSKDocsSource` that 404'd the docs' relative CSS/JS, leaving in-app help **unstyled (serif) with no scroll**. (Found via the SignalK server access log; full story in [[docs-deeplink-double-slash]].) Local clone now on `development` with the fix.
 - **signalk-wilhelmsk-docs at 0.1.5 (published, App-Store-ready):** content-side inline-redirect workaround for already-installed apps (0.1.4), WebApps icon routing fix + docs icon, system sans-serif font (`font: false`, offline), rewritten App Store description, four category keywords (utility/instruments/notifications/ais), listing screenshot (confirmed rendering), CHANGELOG, and enable-by-default. Plus Scott's `restProtocol` SSL docs-link fix + a nil guard.
