@@ -41,9 +41,19 @@ bundled help viewer.
   with SignalK / Victron VRM / NMEA gateways as parallel subsections; tvOS, CarPlay, iKommunicate,
   Raymarine references removed.
 
-## Current State (2026-05-26 pt.2, Scott's doc fixes + theme match)
+## Current State (2026-05-26 pt.3, exact-color tuning)
 
-`main` clean, no open PRs. **4 PRs merged this session.** **#42** implemented all six issues Scott filed
+`main` clean, no open PRs. **pt.3 (PRs #46–#48, merged):** tuned the theme to David's exact Digital
+Color Meter samples. Final palette (sampled in **sRGB**, matching the site's Wix tokens): **title bar
+`#081E20`** (8,30,32), **body `#382A23`** (56,42,35), **brass `#AB9567`** (171,149,103); white text,
+brass links/wordmark, dark scheme default. Live + bundle self-healed. Lessons: sample in sRGB not native
+(native read off; one brass mis-sample came back lime-green); and `gh pr merge --delete-branch` drops
+un-pushed local commits + rejects a 2nd push after the verify-bot commit, so confirm each commit is on
+`origin/<branch>` before merging (cost a redo on #46→#47). **Awaiting Scott's feedback.**
+
+---
+
+**pt.2 (Scott's doc fixes + theme match).** **4 PRs merged.** **#42** implemented all six issues Scott filed
 against the user guide (closes #36–#41): Digital Yacht RAW reframed as a **YDWG alias** (plain NMEA 0183,
 not NMEA 2000); Actisense W2K **DS2-Server / N2K-ASCII** setup (port 60002) per the SK FAQ; Remote Access
 **VPN/tunnel options** (Tailscale/ZeroTier/ngrok/remote.it); Watch Quirks corrected (**SignalK keeps
@@ -52,14 +62,12 @@ fixes (drop deprecated `signalk-zones` → zones built into server; vendor-agnos
 Fusion → `signalk-fusion-stereo`; track overlay → a Tracks-API plugin; Freeboard-SK → `freeboard-sk`; add
 `signalk-wilhelmsk-plugin`); new **Shortcuts and Siri** section. Then matched the docs theme to
 **wilhelmsk.com** over three iterations — **#43** (teal, wrong), **#44** (near-black + brass wordmark),
-**#45** (**deep brown**, correct). Final palette in `docs/stylesheets/extra.css`: body `#574035`,
-header/code `#382A23`, white text, brass accents `#CFB57C`, brass wordmark; dark scheme default. Pages
-deployed and verified live. **Awaiting Scott's feedback.**
+**#45** (deep brown) — landing on a brown body + brass theme later finalized to exact samples in pt.3 above.
 
 **Theme caveat:** it is **deep brown, not teal/near-black** — wilhelmsk.com's Wix near-black token `#061E20`
-(faint cool cast) misled an early pass into teal. Verify rendered colors against what David sees. Color-only;
-serif fonts (Enriqueta/Museo Slab) skipped (proprietary + offline serving). Two issue-wording corrections:
-Fusion plugin is really `signalk-fusion-stereo`; `signalk-zones` has no successor (built into the server).
+(faint cool cast) misled an early pass into teal. Color-only; serif fonts (Enriqueta/Museo Slab) skipped
+(proprietary + offline serving). Two issue-wording corrections: Fusion plugin is really
+`signalk-fusion-stereo`; `signalk-zones` has no successor (built into the server).
 
 **History (pt.1, gauge-reference + automation):** #33 rewrote the Gauge Reference (5 missing gauges, paths
 verified against `Wilhelm/gauges.json`); #34 released **0.1.6** + switched `verify-plugin-docs.yml` to
