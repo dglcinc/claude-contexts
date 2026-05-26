@@ -41,28 +41,37 @@ bundled help viewer.
   with SignalK / Victron VRM / NMEA gateways as parallel subsections; tvOS, CarPlay, iKommunicate,
   Raymarine references removed.
 
-## Current State (2026-05-26, gauge-reference + automation session)
+## Current State (2026-05-26 pt.2, Scott's doc fixes + theme match)
 
-`main` clean. **Published 0.1.6 to npm via OIDC trusted publishing** (no token, no OTP); tag `v0.1.6` pushed.
-This session (PRs all merged): **#33** rewrote the user-guide **Gauge Reference** — added 5 missing gauge
-types (StaticThermostat, Raymarine MFD, WavyTank, AWA Close-Hauled, Watch Grid), verified every gauge's
-SignalK path against the WilhelmSK source (`Wilhelm/gauges.json`, 90 classNames) and fixed the wrong ones,
-added a "Displays" description + a "SignalK Path(s) / Source" column to every section (controls vs
-read-only marked), and a fixed-width table layout (`docs/stylesheets/extra.css` via `md_in_html`). **#34**
-released 0.1.6 and switched `verify-plugin-docs.yml` from verify-and-fail to **rebuild-and-commit**
-(ends the drift emails). **#35** added `publish.yml` for trusted publishing. Also opened
-[sbender9/Wilhelm#101](https://github.com/sbender9/Wilhelm/issues/101) — the `AISTargetsTable` gauges.json
-picker entry has no `GaugeConfig` class (the AIS table is actually embedded in the `AISTargets` gauge).
+`main` clean, no open PRs. **4 PRs merged this session.** **#42** implemented all six issues Scott filed
+against the user guide (closes #36–#41): Digital Yacht RAW reframed as a **YDWG alias** (plain NMEA 0183,
+not NMEA 2000); Actisense W2K **DS2-Server / N2K-ASCII** setup (port 60002) per the SK FAQ; Remote Access
+**VPN/tunnel options** (Tailscale/ZeroTier/ngrok/remote.it); Watch Quirks corrected (**SignalK keeps
+working when the phone is out of range** — watch caches token/connection details); plugin-dependency matrix
+fixes (drop deprecated `signalk-zones` → zones built into server; vendor-agnostic `@signalk/signalk-autopilot`;
+Fusion → `signalk-fusion-stereo`; track overlay → a Tracks-API plugin; Freeboard-SK → `freeboard-sk`; add
+`signalk-wilhelmsk-plugin`); new **Shortcuts and Siri** section. Then matched the docs theme to
+**wilhelmsk.com** over three iterations — **#43** (teal, wrong), **#44** (near-black + brass wordmark),
+**#45** (**deep brown**, correct). Final palette in `docs/stylesheets/extra.css`: body `#574035`,
+header/code `#382A23`, white text, brass accents `#CFB57C`, brass wordmark; dark scheme default. Pages
+deployed and verified live. **Awaiting Scott's feedback.**
 
-**Key automations now in place:** docs PRs auto-rebuild `plugin/public/` in CI (no manual step, no drift
-emails); releases publish hands-free on a `v*` tag via OIDC (npm trusted publisher configured = repo +
-`publish.yml`). GitHub Pages and the npm plugin bundle are decoupled channels — Pages updates on every
-merge, plugin users only on a new release.
+**Theme caveat:** it is **deep brown, not teal/near-black** — wilhelmsk.com's Wix near-black token `#061E20`
+(faint cool cast) misled an early pass into teal. Verify rendered colors against what David sees. Color-only;
+serif fonts (Enriqueta/Museo Slab) skipped (proprietary + offline serving). Two issue-wording corrections:
+Fusion plugin is really `signalk-fusion-stereo`; `signalk-zones` has no successor (built into the server).
+
+**History (pt.1, gauge-reference + automation):** #33 rewrote the Gauge Reference (5 missing gauges, paths
+verified against `Wilhelm/gauges.json`); #34 released **0.1.6** + switched `verify-plugin-docs.yml` to
+rebuild-and-commit; #35 added `publish.yml` (OIDC trusted publishing). Bundle auto-rebuild and hands-free
+`v*`-tag publishing remain in place. Opened sbender9/Wilhelm#101.
 
 ## Next Steps
 
-1. **Mention sbender9/Wilhelm#101 to Scott on the Signal K Discord** (drop the dead picker line vs add the
+1. **Await Scott's feedback** on the content fixes + deep-brown/brass styling; fold in tweaks (e.g. brighten
+   brass body links if dim on the brown — one line in `extra.css`).
+2. **Mention sbender9/Wilhelm#101 to Scott on the Signal K Discord** (drop the dead picker line vs add the
    missing class — offered to PR either).
-2. **Update the pi to 0.1.6** (`npm install signalk-wilhelmsk-docs@latest` + restart, or auto-update).
-3. **Revoke the granular npm token** from the prior session — trusted publishing makes it unnecessary.
-4. Optional: bump the pinned GitHub Actions off Node 20 (deprecation warning).
+3. **Update the pi to 0.1.6** (`npm install signalk-wilhelmsk-docs@latest` + restart, or auto-update).
+4. **Revoke the granular npm token** from the prior session — trusted publishing makes it unnecessary.
+5. Optional: bump the pinned GitHub Actions off Node 20 (deprecation warning).
