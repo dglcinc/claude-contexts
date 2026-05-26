@@ -11,8 +11,9 @@ Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS
   Source** (`book`) — in `SettingsMenuViewController.m`. These rows are code-registered
   plain cells (not storyboard prototypes like the `gear` rows), so a `configureDocCell:`
   helper builds icon+label matching the storyboard geometry, with idiom-aware insets
-  (iPhone x=21/64, iPad x=27/70). Verified on iPhone 17 Pro + iPad Pro 11-inch sims.
-  Branch `settings-doc-menu-icons`, base `development`. Awaiting Scott's review.
+  (iPhone x=21/64, iPad x=27/70). A second commit drops the `>` disclosure chevron
+  from both rows so they match the gear rows. Verified on iPhone 17 Pro + iPad Pro
+  11-inch sims. Branch `settings-doc-menu-icons`, base `development`. Awaiting Scott's review.
 
 ## Prior State (2026-05-25)
 
