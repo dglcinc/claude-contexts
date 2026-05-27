@@ -41,6 +41,22 @@ bundled help viewer.
   with SignalK / Victron VRM / NMEA gateways as parallel subsections; tvOS, CarPlay, iKommunicate,
   Raymarine references removed.
 
+## Current State (2026-05-26 pt.6, Custom SignalK Paths verification)
+
+`main` clean, no open PRs. **pt.6 (PR #50 + pivac PR #55, both merged):** ran down where the docs'
+`StaticThermostat` content came from. The committed pivac `iphone.wlyt` was a **stale April baseline using
+`Thermostat`**; the real device layouts (`StaticThermostat`, plus an `ipad.wlyt`) live only in the
+**OneDrive Claude share** (`~/OneDrive - DGLC/Claude/`) and had never been committed. **PR #50** fixed two
+stale boiler paths in the user guide (`environment.inside.boiler.waterTemperature` →
+`hvac.boiler.sentry.waterTemp`; `propulsion.boiler.gasInput` → `hvac.boiler.sentry.gasInputValue`) and the
+inaccurate "read-only" `StaticThermostat` wording. **pivac PR #55** refreshed the repo layouts from the
+OneDrive exports. Lesson saved: **pivac layout source of truth = OneDrive, not the repo** (David edits in
+the app → exports `.wlyt` → OneDrive → devices). Gauge ground truth: `wilhelm/Wilhelm/gauges.json` (classes)
++ `wilhelm/Core/Classes/Common/Gauges/*.m` (semantics; `StaticThermostat` writes setpoint, has no mode).
+**Still awaiting Scott's feedback.**
+
+---
+
 ## Current State (2026-05-26 pt.5, user-guide content fix)
 
 `main` clean, no open PRs. **pt.5 (PR #49, merged):** small user-guide fix. On arrival the working
