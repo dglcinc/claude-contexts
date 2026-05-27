@@ -83,3 +83,6 @@ rebuild-and-commit; #35 added `publish.yml` (OIDC trusted publishing). Bundle au
 3. **Update the pi to 0.1.6** (`npm install signalk-wilhelmsk-docs@latest` + restart, or auto-update).
 4. **Revoke the granular npm token** from the prior session — trusted publishing makes it unnecessary.
 5. Optional: bump the pinned GitHub Actions off Node 20 (deprecation warning).
+6. **Deferred (cosmetic):** the heading permalink pilcrow (`&para;`, from `toc: permalink: true`) shows
+   next to the heading the in-app context-sensitive help jumps to — Material reveals `.headerlink` on
+   `:target`. One-line CSS fix ready (`.md-typeset :target>.headerlink {opacity:0}`); David chose to leave it.
