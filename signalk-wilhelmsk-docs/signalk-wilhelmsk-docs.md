@@ -41,6 +41,18 @@ bundled help viewer.
   with SignalK / Victron VRM / NMEA gateways as parallel subsections; tvOS, CarPlay, iKommunicate,
   Raymarine references removed.
 
+## Current State (2026-05-26 pt.5, user-guide content fix)
+
+`main` clean, no open PRs. **pt.5 (PR #49, merged):** small user-guide fix. On arrival the working
+tree had three uncommitted edits to `docs/user-guide.md`; two were accidental corruption (a stray space
+`add th em`, a stray `<br>` in `WilhelmSK<br>device`) and were reverted, keeping the intentional pivac
+edit. The non-marine SignalK (pivac) example now distinguishes **thermostat gauges** (setpoints) from
+**custom text gauges** (boiler status). `mkdocs build --strict` clean; merged at `f0e7c4f`; verify-bot
+bundle rebuild `b7fa34a` was on origin before merge (no redo). Local `.venv/bin/mkdocs` (1.6.1) exists —
+prefer it. **Still awaiting Scott's feedback.**
+
+---
+
 ## Current State (2026-05-26 pt.3, exact-color tuning)
 
 `main` clean, no open PRs. **pt.3 (PRs #46–#48, merged):** tuned the theme to David's exact Digital
