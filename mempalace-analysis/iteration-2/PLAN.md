@@ -82,7 +82,7 @@ drawers to see if the cheaper drawer-based approach is now viable.
   failure mode (e.g. "wrong version published", "wrong file built")? Output:
   `mempalace-analysis/iteration-2/docs/F-A.md` and `F-C.md`.
 
-- [ ] **Task 5 — Iteration-2 synthesis.** Read all per-wing F-A and F-C
+- [x] **Task 5 — Iteration-2 synthesis.** Read all per-wing F-A and F-C
   artifacts plus `baseline/INSIGHTS.md` and `bowling/INSIGHTS-bowling.md`.
   Output: `mempalace-analysis/iteration-2/INSIGHTS-2.md` with sections:
   1. **Cross-project pattern.** Where the over-asking/over-planning
