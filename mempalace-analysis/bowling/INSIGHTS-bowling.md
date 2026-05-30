@@ -203,7 +203,7 @@ human-attention budget is spent at the plan gate**, so that is where tuning pays
 - **The vague/precise call is hand-classified.** Baseline §3e proved a keyword regex is wrong
   ~50% of the time on David's politeness-wrapped reports, so B2 classifies by judgment. This is
   the right call but is not mechanically reproducible; another reader might move a borderline
-  message (the boundary cases are noted in `_b2_dump.txt`).
+  message (the per-message classifications are listed in `B2-diagnostics.md`).
 
 - **One corpus, one operating mode.** Bowling is a single delegated build. Its divergences
   from baseline are best read as *what delegation does to the metrics*, not as a second
