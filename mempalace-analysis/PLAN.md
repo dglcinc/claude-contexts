@@ -37,7 +37,7 @@ commits, pushes, and checks its box.
 
 ## Tasks
 
-- [ ] **B1 — Directive histogram (bowling) + diff vs baseline.**
+- [x] **B1 — Directive histogram (bowling) + diff vs baseline.**
   Same methodology as baseline Facet 1, over raw bowling David-messages. Output
   `bowling/B1-directives.md` with (a) top 30 leading verbs by frequency, (b) word-count
   histogram (buckets 1, 2-3, 4-7, 8-15, 16+), (c) 10 representative directives per bucket,
