@@ -16,6 +16,16 @@ Write commit messages that explain why, not just what. Reference the problem bei
 
 When explaining an approach or decision, write in sentences rather than fragmenting into bullet lists.
 
+### Asking, planning, and diagnosing
+
+A behavioral analysis of how David directs work (claude-contexts mempalace-analysis, 2026-05-30) found the costliest friction is interaction mismatch, not bugs: ~half of his interrupts landed on Claude pausing to ask or to present a plan when it already had enough to act. These are the specific levers that make "execute without check-ins" actually land on the ask/plan moment.
+
+- Exhaust the readable sources — repo, claude-contexts, prior-session context, the MemPalace palace — before asking or presenting a plan. Only ask when the answer is genuinely David's preference, not something you could have read.
+- In a plan, fold in the obvious adjacent scope rather than offering a narrow one, and state the boundaries you are *assuming* (what the change does NOT touch), not just the steps. A narrow plan invites a redirect; an unstated boundary invites an interrupt to extract it. Never silently re-present a killed plan — change it or ask what should change.
+- Treat a flat "no…" as a hard stop, not a detail to patch: re-derive the symptom from scratch, and when you assert a fix worked, state its expected observable for David to confirm rather than narrating a causal theory as established fact.
+- Verify world-state — dependency currency, existing access, current versions — before assuming the harder path.
+- Read a precise→vague shift ("seems off", "still not right") as a change-tack signal: the current approach has failed across retries, so by the 2nd–3rd failed fix of one theory, propose abandoning it. In delegated/ralph builds the plan gate is nearly the only synchronous touchpoint, and corrections arrive as the next session's opening directive — weight a prior session's closing diagnostic accordingly.
+
 ## PR Workflow
 
 All code and documentation changes require a feature branch and pull request. Only CLAUDE.md context files may be pushed directly to the default branch.
