@@ -56,7 +56,7 @@ commits, pushes, and checks its box.
   bowling is hands-on product work, so test whether it skews precise like the product wings
   did, and whether vague spikes cluster where a fix failed across retries.
 
-- [ ] **B3 — Interrupt + correction corpus (bowling, full 570-session scan).**
+- [x] **B3 — Interrupt + correction corpus (bowling, full 570-session scan).**
   Scan ALL 570 transcripts for `[Request interrupted` markers; for each, capture the
   in-flight assistant action (what Claude was doing — tool call / ask / plan / assertion)
   and the next genuine David message in the same session (chronological by line). Output

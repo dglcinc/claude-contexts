@@ -1,0 +1,24 @@
+[4583c448:12] INFLIGHT=Read :: Read: /Users/utilityserver/github/bowling-league-tracker/PLAN.md
+    -> (terminal, no follow-up)
+
+[a68cadf2:75] INFLIGHT=ExitPlanMode :: ExitPlanMode: # Local LLM Stats Assistant for Bowling League Tracker ⏎  ⏎ > Retrieved from `Ultraplan Local Model Plan.md` in the project
+    -> CORR [a68cadf2:76] would it make sense to re-package this plan so it can be executed in a ralph loop?
+
+[d8cdcf9a:7] INFLIGHT=(none) :: 
+    -> (terminal, no follow-up)
+
+[d9e08746:817] INFLIGHT=? :: 
+    -> CORR [d9e08746:818] wait you are saying remove fun stats from the LLM surface, that's just your tool not the page in the app right?
+
+[f1e54751:39] INFLIGHT=ExitPlanMode :: ExitPlanMode: # Local LLM Stats Assistant for Bowling League Tracker ⏎  ⏎ ## Context ⏎  ⏎ The Records page already has a **Stat Builder** tab
+    -> CORR [f1e54751:42] I would also like to add a voice option, so I can speak the query. This will be handy if I'm using on a phone or ipad e at the alley, and someone asks a question
+
+[f1e54751:130] INFLIGHT=ExitPlanMode :: ExitPlanMode: # Local LLM Stats Assistant for Bowling League Tracker ⏎  ⏎ ## Context ⏎  ⏎ The Records page already has a **Stat Builder** tab
+    -> CORR [f1e54751:144] I will revisit this plan later, save to backlog
+
+[f1e54751:140] INFLIGHT=ExitPlanMode :: ExitPlanMode: # Local LLM Stats Assistant for Bowling League Tracker ⏎  ⏎ ## Context ⏎  ⏎ The Records page already has a **Stat Builder** tab
+    -> CORR [f1e54751:144] I will revisit this plan later, save to backlog
+
+[f1e54751:162] INFLIGHT=ExitPlanMode :: ExitPlanMode: # Local LLM Stats Assistant for Bowling League Tracker ⏎  ⏎ > **Status:** Backlog — parked 2026-05-02. Plan approved as-is;
+    -> (terminal, no follow-up)
+
