@@ -44,7 +44,7 @@ artifact, and marks the task done.
   Evaluate the hypothesis: "iOS/UI work (`wing_wilhelm`) has 5-10x the
   interrupt density of infra/docs work."
 
-- [ ] **Facet 3 — Vague-vs-precise diagnostic ratio.**
+- [x] **Facet 3 — Vague-vs-precise diagnostic ratio.**
   Source: the `recent:` field of diary drawers + a 200-message sample of
   user-message drawers from `room=problems`. Classify each diagnostic-style
   user message as VAGUE (patterns: "something is", "I think", "doesn't look",
