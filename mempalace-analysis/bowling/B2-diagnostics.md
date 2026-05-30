@@ -3,8 +3,8 @@
 **Source:** the same 79 genuine David human messages B1 extracted from the 570
 uuid-named `*.jsonl` main-thread sessions at
 `~/.claude/projects/-Users-utilityserver-github-bowling-league-tracker/`
-(`agent-*.jsonl` and `*.md` excluded). Parser: `bowling/_b2_extract.py` →
-`bowling/_b2_dump.txt` (full-text dump, all 79 messages, cited `session:line`).
+(`agent-*.jsonl` and `*.md` excluded). Parser: `bowling/_b2_extract.py`, which
+dumps all 79 messages cited `session:line` (raw dump is gitignored scratch).
 The diagnostic detection and the VAGUE/PRECISE call are **hand-classified** — the
 vague/precise boundary is a judgment baseline §e proved a keyword regex cannot
 make reliably (David's hedges are usually politeness wrappers around precise

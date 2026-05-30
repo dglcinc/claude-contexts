@@ -2,8 +2,8 @@
 
 **Source & method.** Full scan of all **570** uuid-named `*.jsonl` main-thread
 sessions at `~/.claude/projects/-Users-utilityserver-github-bowling-league-tracker/`
-(`agent-*.jsonl` and `*.md` excluded). Parser `bowling/_b3_extract.py` → dump
-`bowling/_b3_dump.txt`. For every line whose user-message body contains
+(`agent-*.jsonl` and `*.md` excluded). Parser `bowling/_b3_extract.py` (raw dump
+is gitignored scratch). For every line whose user-message body contains
 `[Request interrupted by user…` it captures (1) the **in-flight assistant action**
 — the last assistant message before the marker, summarized as its tool_use
 name(s) + a brief input snippet (a thinking-only block is reported as the Read/tool
