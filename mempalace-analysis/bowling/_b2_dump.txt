@@ -1,0 +1,79 @@
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:6] (7w) which model is the ask tab using
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:12] (15w) can you switch it to haiku? That should be good enough for this function right?
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:53] (23w) also can you do a cleanup PR to get rid of all the llama config disable the service so it's not consuming memory
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:190] (3w) merge and deploy
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:214] (3w) yup it does
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:219] (9w) why does save-context tool take so long to run
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:235] (2w) yes refactor
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:292] (42w) on the ask page in the app, you are putting ** ** around some items, which is markdown for bold. Is there any way to render the output as markdown so it's bold, or some other way? What exactly did you intend?
+[39c75aa3-868f-46f6-8e88-a09d1ab4fbe0:303] (5w) I like A. Do it.
+[43751840-7024-4975-974b-3da3ed9b7e69:42] (1w) private
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:66] (10w) what prompt should I use for a ralph wiggum loop
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:72] (15w) I read somewhere that the prompt should also direct you to use subagents if nexcessary
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:78] (113w) create a plan.md for a ralph wiggum loop using the following list, and give me the command to run to invoks, using sclaude as the claude invocation. -    For the mobile app, if I go to the scores tab and select the Harry Russell or Chad Harris tournaments, it says “no scores entered” even though there are scores entered. Please fix. ⏎ -    Move the “mobile view” switch from the account menu to a top level visible link. ⏎ -    Develop a plan for the season rollover and puit it in an md file for review. ⏎ -    On the fun stats page, add “most tournaments won or placed” both for an individual tournament and overall.
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:90] (14w) can you put that in an sh, I've had issues copy-pasting from this window
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:101] (5w) yes, add them to .gitignore
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:116] (16w) my environment is not getting inherited by this script (e.g. my definition for sclaude. Please fix
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:138] (96w) I already started the script. the last step after the wiggum loop ends should really be to deploy all the updates to prod. I'm thinking actually I should put a standard ralph script in claude-contexts that I can reference when I want to do a wiggum loop, which means I don't want the deploy to be part of the script, but I want some kind of "finish" step, which varies based on where I'm running it. I may also want a wiggum loop that can run steps in multiple projects/contexts. Suggestions on how to do that?
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:145] (17w) ok it finished all the steps. Why do I have to controlc? Why doesn't it just exit?
+[6d83450e-c566-49e6-b9e0-af9ba9097a49:154] (25w) let's go with option 1 for now. Also can you merge all the PRs and deploy to production (if any steps are required for that)
+[709bb189-88fa-42d3-88a5-3bbc108cdc3e:35] (18w) Is the bowling site down? Please investigate and also tell me why I didn't get a notification email
+[709bb189-88fa-42d3-88a5-3bbc108cdc3e:124] (3w) merge and deploy
+[88eca805-4968-41eb-b096-861cd4414939:6] (10w) get rid of the stat builder tab, merge and deploy
+[88eca805-4968-41eb-b096-861cd4414939:154] (21w) for the ask tab, when I press the microphone button, clear the current text. When I release it, submit the request.
+[88eca805-4968-41eb-b096-861cd4414939:230] (13w) can you review pr 133, looks like it is not needed any more
+[88eca805-4968-41eb-b096-861cd4414939:257] (3w) yes please do
+[a68cadf2-e70a-4990-8853-424d001f5dd8:57] (9w) retrieve the plan for the loacal model for stats
+[a68cadf2-e70a-4990-8853-424d001f5dd8:76] (17w) would it make sense to re-package this plan so it can be executed in a ralph loop?
+[a68cadf2-e70a-4990-8853-424d001f5dd8:83] (7w) yes make the update to the plan
+[a68cadf2-e70a-4990-8853-424d001f5dd8:103] (4w) let's do it now
+[a68cadf2-e70a-4990-8853-424d001f5dd8:176] (6w) yes make all the suggested updates
+[a68cadf2-e70a-4990-8853-424d001f5dd8:207] (19w) one more thing, can you  review the logs, I'm seeing a substantial number of login attempts. Assess and recommend.
+[a68cadf2-e70a-4990-8853-424d001f5dd8:243] (3w) do all 5
+[a68cadf2-e70a-4990-8853-424d001f5dd8:439] (10w) you can do the reboot nnow to test llama restart
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:57] (7w) the verify script failed on line 85
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:80] (18w) every time I set context I there are a number of cancelled parallel tool calls. What is that?
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:93] (5w) which one do you recommend
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:130] (10w) can you do the sandbox fixes. I already merged 122.
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:201] (17w) when you talk about deferring, can you compare the plan and the plan, and merge into plan
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:233] (2w) yes delete
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:241] (11w) for ralph-finish, isn't that an optional file that ralph can invoke?
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:259] (2w) add it
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:276] (4w) merge all open prs
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:313] (2w) do 1
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:334] (3w) update plan.md rules
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:350] (15w) check the llama token rate again to make sure it didn't change after the reboot
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:364] (12w) why are we doing the soak-in? maybe just go ahead with ralph?
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:369] (4w) yes kick off ralph
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:398] (14w) If I tail ralph log there are three tee errors - are those non-critical?
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:445] (2w) yes update
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:464] (6w) merged all the prs - deploy
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:473] (48w) the results from the llama engine seem unreliable. For example, I asked the question "Who has the most career strikes" and I got the answer "According to the all-time records, Peter Mancini has the most career strike with a score of 707." How can you explain that answer?
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:488] (18w) yes open a pr with those changes. Also can you add a "clear" button" for the text entry
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:524] (4w) please merge and deploy
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:534] (25w) also the audio ask button seems to cut the last letter (I ask "who has the most career strikes" and the last s gets dropped
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:551] (3w) merge and deploy
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:558] (36w) this feature seems pretty worthless. For example I asked who won the harry russell tournament the most times, the llm says it can't answer. This is easily answered just by looking at the fun stats page.
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:629] (39w) I wonder how useful this will be, seems like every time I ask a question I could be back here adding more tools. Any way to make this feature smarter? Otherwise I'm not sure how useful it will be.
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:634] (21w) OK draft a PR, and prepare for me to ask to remove all the llama infrastructure, including the services and tools.
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:740] (3w) merge and deploy
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:753] (4w) Here's the key: [REDACTED-API-KEY]
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:783] (59w) The answer always starts with tools used, why is that? The answers seem way too complicated. For example I asked the question "who has won the harry russell tournament the most times" and it gave a long list of partial answers about who won what years but didn't actually answer the question. Am I actually calling the anthropic API?
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:796] (36w) before you draft the PR - in that case, would it have been better for sonnet to just query the database, vs. sending 20K of data back? Seems like a convoluted way to get the ansewr.
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:801] (1w) biggger
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:818] (22w) wait you are saying remove fun stats from the LLM surface, that's just your tool not the page in the app right?
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:823] (3w) yes keep going
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:876] (3w) merge and deploy
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:884] (15w) do I need any tool calls at all or can the model just operate directly?
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:893] (2w) do it
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:972] (16w) you need to update the text displayd on the screen, it still shows llama model comment.
+[d9e08746-0361-43e8-ba34-fc80aff2acd8:1003] (3w) merge and deploy
+[e589c601-98e6-4646-8428-a350199d0cbf:6] (7w) can you read diagrams in a PPT
+[e589c601-98e6-4646-8428-a350199d0cbf:12] (40w) I have a few pages of diagrams, and I want you to ingest them and use them as input to a plan. What's important is the titles and relationships of the diagrams. I don't need you to preserve the diagram.
+[f1e54751-1c4e-47bb-bd19-cc594e450e15:10] (47w) I would like to download an open source model that could run with the bowling app to allow interactive queries for stats. Which model would be best for this mac mini m4 base model machine, and what would be the appraoch to integrate it with the app?
+[f1e54751-1c4e-47bb-bd19-cc594e450e15:42] (36w) I would also like to add a voice option, so I can speak the query. This will be handy if I'm using on a phone or ipad e at the alley, and someone asks a question
+[f1e54751-1c4e-47bb-bd19-cc594e450e15:82] (13w) I accepted the edits, how do I bring the updated plan back here
+[f1e54751-1c4e-47bb-bd19-cc594e450e15:90] (12w) do you have te updated plan? I approved it in ultra plan
+[f1e54751-1c4e-47bb-bd19-cc594e450e15:111] (15w) I was able to copy the plan to a markdown file, please review the updates
+[f1e54751-1c4e-47bb-bd19-cc594e450e15:126] (18w) looks like things got messed up on the plan side, let's just leave it the way it is.
+[f1e54751-1c4e-47bb-bd19-cc594e450e15:144] (9w) I will revisit this plan later, save to backlog

@@ -46,7 +46,7 @@ commits, pushes, and checks its box.
   differs from the cross-project baseline. Re-evaluate the baseline's refuted hypothesis
   ("most directives ≤3 words") on this corpus.
 
-- [ ] **B2 — Vague-vs-precise diagnostics (bowling) + diff vs baseline.**
+- [x] **B2 — Vague-vs-precise diagnostics (bowling) + diff vs baseline.**
   Classify diagnostic-style David messages VAGUE vs PRECISE (baseline Facet 3 criteria:
   PRECISE = concrete locator/error text/named symptom+location; VAGUE = symptom carried only
   by hedge/affect — "seems", "weird", "still not", "doesn't look"). Skip non-diagnostic
