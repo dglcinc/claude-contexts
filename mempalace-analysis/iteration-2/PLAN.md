@@ -64,7 +64,7 @@ drawers to see if the cheaper drawer-based approach is now viable.
   evaluation of the baseline hypothesis: "vague language is a lagging signal
   of a wrong fix approach").
 
-- [ ] **Task 3 — F-A + F-C on `wing_contexts`.** Same shape as Task 2 but
+- [x] **Task 3 — F-A + F-C on `wing_contexts`.** Same shape as Task 2 but
   for claude-contexts infrastructure work. Baseline §1 said `wing_contexts`
   had **zero** genuine interrupts and **zero** diagnostics — infra work is
   directed, not diagnosed. Test that against raw transcripts: do interrupts
