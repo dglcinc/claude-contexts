@@ -34,7 +34,7 @@ artifact, and marks the task done.
   bucket, (d) per-wing breakdown of mean word count, (e) one-paragraph
   observation. Evaluate the hypothesis: "most directives are <=3 words."
 
-- [ ] **Facet 2 — Interrupt density per wing.**
+- [x] **Facet 2 — Interrupt density per wing.**
   Source: drawers whose content matches `[Request interrupted by user]` or
   `[Request interrupted by user for tool use]` across all wings/rooms (use
   `mempalace_search` with high limit + content scan). Output:
