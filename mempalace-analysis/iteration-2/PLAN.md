@@ -74,7 +74,7 @@ drawers to see if the cheaper drawer-based approach is now viable.
   explicitly whether the baseline "zero" finding holds in raw transcripts or
   was an artifact of drawer mining.
 
-- [ ] **Task 4 — F-A + F-C on `wing_docs`.** Same shape but for
+- [x] **Task 4 — F-A + F-C on `wing_docs`.** Same shape but for
   signalk-wilhelmsk-docs work. Baseline placed this between wilhelm (high
   diagnostic) and contexts (zero diagnostic). The relevant question: does the
   over-asking-on-`AskUserQuestion`/`ExitPlanMode` pattern hold here too, or
