@@ -72,41 +72,57 @@ Two layers: semantic-search **drawers** (populated by mining) and the **KG tripl
 does NOT write triples). Not auto-loaded each session; query on demand with
 `mempalace_search` (prose) / `mempalace_kg_query` (entity facts).
 
-## Local convo_miner.py patch + auto-reapply — 2026-05-30
+## Local mempalace patches + auto-reapply — 2026-05-30
 
-`mempalace.convo_miner` line ~402 derives the fallback wing from
-`Path(convo_dir).name`. When the convos source is Claude Code's encoded project
-directory (e.g. `~/.mempalace/incoming/-Users-david-github-claude-contexts`), the
-basename is the *full host filesystem path* with `/` replaced by `-`. Combined
-with `normalize_wing_name` (which lowercases + replaces `-`/space with `_`), this
-produced path-style wings like `_users_david_github_claude_contexts` instead of
-`wing_claude_contexts`. Three of these existed before the 2026-05-30 cleanup:
-`_users_david_github_wilhelmsk` (82), `_home_pi_github_pivac` (55),
-`_users_david_github_claude_contexts` (53). All renamed to `wing_X` via
-`mempalace_update_drawer`.
+Three local patches sit on the Mac Mini (the only host with mempalace
+installed — MacBook/Pi are thin clients). All managed by a single idempotent
+reapply script + daily launchd job. Each patch has a unique marker comment so
+the script can detect "already applied" without parsing diffs.
 
-**Patch applied (Mac Mini only — MacBook/Pi are thin clients, no local install):**
-`utilityserver:/Users/utilityserver/.local/share/uv/tools/mempalace/lib/python3.12/site-packages/mempalace/convo_miner.py`
-— marker comment `Strip Claude Code project-dir encoding`. The patch detects the
-encoding (`name.startswith("-") and "-github-" in name`), strips the host-path
-prefix via `name.rsplit("-github-", 1)[1]`, and prepends `wing_`. Falls back to
-the upstream behavior for non-encoded paths. Backup alongside as
-`convo_miner.py.bak-YYYYMMDD-HHMMSS`.
+**Patched files** (all under
+`utilityserver:/Users/utilityserver/.local/share/uv/tools/mempalace/lib/python3.12/site-packages/mempalace/`):
 
-**Reapply script:** `utilityserver:~/bin/mempalace-reapply-patch.py` — idempotent
-(detects marker comment, no-op if already patched; aborts if upstream snippet
-not found, indicating a real upstream change worth re-evaluating).
+| # | File | Marker comment | What it does |
+|---|---|---|---|
+| P1 | `convo_miner.py` (~line 402) | `Strip Claude Code project-dir encoding` | Detects Claude Code's encoded project dirs (`-Users-david-github-claude-contexts`), strips the host-path prefix, and prepends `wing_`. Without this, the wing label is the full host filesystem path (`_users_david_github_claude_contexts`). |
+| P2 | `hooks_cli.py` (~line 588) | `Local patch: was [:80]` | Raises the diary `recent:` per-message truncation from 80 chars to 400. The 80-char cap clipped most directives mid-word and corrupted every length/diagnostic metric the 2026-05-30 facet analysis tried to compute. |
+| P3 | `convo_miner.py` (file-iteration loop) | `Local patch: skip meta-analysis sessions` | Skips transcripts whose path or first-message `cwd` contains `mempalace-analysis`, so the palace doesn't measure itself. The facet analysis found 35% of interrupt-marker drawers were the palace mining its own analysis sessions. |
+
+Backups left alongside as `<name>.py.bak-YYYYMMDD-HHMMSS` per patch run.
+
+**Pre-patch context (P1 only — historical).** Before P1, three path-style
+wings existed in the palace: `_users_david_github_wilhelmsk` (82),
+`_home_pi_github_pivac` (55), `_users_david_github_claude_contexts` (53). All
+renamed to `wing_X` via `mempalace_update_drawer` MCP calls during the
+2026-05-30 cleanup.
+
+**Reapply script:** `utilityserver:~/bin/mempalace-reapply-patch.py`. One run
+covers all three patches; per-patch idempotency (marker-check, no-op if
+present, abort if upstream snippet not found). Verify with
+`ssh utilityserver ~/bin/mempalace-reapply-patch.py` — expected output is
+three `already patched` lines.
 
 **Auto-reapply:** launchd user agent `com.dglc.mempalace-patch` at
 `utilityserver:~/Library/LaunchAgents/com.dglc.mempalace-patch.plist`. Runs daily
 at 04:00. Log: `utilityserver:~/.local/share/mempalace-patch.log`. Any
-`uv tool upgrade mempalace` wipes the patch; the daily job catches it within 24h.
+`uv tool upgrade mempalace` wipes patches; the daily job catches it within 24h.
 
 **Caveats:**
 - Existing `wing_contexts` (from an explicit `--wing` override) won't merge with
-  future `wing_claude_contexts` produced by the patched fallback. Decide later
-  whether to rename one to the other or accept the divergence.
-- If upstream changes the surrounding code, the reapply script's snippet match
-  will fail loudly. Manual reconciliation needed at that point.
-- When upstream fixes this in `normalize_wing_name` itself, remove the patch +
-  this section + the launchd job + the reapply script.
+  future `wing_claude_contexts` produced by the P1-patched fallback. Decide
+  later whether to rename or accept the divergence.
+- P3's `mempalace-analysis` substring check catches the common case (Claude
+  sessions launched directly in `mempalace-analysis/`) and also peeks at the
+  first session record's `cwd`. Sessions that started in `claude-contexts/`
+  and `cd`'d into `mempalace-analysis/` via tool calls may still slip through.
+- If upstream changes the surrounding code, the reapply script's snippet
+  match aborts loudly. Manual reconciliation needed at that point.
+- When upstream fixes these in `normalize_wing_name` / the diary checkpoint
+  writer / the convo file iterator, remove the corresponding patch block from
+  the script, delete the backups, and trim this section.
+
+**Recommendation source:** patches P2 and P3 implement items #5 and #3 from
+`mempalace-analysis/baseline/INSIGHTS.md` §5 (pipeline improvements). Items
+#1 (interrupt→correction pair extraction), #4 (stable per-message IDs), and
+#6 (sessions catch-all classifier) remain unaddressed — larger refactors,
+worth doing as a batch when the upstream fixes for P1–P3 land.
