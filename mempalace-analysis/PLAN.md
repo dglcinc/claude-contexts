@@ -55,7 +55,7 @@ artifact, and marks the task done.
   ratio, (b) ratio per wing, (c) 10 vague examples + 10 precise examples
   with drawer IDs, (d) brief observation on which projects favor which mode.
 
-- [ ] **Facet 4 — Correction-after-interrupt labeled corpus.**
+- [x] **Facet 4 — Correction-after-interrupt labeled corpus.**
   Source: for each interrupt drawer surfaced in Facet 2, find the next user
   message in the same session (match on `source_file` metadata and
   chronological order). Output: `mempalace-analysis/04-corrections.md` with
