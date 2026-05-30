@@ -43,7 +43,7 @@ drawers to see if the cheaper drawer-based approach is now viable.
 
 ## Tasks
 
-- [ ] **Task 1 — Corpus inventory.** Enumerate raw `.jsonl` transcripts on
+- [x] **Task 1 — Corpus inventory.** Enumerate raw `.jsonl` transcripts on
   the Mini from both `~/.claude/projects/-*/` and `~/.mempalace/incoming/-*/`.
   Map each transcript path to a wing (using the source-cwd encoding rules).
   Output: `mempalace-analysis/iteration-2/00-inventory.md` with one row per
