@@ -51,7 +51,7 @@ drawers to see if the cheaper drawer-based approach is now viable.
   Skip wings with <50 KB total (signal too thin). This grounds the per-wing
   tasks below — they reference its enumerated paths.
 
-- [ ] **Task 2 — F-A + F-C on `wing_wilhelm`.** Highest-signal target per
+- [x] **Task 2 — F-A + F-C on `wing_wilhelm`.** Highest-signal target per
   baseline (iOS/UI work, where interrupts and over-confident diagnoses
   concentrate). **F-A:** extract 20-30
   `(in-flight assistant action, interrupt marker, next user message)`
