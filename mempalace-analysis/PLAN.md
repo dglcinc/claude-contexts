@@ -68,7 +68,7 @@ commits, pushes, and checks its box.
   cross-project mix? This is the richest facet; a week of intense building is the best
   correction corpus available.
 
-- [ ] **B4 — Synthesis & diff vs baseline.**
+- [x] **B4 — Synthesis & diff vs baseline.**
   Read B1-B3 and `baseline/INSIGHTS.md`. Output `bowling/INSIGHTS-bowling.md` (cap 300
   lines, 5-line exec summary first) with: (1) where bowling **CONFIRMS** the baseline
   patterns, (2) where it **DIVERGES** and why (intense single-product build vs the
