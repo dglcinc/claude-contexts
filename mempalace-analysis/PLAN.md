@@ -65,7 +65,7 @@ artifact, and marks the task done.
   verbatim. This is the labeled corpus the synthesis task draws on for
   "what kinds of mistakes happen most often."
 
-- [ ] **Facet 5 — Synthesis: updated insights and recommendations.**
+- [x] **Facet 5 — Synthesis: updated insights and recommendations.**
   Read all four facet artifacts. Cross-reference. Output:
   `mempalace-analysis/INSIGHTS.md` with sections: (1) what the data
   CONFIRMED about the original hypotheses, (2) what it REFUTED or
