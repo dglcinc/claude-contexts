@@ -4,16 +4,29 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
-## Current State (2026-05-26)
+## Current State (2026-05-29)
 
-- **PR #102 open (settings-menu icons).** Added SF Symbol icons to the two settings rows
-  that lacked them — **Help / Documentation** (`questionmark.circle`) and **Documentation
-  Source** (`book`) — in `SettingsMenuViewController.m`. These rows are code-registered
-  plain cells (not storyboard prototypes like the `gear` rows), so a `configureDocCell:`
-  helper builds icon+label matching the storyboard geometry, with idiom-aware insets
-  (iPhone x=21/64, iPad x=27/70). A second commit drops the `>` disclosure chevron
-  from both rows so they match the gear rows. Verified on iPhone 17 Pro + iPad Pro
-  11-inch sims. Branch `settings-doc-menu-icons`, base `development`. Awaiting Scott's review.
+- **Three PRs open, all base `development`, awaiting Scott's review:**
+  - **#103** — drop the dangling `AISTargetsTable` entry from `gauges.json` (no backing
+    `GaugeConfig` class; fixes #101, Scott pre-approved).
+  - **#104** — comprehensive refresh of the internal `.claude/analysis.md` (rewritten as a
+    current-point-in-time analysis: corrected metrics, consistent AWS references, new
+    SignalK v1/v2 + Help & Documentation + Cellular/cold-start sections, reworked Tier list)
+    plus a one-line `ARCHITECTURE.md` fix (ActiveCaptain keys removed).
+  - **#108** — context-help fix: removed the misplaced gauge-catalog "?" from the Advanced
+    editor and repaired the Gauge Options "?" (was clobbered by the Cancel/Save bar-button
+    setup) to point at the Gauge Reference doc. Verified in the simulator and via the xcode MCP.
+- **Filed 3 cleanup issues** (each offering the deletion PR): **#105** OBD/ELM327 orphan
+  files (~720 LOC), **#106** ActiveCaptain residue in the map layer, **#107** dead AWS dict
+  in `Info.plist`.
+- **PR #102 merged** (settings-menu icons) into `development` on 2026-05-26.
+- **Build break fixed:** `RESTSignalK.restEndpoint` was `internal` (broke the Watch
+  connection-error display added to `development`); Scott made it `public` in
+  `WilhelmSKLibrary` `main`, now pulled. Clone builds clean (verified via xcode MCP).
+- **xcode MCP** is connected and now the preferred path for build/test/issues/preview
+  (see [[prefer-xcode-mcp]]); it surfaced new analysis findings (deprecated-API debt,
+  Swift-6 readiness, a latent `GoogleMapViewController` return-type bug).
+- Local clone on branch `refresh-analysis-2026-05` (PR #104), tree clean.
 
 ## Prior State (2026-05-25)
 
