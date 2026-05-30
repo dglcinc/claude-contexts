@@ -71,3 +71,42 @@ Two layers: semantic-search **drawers** (populated by mining) and the **KG tripl
 (populated only by explicit `mempalace_kg_add`, e.g. in `/save-context` step 8.5 — mining
 does NOT write triples). Not auto-loaded each session; query on demand with
 `mempalace_search` (prose) / `mempalace_kg_query` (entity facts).
+
+## Local convo_miner.py patch + auto-reapply — 2026-05-30
+
+`mempalace.convo_miner` line ~402 derives the fallback wing from
+`Path(convo_dir).name`. When the convos source is Claude Code's encoded project
+directory (e.g. `~/.mempalace/incoming/-Users-david-github-claude-contexts`), the
+basename is the *full host filesystem path* with `/` replaced by `-`. Combined
+with `normalize_wing_name` (which lowercases + replaces `-`/space with `_`), this
+produced path-style wings like `_users_david_github_claude_contexts` instead of
+`wing_claude_contexts`. Three of these existed before the 2026-05-30 cleanup:
+`_users_david_github_wilhelmsk` (82), `_home_pi_github_pivac` (55),
+`_users_david_github_claude_contexts` (53). All renamed to `wing_X` via
+`mempalace_update_drawer`.
+
+**Patch applied (Mac Mini only — MacBook/Pi are thin clients, no local install):**
+`utilityserver:/Users/utilityserver/.local/share/uv/tools/mempalace/lib/python3.12/site-packages/mempalace/convo_miner.py`
+— marker comment `Strip Claude Code project-dir encoding`. The patch detects the
+encoding (`name.startswith("-") and "-github-" in name`), strips the host-path
+prefix via `name.rsplit("-github-", 1)[1]`, and prepends `wing_`. Falls back to
+the upstream behavior for non-encoded paths. Backup alongside as
+`convo_miner.py.bak-YYYYMMDD-HHMMSS`.
+
+**Reapply script:** `utilityserver:~/bin/mempalace-reapply-patch.py` — idempotent
+(detects marker comment, no-op if already patched; aborts if upstream snippet
+not found, indicating a real upstream change worth re-evaluating).
+
+**Auto-reapply:** launchd user agent `com.dglc.mempalace-patch` at
+`utilityserver:~/Library/LaunchAgents/com.dglc.mempalace-patch.plist`. Runs daily
+at 04:00. Log: `utilityserver:~/.local/share/mempalace-patch.log`. Any
+`uv tool upgrade mempalace` wipes the patch; the daily job catches it within 24h.
+
+**Caveats:**
+- Existing `wing_contexts` (from an explicit `--wing` override) won't merge with
+  future `wing_claude_contexts` produced by the patched fallback. Decide later
+  whether to rename one to the other or accept the divergence.
+- If upstream changes the surrounding code, the reapply script's snippet match
+  will fail loudly. Manual reconciliation needed at that point.
+- When upstream fixes this in `normalize_wing_name` itself, remove the patch +
+  this section + the launchd job + the reapply script.

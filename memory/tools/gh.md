@@ -71,3 +71,27 @@ For repos that don't actually use LFS (most of them — the LFS hook is global o
 **Don't try `git config lfs.<url>.locksverify false`** in a Claude Code session — writes to `.git/config` and `~/.gitconfig` fail with `Operation not permitted` even though git is in `sandbox.excludedCommands`. Edit `.git/config` directly with the Edit tool instead.
 
 The full fix would be to rebuild git-lfs with `CGO_ENABLED=0` like gh, but the per-remote config workaround is enough for repos that don't push LFS objects.
+
+## Mini (`utilityserver`) gotchas — 2026-05-30
+
+Different setup from David's M2:
+
+- **`git-lfs` is NOT installed at all on the Mini.** When git LFS hooks exist
+  in a clone (`.git/hooks/post-checkout`, `post-commit`, `pre-push`) but the
+  `git-lfs` binary is missing, the hooks self-abort with "If you no longer wish
+  to use Git LFS, remove this hook by deleting the '<name>' file." The
+  `pre-push` hook's abort is fatal to `git push`. For repos that don't actually
+  use LFS (check `.gitattributes` for `filter=lfs` entries — `claude-contexts`
+  has none), the right fix is to delete the three hook files outright. Done on
+  Mini's `claude-contexts` clone 2026-05-30.
+
+- **Non-login SSH on the Mini does not include `/opt/homebrew/bin/` in `PATH`.**
+  `ssh utilityserver gh ...` fails with `command not found` even though
+  `/opt/homebrew/bin/gh` exists. Two workarounds:
+  - `ssh utilityserver bash -lc 'gh ...'` — login shell sources `.zprofile`
+    and picks up Homebrew's PATH.
+  - `ssh utilityserver /opt/homebrew/bin/gh ...` — explicit path.
+
+  The explicit-path form is what to use inside `ssh utilityserver bash -s
+  <<EOF ... EOF` blocks (heredoc'd scripts), since bash invoked via `bash -s`
+  is non-login.
