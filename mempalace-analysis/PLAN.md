@@ -24,7 +24,7 @@ artifact, and marks the task done.
 
 ## Tasks
 
-- [ ] **Facet 1 — Imperative-verb histogram + directive length distribution.**
+- [x] **Facet 1 — Imperative-verb histogram + directive length distribution.**
   Source: the `recent:` field of every diary-room drawer (room=diary, all wings).
   Extract pipe-delimited user-message snippets; drop drawer/session boilerplate
   ("Base directory for this skill:" etc.). Output:
