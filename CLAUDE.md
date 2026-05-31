@@ -75,8 +75,9 @@ Structured memory lives in this repo and is symlinked into `~/.claude/` by `setu
 
 - `memory/` → symlinked to `~/.claude/memory/` — global cross-project memory (memory.md index, general.md conventions, user.md profile, tools/, domain/)
 - `hooks/pre-tool-memory.{sh,py}` → symlinked to `~/.claude/hooks/` — PreToolUse hook that auto-injects project MEMORY.md + global index on the first tool call per session (PPID-flagged so it fires once per Claude Code process)
+- `hooks/session-end-save-context-reminder.sh` → symlinked to `~/.claude/hooks/` — SessionEnd hook that, when a session ends without `/save-context` having run (and there was real work), fires a macOS notification and logs to `~/.claude/unsaved-context.log`. Read-only — never touches git or the model. Detects a prior save via two structural transcript markers (`command-name>/save-context` or the `"skill":"save-context"` Skill-tool call), so prose mentioning save-context doesn't false-positive. macOS notification is `osascript`-only; the log line is the cross-platform signal.
 
-`setup.sh` also idempotently merges the hook registration into `~/.claude/settings.json` via `jq` (settings.json itself is per-machine — statusLine paths, plugin list, etc — so it can't be symlinked). Requires `jq` installed (`brew install jq` / `apt install jq`).
+`setup.sh` also idempotently merges the hook registrations (PreToolUse memory + SessionEnd reminder) into `~/.claude/settings.json` via `jq` (settings.json itself is per-machine — statusLine paths, plugin list, etc — so it can't be symlinked). Requires `jq` installed (`brew install jq` / `apt install jq`). The SessionEnd merge is marker-based, so re-running `setup.sh` after an interim `~/.claude/hooks-local/` install cleanly replaces that registration rather than double-firing.
 
 The actual memory rules (lifecycle, when to write, when to ask before modifying) live in `global.md` under the Memory Management, Global Memory, Repo Memory Auto-Init, and Domain Knowledge Lifecycle sections.
 
