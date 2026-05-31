@@ -95,6 +95,35 @@ else
   echo "Added:     PreToolUse memory hook to settings.json"
 fi
 
+# --- SessionEnd save-context reminder hook ---
+# Fires on every session end; if /save-context didn't run and there was real
+# work, it posts a macOS notification + logs to ~/.claude/unsaved-context.log.
+# Marker-based dedup replaces any prior registration (e.g. an interim
+# ~/.claude/hooks-local/ copy) so the hook never double-fires.
+SESSIONEND_HOOK_CMD="bash ~/.claude/hooks/session-end-save-context-reminder.sh"
+SESSIONEND_MARKER="session-end-save-context-reminder.sh"
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARNING:   jq not found — cannot merge SessionEnd hook into settings.json."
+elif [ ! -f "$SETTINGS" ]; then
+  echo "WARNING:   $SETTINGS does not exist — start Claude Code once, then re-run."
+elif jq -e --arg cmd "$SESSIONEND_HOOK_CMD" \
+       '[.hooks.SessionEnd[]?.hooks[]?.command] | any(. == $cmd)' \
+       "$SETTINGS" >/dev/null 2>&1; then
+  echo "OK:        settings.json SessionEnd save-context reminder already configured"
+else
+  tmp=$(mktemp)
+  jq --arg cmd "$SESSIONEND_HOOK_CMD" --arg marker "$SESSIONEND_MARKER" '
+    .hooks //= {}
+    | .hooks.SessionEnd //= []
+    | .hooks.SessionEnd |= (
+        map(.hooks = ((.hooks // []) | map(select((.command // "") | contains($marker) | not))))
+        | map(select((.hooks // []) | length > 0))
+      )
+    | .hooks.SessionEnd += [{hooks:[{type:"command",command:$cmd,timeout:10}]}]
+  ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "Added:     SessionEnd save-context reminder hook to settings.json"
+fi
+
 # --- macOS sandbox config + sandbox-bypass hook ---
 # Skipped on non-Darwin (Pi). Keeps sandbox.excludedCommands in sync with the
 # pre-tool-sandbox-bypass hook so reflexive `dangerouslyDisableSandbox: true`
