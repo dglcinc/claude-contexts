@@ -78,6 +78,11 @@ Topic files:
 - ~/.claude/memory/tools/claude-hud.md — claude-hud statusLine setup quirks (GNU grep `\t` workaround)
 - ~/.claude/memory/tools/ralph.md — Ralph loop pattern (PLAN.md + ralph.sh driver for batch task execution)
 - ~/.claude/memory/tools/mempalace.md — MemPalace auto-mines via plugin Stop/PreCompact hooks (not settings.json); palace = mined own content
+- ~/.claude/memory/tools/gh-stacked-prs.md — squash-merging a parent PR with --delete-branch auto-closes child PRs (reopen blocked); cherry-pick to recover
+- ~/.claude/memory/tools/nfs.md — D-state stuck procs survive SIGKILL; lazy-unmount + reboot to recover; fstab pattern for non-blocking boot
+- ~/.claude/memory/tools/rsync.md — rsync starves over NFSv4 on large sparse files (use cat|ssh|dd or cp); rsync 3.4 → older server needs `--old-args`
+- ~/.claude/memory/tools/synology.md — DSM rsync-over-SSH gate (code 43); nasadmin + `--rsync-path='sudo rsync'` workaround; NFS+ACL recipe
+- ~/.claude/memory/tools/m365-graph.md — modern M365 tenants disable SMTP AUTH; use MSAL + Graph `sendMail` with client-credentials
 
 ## Global Memory Reference Rule
 
