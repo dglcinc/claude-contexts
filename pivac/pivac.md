@@ -10,16 +10,17 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-05-12*
+*Updated 2026-05-31*
 
-**Last worked on**: RedLink session-stuck bug. After ~2 days of uptime since Sunday's SD-clone window, Honeywell returned 401 *Key Expired?* on every device refresh; all five WilhelmSK thermostat tiles flat-lined simultaneously around 2026-05-12 00:25 EDT. The 401 was being swallowed by `_refresh_one`'s catch-all `except Exception`, so `must_reset` never went True and the dead access token sat in `_client` forever. Shipped pivac PR #54 (merged as `8946234`) — `_refresh_one` now re-raises `UnauthorizedError`, `_refresh_all` surfaces it from gather results, `status()` has a fourth `must_reset = True` clause. Deployed via `systemctl restart pivac-redlink`; first two cycles slow (99.6s discover timeout, then 148.6s recovery cycle) but normal per the documented cold-start path.
+**Last worked on**: (1) Verified PR #54 RedLink token-expiry fix works in production — on 2026-05-29 21:34 EDT Honeywell returned 5×401 "Key Expired?" and the new `must_reset` path fired correctly (`RedLink token expired (401); resetting session`). (2) Documented the intentional `/etc/crontab` weekly Sunday-midnight `reboot now` cron in both `pi-CLAUDE.md` (cause) and pivac `CLAUDE.md` Known Operational Behaviours (RedLink cold-start effect) — commits `db2139d` (claude-contexts) and `f2933c1` (pivac). (3) **Live freshness incident**: outside-temp + 2 of 3 hydronic temp gauges stale. Two root causes — the OUT sensor `0516a365d8ff` dropped physically off the w1 bus, and a previously-undocumented **OneWireTherm cascade-failure bug** where one bad sensor's exception kills the whole module's cycle (since `pivac-provider.py:171` catches at module level). modprobe-reload + service restart did NOT recover the bus state (service crash-looped on `NoSensorFoundError`); user issued a full Pi reboot. (4) Documented the cascade-failure bug as a Known Operational Behaviour in pivac CLAUDE.md with fix shape (wrap per-sensor read in try/except).
 
 **Next steps**:
-1. **Verify natural recovery from a token-expiry event** — next time Honeywell's access token expires (~2 days post-restart, target ~2026-05-14). Look for `RedLink token expired (401); resetting session` in `journalctl -u pivac-redlink`, followed by a fresh ~75s login and resumed publishing — instead of indefinite 401 spam.
-2. *(carryover)* Verify Sunday's SD clone — **2026-05-10** ~02:02 EDT should have already run; `journalctl -u sd-clone.service` should show "target: /dev/sdb" and a successful ~2 min incremental clone against the new Anker reader.
-3. *(carryover)* **Physical card-swap boot test** — pull live SD, drop spare in, confirm boot. Still pending; needs hands at the Pi.
-4. *(carryover)* Verify the first scheduled NAS image-backup run — **2026-06-01** ~03:00 EDT via `journalctl -u nas-image-backup.service` and confirm `pivac.img` mtime advances on the NAS.
-5. *(deferred)* Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m.
+1. **After reboot — verify clean recovery.** `systemctl status pivac-1wire pivac-redlink signalk` + `journalctl -u pivac-1wire -n 30` looking for clean cycles without `SensorNotReadyError` or `NoSensorFoundError`. Expected: IN, CRW, AMB publish; OUT (`0516a365d8ff`) remains absent.
+2. **Fix the OneWireTherm cascade-failure bug** — wrap `sensor.get_temperature()` in a try/except inside the `for sensor in sensors` loop in `pivac/OneWireTherm.py`. Same isolation pattern as RedLink's `_refresh_one`. Without this fix, any one bad sensor takes down all temperatures until reboot.
+3. **Physical-inspect the OUT hydronic sensor (`0516a365d8ff`)** — gone from the w1 bus. Until replaced/reconnected, the "Out" hydronic water-temp gauge stays stale.
+4. *(carryover)* **NAS image-backup tomorrow 2026-06-01 ~03:06 EDT** — first auto-scheduled monthly run via `nas-image-backup.timer`. Check `journalctl -u nas-image-backup.service` after 03:30 and confirm `pivac.img` mtime advances on the NAS.
+5. *(carryover)* **Physical card-swap boot test** — pull live SD, drop spare in, confirm boot. Still pending; needs hands at the Pi.
+6. *(deferred)* Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m.
 
 **Notes**:
 - **Reader hardware:** Anker USB 3.0 Micro SD Card Reader, USB `05e3:0764` (Genesys Logic chipset). Replaced the 4-LUN Insignia NS-DCR30A2 on 2026-05-09. The Anker is a 2-LUN device but the same `size > 0` filter handles single- and multi-slot readers identically.
