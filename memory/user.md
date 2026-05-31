@@ -9,4 +9,9 @@ Infrastructure is managed through GitHub (dglcinc). Personal content stays in iC
 
 Projects: bowling league web app (Flask/Python, mlb.dglc.com), pivac (HVAC monitoring on Pi), MacDownToo (macOS markdown editor), Arduino sketches, WilhelmSK (iPad layouts).
 
+Machines:
+- **Mac Mini at `10.0.0.84`** runs the bowling app (gunicorn) under user **`utilityserver`** — there is no `david` user on this Mac. Pi → Mac SSH must target `utilityserver@10.0.0.84`.
+- **Raspberry Pi at `10.0.0.82`** (`68lookout.dglc.com` externally) runs pivac, nginx TLS proxy, Grafana, InfluxDB, Signal K. User `pi`.
+- **LookoutNas DS225+ at `10.0.0.3`** for backups. SSH as `root` from the Pi (via the pi user's RSA key). DSM admin account is `dlewis`.
+
 Prefers clean, maintainable systems over clever ones. Thinks through architecture before building. Asks probing questions to understand tradeoffs before committing to an approach.
