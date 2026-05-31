@@ -10,17 +10,16 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-05-31*
+*Updated 2026-05-31 (session 2)*
 
-**Last worked on**: (1) Verified PR #54 RedLink token-expiry fix works in production — on 2026-05-29 21:34 EDT Honeywell returned 5×401 "Key Expired?" and the new `must_reset` path fired correctly (`RedLink token expired (401); resetting session`). (2) Documented the intentional `/etc/crontab` weekly Sunday-midnight `reboot now` cron in both `pi-CLAUDE.md` (cause) and pivac `CLAUDE.md` Known Operational Behaviours (RedLink cold-start effect) — commits `db2139d` (claude-contexts) and `f2933c1` (pivac). (3) **Live freshness incident**: outside-temp + 2 of 3 hydronic temp gauges stale. Two root causes — the OUT sensor `0516a365d8ff` dropped physically off the w1 bus, and a previously-undocumented **OneWireTherm cascade-failure bug** where one bad sensor's exception kills the whole module's cycle (since `pivac-provider.py:171` catches at module level). modprobe-reload + service restart did NOT recover the bus state (service crash-looped on `NoSensorFoundError`); user issued a full Pi reboot. (4) Documented the cascade-failure bug as a Known Operational Behaviour in pivac CLAUDE.md with fix shape (wrap per-sensor read in try/except).
+**Last worked on**: Three PRs. (1) **PR #56 (merged)** — fixed the OneWireTherm cascade-failure bug: per-sensor read now wrapped in try/except so one bad DS18B20 no longer stales all hydronic temps. Verified live after the 08:00 reboot; OUT sensor `0516a365d8ff` re-enumerated and reads normally (earlier dropout was intermittent). (2) **PR #57 (OPEN, code deployed live)** — split the two outdoor-temp sources by provenance: 1-wire AMB → canonical `environment.outside.temperature`; RedLink now emits Honeywell's outdoor temp to `environment.outside.thermostat.temperature` (new `dev.outdoor_temperature`). Added `sensor-freshness.yaml` (hydronic IN/CRW/OUT + outside staleness + 1-wire-vs-thermostat divergence alert), all to the graph-bridge email. (3) **PR #58 (merged)** — `docs/circ-loop-temp-monitoring-plan.md`, the plan for a 5th DS18B20 on the DHW recirc loop. Also installed `glow` for terminal markdown review.
 
 **Next steps**:
-1. **After reboot — verify clean recovery.** `systemctl status pivac-1wire pivac-redlink signalk` + `journalctl -u pivac-1wire -n 30` looking for clean cycles without `SensorNotReadyError` or `NoSensorFoundError`. Expected: IN, CRW, AMB publish; OUT (`0516a365d8ff`) remains absent.
-2. **Fix the OneWireTherm cascade-failure bug** — wrap `sensor.get_temperature()` in a try/except inside the `for sensor in sensors` loop in `pivac/OneWireTherm.py`. Same isolation pattern as RedLink's `_refresh_one`. Without this fix, any one bad sensor takes down all temperatures until reboot.
-3. **Physical-inspect the OUT hydronic sensor (`0516a365d8ff`)** — gone from the w1 bus. Until replaced/reconnected, the "Out" hydronic water-temp gauge stays stale.
-4. *(carryover)* **NAS image-backup tomorrow 2026-06-01 ~03:06 EDT** — first auto-scheduled monthly run via `nas-image-backup.timer`. Check `journalctl -u nas-image-backup.service` after 03:30 and confirm `pivac.img` mtime advances on the NAS.
-5. *(carryover)* **Physical card-swap boot test** — pull live SD, drop spare in, confirm boot. Still pending; needs hands at the Pi.
-6. *(deferred)* Verify the `redlink-stale` Grafana alert fires the next time pivac-redlink is offline >30m.
+1. **Review & merge PR #57** — code already runs live on the Pi; merging master picks up the CLAUDE.md doc updates it carries.
+2. **Circ-loop temp plan** (`docs/circ-loop-temp-monitoring-plan.md`): decide the 4 open items — cable run vs new Arduino · SK path `CIRC` vs `DHWRECIRC` · recirc schedule (cold-alert window) · cold threshold (~90 °F start). Then implement: generalize `ArduinoSensor` (multi-field + temp→Kelvin), add `temp` input to `ArduinoThermPSI`, flash the DHW Arduino (Mac-only), add Grafana panel + freshness + pump-cold alerts.
+3. *(carryover)* NAS image-backup first auto-run was due 2026-06-01 ~03:06 — check `journalctl -u nas-image-backup.service` after 03:30; confirm `pivac.img` mtime advances.
+4. *(carryover)* Physical card-swap boot test — needs hands at the Pi.
+5. *(deferred)* Verify the `redlink-stale` Grafana alert fires next time pivac-redlink is offline >30m.
 
 **Notes**:
 - **Reader hardware:** Anker USB 3.0 Micro SD Card Reader, USB `05e3:0764` (Genesys Logic chipset). Replaced the 4-LUN Insignia NS-DCR30A2 on 2026-05-09. The Anker is a 2-LUN device but the same `size > 0` filter handles single- and multi-slot readers identically.
