@@ -10,7 +10,22 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-05-31 (session 3)*
+*Updated 2026-06-01 (session 4)*
+
+**Last worked on (session 4)**: Ran down the ~03:00 Grafana **mlb-availability** alert.
+It was self-inflicted — the monthly NAS image-backup (1st @ 03:00) stops `nginx`, blacking
+out the `mlb.dglc.com` proxy 03:03–03:15. Separately, the backup itself was **failing with
+ENOSPC**: RonR `image-backup` had sized `pivac.img`'s root partition to usage+margin at
+creation (54.4 GiB), and live root had grown to 54.9 GiB. **Grew `pivac.img` on the NAS to
+the full 128 GB card** (`truncate` → `parted resizepart 2 100%` → `e2fsck` → `resize2fs`;
+now p2 = 118.7 GiB, ~63 GiB free, sparse 54 GB actual; restore is 1:1 to any ≥128 GB card),
+and **restored the MBR disk id `0xf9199e61`** (parted regenerates it → would break
+PARTUUID boot of a restore). Edited `nas-image-backup.sh` (PR #64, open): dropped `nginx`
+from the stop list (mlb stays up during backups) and excluded the `/home/pi/thinclient_drives`
+xrdp FUSE mount (root can't stat it → rsync exit 23). **Open:** confirm a clean exit-0 run
+post-exclude, then merge PR #64. (David's live SD card was already fully expanded — fine.)
+
+*Session 3 (2026-05-31):*
 
 **Last worked on**: Shipped the **DHW recirc-loop temperature** feature end-to-end + several fixes. Generalized `pivac.ArduinoSensor` to multi-field (`type: temperature`→Kelvin), wired/flashed a DS18B20 on the DHW Arduino, deployed live (`environment.inside.hvac.dhw.recirc.temperature`, ~313 K), added a Grafana 2nd-axis panel, a `circ-temp-stale` freshness alert, and WilhelmSK iPad+iPhone gauges. Also: **corrected the inverted Arduino board/IP/role mapping** (DHW board = .114/`pivac.ArduinoPSI`, boiler = .219/`pivac.ArduinoThermPSI` — names are backwards vs role); **rotated the leaked GitHub PAT** (all `~/github` remotes→SSH, new fine-grained token in gh keyring on Mac+Pi, old `ghp_` revoked, 2027-05-17 rotation reminder scheduled); and **root-caused + hardened the Sentry** boiler-display "jumping values." Plan doc marked ✅ COMPLETE. PRs: pivac #59/#61/#62/#63, Arduino #4, wilhelm-sk #2 (all merged).
 
