@@ -24,10 +24,10 @@ PARTUUID boot of a restore). Edited `nas-image-backup.sh` (PR #64, open): droppe
 from the stop list (mlb stays up during backups) and excluded the `/home/pi/thinclient_drives`
 xrdp FUSE mount (root can't stat it → rsync exit 23). **Validated:** patched script ran
 clean **exit 0 in 125 s**, mlb stayed up (HTTP 302) throughout, all 10 services active
-after; fresh image timestamped 07:24, 56 G actual on the NAS (2.4 T free). **Open:** merge
-PR #64, then on the Pi `git checkout master && git pull` to leave the feature branch (the
-live service runs the in-repo working-tree script). (David's live SD card was already fully
-expanded — fine.)
+after; fresh image timestamped 07:24, 56 G actual on the NAS (2.4 T free). **Done:** PR #64
+merged, Pi back on master. Also **pruned all stale branches** — 9 local + 29 merged remote
+branches deleted; repo is now just `master` (local + origin) with zero open PRs. (David's
+live SD card was already fully expanded — fine.) **No open pivac work.**
 
 *Session 3 (2026-05-31):*
 
