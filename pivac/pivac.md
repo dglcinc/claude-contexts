@@ -10,18 +10,19 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-05-31 (session 2)*
+*Updated 2026-05-31 (session 3)*
 
-**Last worked on**: Three PRs. (1) **PR #56 (merged)** — fixed the OneWireTherm cascade-failure bug: per-sensor read now wrapped in try/except so one bad DS18B20 no longer stales all hydronic temps. Verified live after the 08:00 reboot; OUT sensor `0516a365d8ff` re-enumerated and reads normally (earlier dropout was intermittent). (2) **PR #57 (OPEN, code deployed live)** — split the two outdoor-temp sources by provenance: 1-wire AMB → canonical `environment.outside.temperature`; RedLink now emits Honeywell's outdoor temp to `environment.outside.thermostat.temperature` (new `dev.outdoor_temperature`). Added `sensor-freshness.yaml` (hydronic IN/CRW/OUT + outside staleness + 1-wire-vs-thermostat divergence alert), all to the graph-bridge email. (3) **PR #58 (merged)** — `docs/circ-loop-temp-monitoring-plan.md`, the plan for a 5th DS18B20 on the DHW recirc loop. Also installed `glow` for terminal markdown review.
+**Last worked on**: Shipped the **DHW recirc-loop temperature** feature end-to-end + several fixes. Generalized `pivac.ArduinoSensor` to multi-field (`type: temperature`→Kelvin), wired/flashed a DS18B20 on the DHW Arduino, deployed live (`environment.inside.hvac.dhw.recirc.temperature`, ~313 K), added a Grafana 2nd-axis panel, a `circ-temp-stale` freshness alert, and WilhelmSK iPad+iPhone gauges. Also: **corrected the inverted Arduino board/IP/role mapping** (DHW board = .114/`pivac.ArduinoPSI`, boiler = .219/`pivac.ArduinoThermPSI` — names are backwards vs role); **rotated the leaked GitHub PAT** (all `~/github` remotes→SSH, new fine-grained token in gh keyring on Mac+Pi, old `ghp_` revoked, 2027-05-17 rotation reminder scheduled); and **root-caused + hardened the Sentry** boiler-display "jumping values." Plan doc marked ✅ COMPLETE. PRs: pivac #59/#61/#62/#63, Arduino #4, wilhelm-sk #2 (all merged).
 
 **Next steps**:
-1. **Review & merge PR #57** — code already runs live on the Pi; merging master picks up the CLAUDE.md doc updates it carries.
-2. **Circ-loop temp plan** (`docs/circ-loop-temp-monitoring-plan.md`): decide the 4 open items — cable run vs new Arduino · SK path `CIRC` vs `DHWRECIRC` · recirc schedule (cold-alert window) · cold threshold (~90 °F start). Then implement: generalize `ArduinoSensor` (multi-field + temp→Kelvin), add `temp` input to `ArduinoThermPSI`, flash the DHW Arduino (Mac-only), add Grafana panel + freshness + pump-cold alerts.
-3. *(carryover)* NAS image-backup first auto-run was due 2026-06-01 ~03:06 — check `journalctl -u nas-image-backup.service` after 03:30; confirm `pivac.img` mtime advances.
-4. *(carryover)* Physical card-swap boot test — needs hands at the Pi.
-5. *(deferred)* Verify the `redlink-stale` Grafana alert fires next time pivac-redlink is offline >30m.
+1. **Pump-health / "loop cold" alert — intentionally deferred** (plan §8.3): the recirc pump is on-demand/aquastat, so a static threshold false-alarms. Observe the duty cycle a few days, then build a "never reached hot in 24h" signal.
+2. *(optional)* Round the HVAC In/CRW/Out WilhelmSK gauges to whole °F (recirc already done via `valueLabelFormat %0.0f`).
+3. *(carryover)* NAS image-backup first auto-run check (`journalctl -u nas-image-backup.service`); physical card-swap boot test — needs hands at the Pi.
 
 **Notes**:
+- **Arduino board/IP/role mapping (was inverted in docs; now corrected in CLAUDE.md):** DHW board = MAC `c0:4e:30:11:6f:3c` = **10.0.0.114** = `pivac.ArduinoPSI` / `electrical.ac.arduinoPSI` / "Potable DHW PSI" / 200 PSI Domestic sketch (**recirc DS18B20 is here**). Boiler/hydronic = MAC `34:b7:da:66:1e:50` = **10.0.0.219** = `pivac.ArduinoThermPSI` / `electrical.ac.arduinoThermPSI` / "Hydronic PSI" / 100 PSI BoilerLoop sketch. Names kept (InfluxDB history); IPs DHCP-by-MAC.
+- **Sentry CV depends on a locked camera mode:** Tapo C120 Night Vision must stay **Night** (+ Night Boost **off**), not Auto — Auto day/night switching causes 7-segment misreads. Module hardened (range-sanity + median debounce, PR #62).
+- **GitHub auth on all machines is now SSH remotes + a fine-grained PAT** (gh keyring on Mac + Pi). The old broad `ghp_` classic token was leaked across configs and is revoked. New token expires ~2027-05-31.
 - **Reader hardware:** Anker USB 3.0 Micro SD Card Reader, USB `05e3:0764` (Genesys Logic chipset). Replaced the 4-LUN Insignia NS-DCR30A2 on 2026-05-09. The Anker is a 2-LUN device but the same `size > 0` filter handles single- and multi-slot readers identically.
 - **Why VID:PID, not SCSI model:** Anker's SCSI model string is `MassStorageClass` — too generic to match safely (any USB stick reports it). VID:PID is unique to the actual reader.
 - **Both timers installed and enabled.** `nas-image-backup.timer` (monthly, 1st @ 03:00 EDT) and `sd-clone.timer` (weekly, Sun @ 02:00 EDT +/− 15m jitter). 1h gap prevents collision when the 1st of a month falls on a Sunday.
