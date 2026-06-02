@@ -10,6 +10,12 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-02 (session 6)*
+
+**Last worked on**: **Closed out the Arduino firmware deployment (`dglcinc/Arduino#6`, now MERGED).** Flashed both UNO R4 WiFi pressure boards with the hardened firmware (RA4M1 watchdog + escalating WiFi reconnect with `NVIC_SystemReset()` fallback + bounded HTTP + `uptime_ms`; DHW board also gets the compile-guarded DS18B20) via `arduino-cli` on the M2, fixed the inverted IP/MAC columns in the Arduino repo `CLAUDE.md` hardware table, merged PR #6 to `main`, and **verified end-to-end on the Pi**: recirc temp `environment.inside.hvac.dhw.recirc.temperature` = **310 K** and DHW pressure `electrical.ac.arduinoPSI.psi` = **64 PSI** both flowing fresh into Signal K. No open work on either repo.
+
+**Flashing how-to (M2 = `David-M2.local`)**: `arduino-cli` 1.4.1 flashes fine — **not GUI-only**. Board identity = USB serial = WiFi MAC, so the connected board self-identifies which firmware it needs: `.219`/`usbmodem34B7DA661E50*` = BoilerLoop 100 PSI (boiler); `.114`/`usbmodemC04E30116F3C*` = Domestic 200 PSI + DS18B20 (DHW). Compile: `arduino-cli compile --fqbn arduino:renesas_uno:unor4wifi --libraries ArduinoPSI_BoilerLoop/libraries <SketchDir>` (OneWire/DallasTemperature come from global user libs; Domestic only). A board flashed on the bench (not reinstalled) reads `temp` = `-196.6 °F` = `-127 °C` `DEVICE_DISCONNECTED_C` and a floating `psi` — bench artifact, not a fault. The M2 can `ssh pi@10.0.0.82`. (Correction to session 5: the Arduino `gh`/SSH path works from the M2 now.)
+
 *Updated 2026-06-02 (session 5)*
 
 **Last worked on**: Diagnosed a DHW-Arduino stale-data alarm — both pressure Arduinos dropped off 2.4 GHz WiFi and self-recovered ~2 h later. Proved via UniFi U6-Pro AP logs (`KitchenAP`, 10.0.0.78) + USG DHCP logs that the recovery was a WiFi re-association, **not** a reboot/power cycle (board sent `DHCPREQUEST`, kept its IP; a reboot sends `DHCPDISCOVER`, which both boards did at a *separate* ~12:23 PM power blip). Hardened the Arduino firmware (RA4M1 watchdog + escalating reconnect with `NVIC_SystemReset()` fallback + bounded HTTP + `uptime_ms`), recovered the weekend DS18B20 DHW-recirc temp firmware from the M2, merged both into one branch, and consolidated PRs → **Arduino `dglcinc/Arduino#6`** (open). Flash still pending. (Board mapping below — `.114`=DHW, `.219`=boiler — re-confirmed.)
