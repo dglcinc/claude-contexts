@@ -10,6 +10,21 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-03 (session 7)*
+
+**Last worked on**: Grafana DHW panel polish. Made DHW pressure and recirc-loop
+temp share **one** y-axis on the "Potable DHW Loop — Pressure & Recirc Temp"
+panel (`pivacr.json` id 5). **PR #65** moved recirc temp off the right axis to
+the left (target view can't render right-side axis labels), relabeled the axis
+`PSI + °F`, and dropped the temp `fahrenheit` unit. **PR #66** fixed the residual
+two-stacked-left-axes problem — PSI on `axisPlacement: auto` vs temp override
+`left` don't dedupe in Grafana, so it drew two independently auto-scaled left
+axes — by setting the panel default to explicit `left` and removing the
+per-series override. Both merged, pulled on the Pi, confirmed live (one shared
+scale). **Gotcha worth keeping:** Grafana only merges series onto one y-axis if
+they share the *same explicit* placement (+ matching unit grouping); `auto` ≠
+`left`. No open work.
+
 *Updated 2026-06-02 (session 6)*
 
 **Last worked on**: **Closed out the Arduino firmware deployment (`dglcinc/Arduino#6`, now MERGED).** Flashed both UNO R4 WiFi pressure boards with the hardened firmware (RA4M1 watchdog + escalating WiFi reconnect with `NVIC_SystemReset()` fallback + bounded HTTP + `uptime_ms`; DHW board also gets the compile-guarded DS18B20) via `arduino-cli` on the M2, fixed the inverted IP/MAC columns in the Arduino repo `CLAUDE.md` hardware table, merged PR #6 to `main`, and **verified end-to-end on the Pi**: recirc temp `environment.inside.hvac.dhw.recirc.temperature` = **310 K** and DHW pressure `electrical.ac.arduinoPSI.psi` = **64 PSI** both flowing fresh into Signal K. No open work on either repo.
