@@ -4,6 +4,19 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-03)
+
+Large contribution session. **Nine PRs open against `development`** awaiting Scott (all build clean for the iOS Simulator):
+- Dead-code cleanups closing pre-filed issues: **#109** (AWS Info.plist dict → #107), **#110** (OBD/ELM327 orphans ~720 LOC → #105), **#111** (ActiveCaptain map residue → #106). Issues #105/#106/#107 closed.
+- **#112** — Tier 1 crash-risk force-unwraps (NotificationsManager server-data parse, watch `SessionHandler`, 5 widget `Calendar` unwraps).
+- **#113** — Keychain Surface 1 (stop syncing creds to iCloud) + `.claude/keychain-migration-plan.md`. **Issue #114** opened for Surfaces 2+3 (coupled via the App Group → needs a coordinated iOS+watchOS release).
+- **#115** — Tier 1 cellular cold-start: scope the WebSocket subscription to `vessels.self` (+ AIS-on-demand + legacy escape hatch), cellular low-bandwidth throttle (default off), parallel startup reads; + `.claude/cellular-startup-plan.md`. Safe core implemented; UI + snapshot-reorder deferred; needs runtime verification (alarms/AIS/no-stale-gauges).
+- **#104** — analysis.md refresh + this session's corrections (below). (pre-existing: #103, #108.)
+
+**analysis.md substantially corrected** after several Tier 1 claims proved wrong on inspection: auto-reconnect **retracted** (it IS implemented via `streamReconnectTimer`/`reconnectTimer:`); Keychain Surfaces 2+3 found coupled; Tier 2–5 re-verified (CI scheme is `Wilhelm` not `WilhelmSK`, `SBJson` now unused, idiom count 84); crash-reporting reworked (MetricKit-first; Firebase footprint is vestigial/not linked). `GenericGaugeWidget:488` unwrap was a false positive (commented-out).
+
+**Recurring facts:** pull WilhelmSKLibrary (`main`) before building or the Watch build fails on a non-public `restEndpoint`; `gh` needs a **classic** PAT for the `sbender9/Wilhelm` API (fine-grained 404s) — now set up on both machines. Working principle: for this third-party repo a documented good-faith PR is an acceptable deliverable even when not runtime-verifiable; Scott's review is the gate.
+
 ## Current State (2026-05-29)
 
 - **Three PRs open, all base `development`, awaiting Scott's review:**
