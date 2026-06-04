@@ -4,7 +4,19 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
-## Current State (2026-06-03)
+## Current State (2026-06-03 PM — App Store crash mining)
+
+Scott granted David **Developer-role App Store Connect access** (David's own Apple ID, no shared creds) to offload crash/feedback triage. Built a working pipeline — **Xcode Organizer backtrace screenshot → map symbol to source → focused PR** — and shipped **4 crash-fix PRs** (all build-verified, base `development`):
+- **#116** `StreamingBoat connect` `dispatch_group` over-leave (top crash, 21 devices) — Venus/MQTT source fires its completion handler >1×; added `__block` idempotent-leave guard.
+- **#117** `NMEA2000 parse:data:forBoat:` nil-object array (15 devices) — `@[data]` with nil from a non-UTF8 socket decode; extended the nil guard.
+- **#118** `LocalPushReader sendNotification:` nil-value dictionary (~7, PushProvider) — built `userInfo` defensively.
+- **#119** `AppleMapViewController findOverlay:` unrecognized selector (~5) — `isKindOfClass:[Overlay class]` guards.
+
+Got an **ASC API key** from Scott (`~/github/wilhelm/.asctoken`, git-excluded; tooling at `~/.wilhelm-asc/asc.py`). Reality: the key is **Developer-level** — reviews read OK, but **Analytics Reports + TestFlight beta-feedback APIs return 403** (need an Access-to-Reports/Admin key for crash/perf *trends*). Reviews are a tiny corpus (**25 total**, 4.46★, 24 unanswered) and fully analyzed — no new bugs; dominant negative theme is **support responsiveness**. Drafted developer responses for the 3 negatives + the iPhone-GPS question (which IS supported via `useDeviceLocation`) → `~/.wilhelm-asc/review-drafts.md`, **sent to Scott for approval** (not posted). TestFlight + App Store crashes both land in Organizer (Distribution filter); Organizer "Feedback" tab is empty.
+
+**Still diagnosed / pending:** PushProvider `GCDAsyncSocket` dealloc race (14 devices — `LocalPushReader connect` releases the socket mid async teardown) needs Scott's OK before a fix; `doesNotRecognizeSelector` (16) + `__exceptionPreprocess` (13) need the selector name / exception reason; `dayThemeChanged:`/`tapGesture:`/`putPath:` await backtrace screenshots.
+
+## Current State (2026-06-03 AM)
 
 Large contribution session. **Nine PRs open against `development`** awaiting Scott (all build clean for the iOS Simulator):
 - Dead-code cleanups closing pre-filed issues: **#109** (AWS Info.plist dict → #107), **#110** (OBD/ELM327 orphans ~720 LOC → #105), **#111** (ActiveCaptain map residue → #106). Issues #105/#106/#107 closed.
