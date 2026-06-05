@@ -4,6 +4,34 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-04)
+
+**Navionics map-gauge orientation feature (Scott's request) — PR #120 open, awaiting review.**
+Apple/Google map gauges support North/Head/Course Up; the Navionics gauge didn't
+(`animateToBearing:` was an empty stub). The Navionics SDK can't rotate the chart
+programmatically (`NMSCameraPosition.h`: bearing is read-only for rotation; only GPS-driven
+modes rotate, useless with SignalK data), so orientation is done by **rotating the NMSMapView
+viewport** (Scott's idea):
+
+- `animateToBearing:` applies a `CGAffineTransform` rotation; the shared `refresh:`/`mapUpChanged:`
+  path already feeds COG/heading/0, so tracking is automatic.
+- `viewDidLayoutSubviews` oversizes the map view to a **diagonal-sized square**, centered, with the
+  container clipping → rotated chart fills the frame (no blank corners, no pixel scaling).
+- `setupChartRotation` detaches the map view from storyboard edge constraints and builds the
+  Course/Head/North Up control **in code** (the Navionics scene has no `mapUpSegmented`).
+- Markers need no counter-rotation (they're SDK subviews and rotate with the viewport).
+
+One file (`NavionicsViewController.m`, ~84 lines). **Verified** in iPad sim (all 3 modes +
+landscape) and iPhone 17 sim (narrow-width control fit): frame filled edge-to-edge, build green.
+Tested against a local `signalk-server` on this machine replaying Scott's recorded NMEA2000 log
+(FileStream/Multiplexed playback; server stopped at session end).
+
+**Gotcha:** WilhelmSK persists its page layout in iCloud KVS, so a gauge can't be injected via
+prefs/bundle — it must be added through the app UI. (Full detail + the local test-server recipe
+are in the project `CLAUDE.md`.)
+
+**Next:** Scott's review of #120; then a physical-device test.
+
 ## Current State (2026-06-03 PM — App Store crash mining)
 
 Scott granted David **Developer-role App Store Connect access** (David's own Apple ID, no shared creds) to offload crash/feedback triage. Built a working pipeline — **Xcode Organizer backtrace screenshot → map symbol to source → focused PR** — and shipped **4 crash-fix PRs** (all build-verified, base `development`):
