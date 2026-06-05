@@ -4,7 +4,31 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
-## Current State (2026-06-04)
+## Current State (2026-06-04 evening)
+
+Two contributions tonight, both build-verified and tested on the iPad sim against **Scott's
+live (read-only) SignalK connection**:
+
+- **PR #120 MERGED** (Scott landed it into `development`). Beyond the orientation feature it
+  now also carries a **note-bubble upright fix**: in Head/Course Up the whole NMSMapView
+  viewport rotates, so note callout bubbles (and the anchor marker) were spinning with the
+  chart. Fix honors the `isFlat` flag — `isFlat:NO` billboards are counter-rotated by
+  `+mapBearing` to stay screen-upright (`isFlat:YES` AIS/own-ship still rotate). `NMSMarker`
+  has no rotation property, so it's an image redraw, **throttled to ~2° of bearing change** to
+  bound CPU cost.
+- **PR #121 OPEN** — Alerts panel bulk-action title bar. The floating "?" help button sat over
+  the rows and obscured each alert's mute/ack/clear buttons; replaced it with a fixed title
+  bar of **Silence/Ack/Clear-all** + Help (same size/icons as the per-row buttons). Bulk
+  actions iterate notifications gated by the same canSilence/canAcknowledge/canClear + V1/V2
+  rules; each enables only if ≥1 alert supports it (so all three correctly disable/gray on a
+  read-only connection). One file, built in code (no storyboard XML). Branched off latest
+  `origin/development` (post-#120-merge).
+
+**Next:** Scott's review of #121; physical-device test of the merged orientation feature;
+resume App Store crash triage (the original session intent — crash-summary screenshot never
+arrived).
+
+## Current State (2026-06-04, earlier — #120 pre-merge)
 
 **Navionics map-gauge orientation feature (Scott's request) — PR #120 open, awaiting review.**
 Apple/Google map gauges support North/Head/Course Up; the Navionics gauge didn't
