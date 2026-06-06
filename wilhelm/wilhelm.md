@@ -4,6 +4,21 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-06) — Detour: signalk-server architectural review
+
+This session did **no Wilhelm code work**. It was a full architectural review of the upstream
+**SignalK/signalk-server** codebase (the Node.js server WilhelmSK connects to), requested by
+David. Deliverable: `~/github/signalk-server-architecture-review.md` (~44KB / ~700 lines) —
+a loose file (`~/github/` is not a git repo, so uncommitted). Covers structure, performance,
+scalability, extensibility, code evolution, and recommendations for governing the rising volume
+of AI-assisted PRs (reviewed via CodeRabbit). Headline findings: ~123k LOC first-party; **~68%
+of the core `src/` rewritten in 2026 alone** (a strict-TypeScript migration + React 19 admin-UI
+rebuild); top liabilities are the central **`app` god-object** and a **plugin API that leaks the
+whole `app`**; strong existing AI-PR governance, so the rec was to add a **CODEOWNERS** file +
+**architecture-alignment criteria** for CodeRabbit rather than more style rules. Full findings in
+the `signalk-server-architecture-review` memory file. **Wilhelm working tree is clean; all anchor
+Live Activity state below is unchanged.**
+
 ## Current State (2026-06-05) — Anchor Live Activity (3 PRs open, cross-repo)
 
 New Scott project: a DoorDash-style **ActivityKit Live Activity** for the anchor-deployment
