@@ -4,10 +4,22 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
-## Current State (2026-06-06 PM) — Crash + TestFlight-feedback triage (7 PRs)
+## Current State (2026-06-06 PM) — Crash + feedback triage + docs release (8 PRs + v0.1.7/v0.1.8)
 
 Worked from Xcode Organizer **crash** screenshots and **Feedback** screenshots (in `~/Documents/`).
-Opened **7 focused PRs** against `development`, all build-clean (iOS Simulator), awaiting Scott:
+Opened **8 PRs** against `development` (all build-clean, awaiting Scott) and **released the docs
+plugin twice**.
+
+**Docs:** **#130** refreshes the in-repo docs — `ARCHITECTURE.md` (fixed stale auto-reconnect &
+credential-sync claims; added Alerts toolbar, Anchor Live Activity, a Maps & Charts section) and
+`.claude/analysis.md` (marked the OBD/ActiveCaptain/AWS dead-code cleanup DONE). The **user-guide
+plugin** (dglcinc/signalk-wilhelmsk-docs) shipped **v0.1.7** (anchor Live Activity, alerts bulk
+actions, Navionics orientation, two-finger map paging) and **v0.1.8** (reworked
+"Anchoring and the Anchor Alarm" section, `{ #anchor-alarm }` id pinned). Both via OIDC
+trusted-publish on a `vX.Y.Z` tag; GitHub Pages auto-deploys. Docs repo `origin` switched HTTPS→SSH.
+Anchor-LA lifecycle verified plugin-driven (START on drop, END on raise, no manual stop).
+
+The seven fix/feature PRs (#130 is the docs PR above):
 - **#123** — four defensive crash guards (theme IBAction non-NSString sender; `GraphicGaugeView
   tapGesture:` parallel-array bounds; `StreamingBoat putPath:` nil path/value; `scrollToRowAtIndexPath:`
   stale index path).
