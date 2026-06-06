@@ -4,7 +4,31 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
-## Current State (2026-06-06) — Detour: signalk-server architectural review
+## Current State (2026-06-06 PM) — Crash + TestFlight-feedback triage (7 PRs)
+
+Worked from Xcode Organizer **crash** screenshots and **Feedback** screenshots (in `~/Documents/`).
+Opened **7 focused PRs** against `development`, all build-clean (iOS Simulator), awaiting Scott:
+- **#123** — four defensive crash guards (theme IBAction non-NSString sender; `GraphicGaugeView
+  tapGesture:` parallel-array bounds; `StreamingBoat putPath:` nil path/value; `scrollToRowAtIndexPath:`
+  stale index path).
+- **#124** — push-provider **GCDAsyncSocket dealloc race** (`LocalPushReader` teardown serialized on
+  main/delegate queue). This was the previously-unidentified "pending" crash: 12 devices, CFNetwork
+  `Schedulables::_SchedulesInvalidateApplierFunction`, still live on 1.17.4.
+- **#125** — gauge feedback: duplicate Gauge Options panel (re-entrancy guard in `selectGauge:`);
+  stale green bar with Show-Old-Data off (`BarGaugeView refresh:` early-return ordering); engine-hours
+  seconds option (`engineRuntimeHideSeconds`, default = show seconds).
+- **#126** — deleted connection lingered in App Group store (`removeConnection:` made symmetric with save).
+- **#127** — autopilot alert de-spam ("this will not go away"; confirmation logic untouched — safety).
+- **#128** — no exit from Settings for a first-run user (Done-button fallback when no reveal controller).
+- **#129** — two-finger swipe to page off a map (the map eats the one-finger pan).
+
+**Crash confirmations:** #116 (Venus/MQTT over-leave) & #117 (NMEA2000 nil-array) already-fixed per the
+Organizer stacks. **Still open:** `doesNotRecognizeSelector` (13 devices) needs "Open in Project"
+symbolication (selector masked, Thread 0 empty); `demo.signalk.org` connect failure needs repro.
+**Jaakko W2K-1 "no data"** = already fixed by `ed4c095e` (BoatDeviceType enum off-by-one, build 251);
+he's on 241 → tell him to update. No simulator tap automation here, so #6 was reproduced by code tracing.
+
+## Current State (2026-06-06 AM) — Detour: signalk-server architectural review
 
 This session did **no Wilhelm code work**. It was a full architectural review of the upstream
 **SignalK/signalk-server** codebase (the Node.js server WilhelmSK connects to), requested by
