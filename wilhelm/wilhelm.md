@@ -9,26 +9,39 @@ Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS
 New Scott project: a DoorDash-style **ActivityKit Live Activity** for the anchor-deployment
 process, **watch-first** (watchOS 11+ mirrors the iOS activity into the Smart Stack). Spec in
 OneDrive "Live Activity anchor monitoring..." docx; full design in the local (git-excluded)
-`ANCHOR-LIVE-ACTIVITY-PLAN.md` in the wilhelm repo root. Planned with David: full-stack scope,
-watch-primary, spike the mini radar, devices available.
+`ANCHOR-LIVE-ACTIVITY-PLAN.md` in the wilhelm repo root. Built on the **mini**; David came to the
+**MacBook (M2)** to test on his phone.
 
-**Built + 3 PRs open (all build/type-check clean; NOT yet device-verified):**
+**Built + 3 PRs open (all by David, build/type-check clean, all mergeable, awaiting Scott):**
 - **sbender9/Wilhelm#122** (iOS, `feature/anchor-live-activity` off `development`):
-  AnchorActivityAttributes + AnchorLiveActivity (ActivityConfiguration: lock-screen + Dynamic
-  Island + static radar) + @objc AnchorActivityManager (push-to-start + per-activity tokens).
-  Builds clean (xcode MCP sim).
+  AnchorActivityAttributes + AnchorLiveActivity (lock-screen + Dynamic Island + static radar) +
+  @objc AnchorActivityManager (push-to-start + per-activity tokens). Builds clean (sim). **Added
+  `#Preview` blocks this session — committed `a145e37e`.**
 - **sbender9/signalk-push-notifications#13** (from **dglcinc fork** — no direct push access):
   orchestrates start/update/end off anchoring.started/ended (anchoralarm **PR #87 merged**).
-  `tsc` clean (`src/icon.ts` w/ AWS creds is git-ignored/absent — stub locally).
+  `tsc` clean (`src/icon.ts` w/ AWS creds is git-ignored — stub locally).
 - **sbender9/wilhelmsk-lambda-push#1** (David has push): `pushLiveActivityHandler`. **Scott must
-  deploy** an AWS Lambda fn `sendLiveActivity` wired to it (David has no AWS access).
+  deploy** an AWS Lambda fn `sendLiveActivity` + invoke route (David has no AWS access).
 
-**NEXT: on-device test on the M2.** `git checkout anchor-live-activity-devtest` (throwaway branch
-w/ Automatic signing for all targets — NOT for merge), build to iPhone, read the Xcode console
-`AnchorActivityManager: push-to-start token <hex>`. Test spike lives on the **Mac Mini** at
-`~/wilhelm-spike/` (`node anchor-spike.mjs start <hex>` etc.) — fires ActivityKit pushes straight
-at APNs, bypassing plugin+Lambda. WilhelmSKPushProvider (NetworkExtension) is the device-build
-snag; not needed for the LA test. Then get Scott to deploy the Lambda fn.
+**Cross-tier verification this session: CLEAN.** Checked every seam — endpoint paths app↔plugin,
+`content-state`/`attributes` vs the Swift structs, Lambda invoke params + token shape, the
+`…push-type.liveactivity` topic/pushType, and the `anchoring.started/ended/alert` + drag-alarm
+state mapping against the **real** signalk-anchoralarm-plugin source. No code defects.
+
+**Device test BLOCKED — signing (resolved 2026-06-05):** the planned `anchor-live-activity-devtest`
+branch (Automatic signing all targets) **does not work** — David's Apple ID is on Scott's team
+`1090917221`, but the app signs under **`F5FEBHD6EF` = Scott's INDIVIDUAL account**, which can't
+add members. So David **can't** sign/debug on device. Dev now = **iOS Simulator** (no signing):
+`#Preview` canvas for the views + a `#if DEBUG` `-wskDebugAnchorLA` hook that starts/cycles a
+sample activity (kept local, not in #122; sim suspends backgrounded apps in ~30–60s so the live
+island cycle is brief). Real-device end-to-end needs Scott's **ad-hoc** (UDID
+`00008140-000928563A0B001C`, sandbox APNs) or **TestFlight** (prod APNs) build. The mini's
+`~/wilhelm-spike/` APNs harness (`node anchor-spike.mjs start <hex>`) also needs a device token,
+so it's likewise gated. **XcodeBuildMCP** installed (local scope; v2.x needs the `mcp` subcommand).
+
+**Waiting on Scott:** review/merge the 3 PRs together · AWS-deploy the Lambda `sendLiveActivity` ·
+provide an ad-hoc/TestFlight build for the real end-to-end test. (Also flagged via DM: the APNs
+`.p8` key is committed in plaintext in `wilhelmsk-lambda-push/index.mjs`.)
 
 ## Current State (2026-06-04 evening)
 
