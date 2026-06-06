@@ -4,6 +4,32 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-05) — Anchor Live Activity (3 PRs open, cross-repo)
+
+New Scott project: a DoorDash-style **ActivityKit Live Activity** for the anchor-deployment
+process, **watch-first** (watchOS 11+ mirrors the iOS activity into the Smart Stack). Spec in
+OneDrive "Live Activity anchor monitoring..." docx; full design in the local (git-excluded)
+`ANCHOR-LIVE-ACTIVITY-PLAN.md` in the wilhelm repo root. Planned with David: full-stack scope,
+watch-primary, spike the mini radar, devices available.
+
+**Built + 3 PRs open (all build/type-check clean; NOT yet device-verified):**
+- **sbender9/Wilhelm#122** (iOS, `feature/anchor-live-activity` off `development`):
+  AnchorActivityAttributes + AnchorLiveActivity (ActivityConfiguration: lock-screen + Dynamic
+  Island + static radar) + @objc AnchorActivityManager (push-to-start + per-activity tokens).
+  Builds clean (xcode MCP sim).
+- **sbender9/signalk-push-notifications#13** (from **dglcinc fork** — no direct push access):
+  orchestrates start/update/end off anchoring.started/ended (anchoralarm **PR #87 merged**).
+  `tsc` clean (`src/icon.ts` w/ AWS creds is git-ignored/absent — stub locally).
+- **sbender9/wilhelmsk-lambda-push#1** (David has push): `pushLiveActivityHandler`. **Scott must
+  deploy** an AWS Lambda fn `sendLiveActivity` wired to it (David has no AWS access).
+
+**NEXT: on-device test on the M2.** `git checkout anchor-live-activity-devtest` (throwaway branch
+w/ Automatic signing for all targets — NOT for merge), build to iPhone, read the Xcode console
+`AnchorActivityManager: push-to-start token <hex>`. Test spike lives on the **Mac Mini** at
+`~/wilhelm-spike/` (`node anchor-spike.mjs start <hex>` etc.) — fires ActivityKit pushes straight
+at APNs, bypassing plugin+Lambda. WilhelmSKPushProvider (NetworkExtension) is the device-build
+snag; not needed for the LA test. Then get Scott to deploy the Lambda fn.
+
 ## Current State (2026-06-04 evening)
 
 Two contributions tonight, both build-verified and tested on the iPad sim against **Scott's
