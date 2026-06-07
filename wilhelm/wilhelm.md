@@ -4,6 +4,41 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-07) — Backlog merged; Keychain + testing-plan PRs; advisory work
+
+**Scott merged the bulk of the backlog today:** #123–#129 (crash + feature fixes), #131
+(correctness quick wins), #130 (analysis refresh + Tier-1 status markers). This session opened
+**#131** (3 correctness quick wins — MERGED), **#132** (connection credentials → shared Keychain,
+Surfaces 2+3 — OPEN), **#137** (Tier 3 automated-testing & regression-defense plan, docs — OPEN),
+and filed **issue #135** (modernize the Apple TV UI, Scott-requested).
+
+**Keychain #132** (Surfaces 2+3, finishing #113's Surface 1): credentials move to a shared-access-
+group Keychain read by app/widget/watch. Kept the in-memory connection-dict interface unchanged
+(moved only the save/load persistence boundary), so ~20 credential read sites are untouched.
+SecItem in `Settings.m` (no new file; WilhelmTV links Security.framework) + KeychainAccess on the
+Swift side; service `com.scottbender.WilhelmSK`, account `cred.<name>.<field>`, no explicit access
+group (defaults to the shared group the deviceToken uses). Added `keychain-access-groups` to both
+watch entitlements. Migrate-on-read + delete; also strips VRM creds from iCloud (closes the #113
+follow-up). Builds clean (Wilhelm + watch); **needs Scott's device/runtime verification** and a
+decision on the migrate-delete rollback trade-off.
+
+**Testing plan #137** (docs): risk-weighted Tier 3 program grounded by 4 subagents. The **W2k
+regression is a class** — a `BoatDeviceType` value inserted mid-enum, deleted in the OBD cleanup,
+renumbered later cases while `ConnectionSettingsViewController.m` still branched on the dead
+constant (fixed `ed4c095e`); the plan locks it with enum-ordinal + capability tests. Highest crash
+ROI = a malformed-server-input harness. **Local-first gates** (pre-push hook + optional self-hosted
+runner) because the **private** repo makes GitHub-hosted macOS CI 10× costly. Phase 0 (new test
+target/scheme/fastlane lane) to be aligned with Scott on Discord first.
+
+**Advisory threads:** dropped the MetricKit→signalk-server crash-telemetry idea (Organizer already
+shows aggregated MetricKit data free on App Store/TestFlight, gated on opt-in + privacy threshold;
+programmatic access needs a coarse Access-to-Reports/Admin ASC key — David's is Developer-level,
+for reviews). **Jordan #4 autopilot "undefined != standby":** server-side, single SK server on a
+**Victron Ekrano (Venus OS Large)** — likely the `signalk-raymarine-autopilot` plugin, updatable
+via the on-device SignalK appstore independent of Victron firmware (core SK version is firmware-
+gated). Next: Jordan to confirm the plugin is installed + appstore loads. App-side #127 de-spam
+merged; he can test on the boat next build.
+
 ## Current State (2026-06-06 PM) — Crash + feedback triage + docs release (8 PRs + v0.1.7/v0.1.8)
 
 Worked from Xcode Organizer **crash** screenshots and **Feedback** screenshots (in `~/Documents/`).
