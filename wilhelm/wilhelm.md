@@ -39,6 +39,33 @@ via the on-device SignalK appstore independent of Victron firmware (core SK vers
 gated). Next: Jordan to confirm the plugin is installed + appstore loads. App-side #127 de-spam
 merged; he can test on the boat next build.
 
+## Current State (2026-06-07) — Anchor Live Activity on-device testing + fixes
+
+Live-tested the anchor LA on a **TestFlight build** (David's iPhone, built by Scott from
+`feature/anchor-live-activity`) against a **mini SignalK test server**. **Validated watch-first
+end-to-end:** drop from the watch → LA deploys (yellow) → live distance updates → lock radius →
+set. Reworked the lifecycle to **green-while-anchored** (stays green at set with no further
+events, ends on raise) per David's point that an idle green activity costs nothing.
+
+**Plugin fixes — sbender9/signalk-push-notifications#13** (pushed to dglcinc fork, latest
+`e7e8e1e`): rebased on master; invoke the deployed lambda name **`sendLiveActivityPush`**;
+**always subscribe to the anchor data feed** (fix: the LA wasn't updating live during deploy
+because it only subscribed if a push-to-start token existed at plugin boot); **green-while-anchored**
+lifecycle. **App:** PR **#134 MERGED** (`sendPOST` nullability crash — the Remote-Notifications
+crash); PR **#136 OPEN** (settings no-exit, follow-up to #128). **AWS:** `sendLiveActivityPush`
+lambda + IAM working (Scott). **Docs:** lambda runbook **wilhelmsk-lambda-push#2**; anchoring docs
+**signalk-wilhelmsk-docs#53** (NEEDS UPDATE — behavior is now green-while-anchored, not end-at-set).
+
+**Remaining (app-side → need a NEW TestFlight build from Scott to test):** orphaned-LA cleanup
+(stuck LAs can't be ended remotely; app should clear stray activities on launch/fresh-drop);
+dismiss garbage-error ("Server Returned Error -7562…", uninitialized code); confirm the watch-gauge
+"not deployed"/lag is a real bug vs a desync artifact. **Signing:** David CANNOT self-sign (app
+team `F5FEBHD6EF` = Scott's individual account; David's Apple ID on a different team) — app changes
+need Scott's build; plugin changes are testable on the mini. **Test protocol:** David drives
+drop/lock/raise; Claude drives ONLY the boat position (server-side anchor changes desync David's
+devices). Full resume detail + mini test-bed restart procedure in the `session_state_wilhelm`
+memory.
+
 ## Current State (2026-06-06 PM) — Crash + feedback triage + docs release (8 PRs + v0.1.7/v0.1.8)
 
 Worked from Xcode Organizer **crash** screenshots and **Feedback** screenshots (in `~/Documents/`).
