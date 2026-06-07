@@ -83,6 +83,7 @@ Topic files:
 - ~/.claude/memory/tools/rsync.md — rsync starves over NFSv4 on large sparse files (use cat|ssh|dd or cp); rsync 3.4 → older server needs `--old-args`
 - ~/.claude/memory/tools/synology.md — DSM rsync-over-SSH gate (code 43); nasadmin + `--rsync-path='sudo rsync'` workaround; NFS+ACL recipe
 - ~/.claude/memory/tools/m365-graph.md — modern M365 tenants disable SMTP AUTH; use MSAL + Graph `sendMail` with client-credentials
+- ~/.claude/memory/tools/signalk.md — SignalK-server plugin admin: install topology, force-disable un-toggleable built-ins, mint an admin JWT, read in-app-browser 404s from the access log
 
 ## Global Memory Reference Rule
 

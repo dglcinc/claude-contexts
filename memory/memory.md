@@ -15,6 +15,7 @@ Read this file at session start. Load specific topic files only when relevant.
 | `tools/rsync.md` | rsync over NFSv4 starves on large sparse files (use cat\|ssh\|dd or cp instead); rsync 3.4 → older server needs `--old-args`. | 2026-05-08 |
 | `tools/synology.md` | DSM rsync-over-SSH gate: code 43 even with toggle on; nasadmin+`--rsync-path='sudo rsync'` is the workaround. NFS+ACL recipe included. | 2026-05-08 |
 | `tools/m365-graph.md` | Modern M365 tenants disable SMTP AUTH — use MSAL + Graph `sendMail` with client-credentials. Reusable Azure app pattern. | 2026-05-08 |
+| `tools/signalk.md` | SignalK-server plugin admin: bundled-vs-`~/.signalk` install topology, force-disable un-toggleable built-ins via `plugin-config-data`, mint an admin JWT for `/skServer/plugins`, read in-app-browser 404s from the access log | 2026-06-07 |
 
 ## Cross-Memory Sync Rule
 
