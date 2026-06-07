@@ -81,3 +81,35 @@ URLs and status codes, which ends the guessing fast. A real case: a malformed `�
 **404**, so it rendered unstyled with no JS — invisible in the URL bar but obvious in the log as
 404s on every asset. Lesson generalizes: a 200 on the page but 404s on its assets = a path/base
 problem, not fonts/cache/HSTS.
+
+## Reverse-proxying SignalK — must forward `/skServer/` too
+
+A reverse proxy (nginx) in front of SignalK has to proxy **all** of SignalK's path namespaces,
+not just `/signalk/`. The admin API lives under **`/skServer/*`** (`/skServer/settings`,
+`/skServer/plugins`, `/skServer/appstore/available`, `/skServer/security/users`,
+`/skServer/loginStatus`). If the proxy forwards `/signalk/`, `/admin/`, and `/@signalk/` but
+**not** `/skServer/`, the symptom is sneaky: login and the data view work, the "logged in as
+admin" banner is correct, but the **Settings tab says "not authorized" and the Plugins/Store is
+empty** — because every admin API call 404s at the proxy and never reaches the server, and the UI
+reads that as not-authorized.
+
+Diagnosis: hit an admin endpoint **direct on :3000** vs **through the proxy** with a valid admin
+token — direct 200 + via-proxy 404 pinpoints the missing location block. (`allow_readonly: true`
+masks it: an unauthenticated request still gets read-only data, so nothing errors loudly.)
+
+Fix — add a `/skServer/` block mirroring `/signalk/` (nginx forwards the `Authorization` header by
+default, so no special header handling is needed), then `sudo nginx -t && sudo systemctl reload nginx`:
+
+```nginx
+location /skServer/ {
+    proxy_pass http://localhost:3000/skServer/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
+
+Seen on `pivac` (`/etc/nginx/sites-available/pivac`, server `68lookout.dglc.com`) 2026-06-07 — the
+`/skServer/` block had never been present, so admin only ever worked by hitting
+`http://<host>:3000` directly, bypassing the proxy.
