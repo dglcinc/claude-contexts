@@ -4,6 +4,40 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-12) — Units/localization plan PR #140 + connection-bug diagnostics
+
+Two threads. **(1) Units & Localization recommendation** — authored `.claude/units-localization-plan.md`
+for issue **#138** and opened **PR #140** (docs-only, base `development`). Frames the work as two tracks
+sharing one seam: **Track A propagation** (the literal #138 ask — `unitsChanged:` writes the pref but
+broadcasts nothing; surfaces only refresh on the next data tick; the watch `updateWatchData()` trigger
+exists but is never called) and **Track B i18n** (app is effectively English-only; the headline bug is
+**zero `NumberFormatter`/`Locale.current` anywhere** → C-locale decimals break international users — also
+a units concern). Doc adds a per-category expose/retire table (retire dead Angle/electrical/Charge/Ratio
+settings; add fathoms + imperial gallon), a marine-aware Imperial/Metric/Nautical preset seeded from
+`Locale.current` on first run, and a SignalK server/plugin coordination section (SI on the wire; display
+pref is client-only; scattered write-back conversions → centralize + round-trip tests; `meta.units` for
+arbitrary paths; LA content-state contract; server-emitted strings can't be localized app-side). Phased,
+each phase an independent PR; P1 closes #138 and is simulator-verifiable.
+
+**(2) Connection-bug diagnostics (investigation only, no code).** Diagnosed two post-release reports.
+Root mechanism is the **W2k regression class again**: device types are tracked by fragile positional
+alignment across three hand-maintained lists (`BoatDeviceType` enum `Boat.h:48` + `boatConnectionTypes`
+constants + `boatConnectionTypeNames` `Boat.m:134-136`), with array-index→enum casts (`NonSKSource.m:31`).
+The ODB removal was split across two releases — arrays lost ODB **May 22** (`51bb5df7`), enum kept it
+until **Jun 5** (`ed4c095e`) — leaving an off-by-one window for every device after HelmSmart.
+**Scott's W2K‑1 → YDGW (likely):** discovery can't distinguish an Actisense W2K‑1 from a Yacht Devices
+gateway — both broadcast NMEA2000 RAW over **UDP 2002** in the same format; the YDGW socket hardcodes the
+match as `kYDWGDevice`/"YDGW‑02" (`SignalKBrowser.m:367`), and discovered connections rebuild
+`connectionType` from `deviceType` each refresh. **David's discovered SignalK Pi connection "reset":**
+SignalK is enum type 0 (unshifted), so the integer mechanism doesn't apply; a discovered connection is
+LAN-only/ephemeral and `NSUserDefaults` survives updates — he's simply off the Pi's LAN. Real fix for
+remote use is a manual connection (Tailscale/DDNS). **Did the "security" updates cause either? NO
+(verified):** the merged security change is **#113** (`9eabaa55`, Keychain Surface 1) — a 14-line diff
+that only strips `username`/`password`/`jwtToken` from the iCloud copy, only for `source=="manual"`
+connections; it never touches `connectionType` and never runs for discovered connections. **#132
+(Surfaces 2+3) is unmerged and its keychain code isn't in the shipped tree at all.** Offered (awaiting
+David's go-ahead): a fix keying connection prefs by stable `uuid`/string constant instead of the
+renumberable integer, a #137 regression test, and a Pi remote-access writeup.
 ## Current State (2026-06-07 evening → 06-08) — Anchor LA reliability, throttling fix, local-start fallback
 
 A long live test of the anchor LA (David's TestFlight build vs the mini test bed) became a reliability + design pass. **Fixes landed across two repos:**
