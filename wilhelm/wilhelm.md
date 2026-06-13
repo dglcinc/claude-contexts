@@ -4,6 +4,39 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-12) — Four docs/review PRs + anchor LA staleness/orphan fixes
+
+A documentation + review session, all output as PRs against `development` (plus one cross-repo
+plugin change). Seven PRs now open, all awaiting Scott — no local work is blocked on David.
+
+1. **Reviewed + corrected the testing plan (#137) and units/localization plan (#140).** Commit
+   forensics corrected the W2k root cause: the shipped break was an array↔enum desync window
+   (`51bb5df7` removed `ODB II` from the `Boat.m` arrays 2026-05-22; the `Boat.h` enum kept
+   `BoatDeviceTypeODBII` until `ed4c095e` 2026-06-05), NOT the #110 cleanup. Added a three-list
+   parity guard + a discovery-classification (W2K‑1↔YDGW on UDP 2002) regression class to #137;
+   added tvOS-propagation + locale-blind-`floatValue` notes to #140.
+2. **tvOS modernization plan** (`.claude/tvos-modernization-plan.md`, **PR #141**, issue #135) —
+   Scott left "modernization" undefined, so the doc proposes it as the verified gap vs Apple's 2026
+   platform bar: P1 mandatory hygiene (tvOS 26 SDK/Liquid Glass audit, UIScene adoption, stale
+   OBD/HomeKit plist keys, deprecations), P2 focus/HIG, P3 TV-native settings/connections (after
+   #140), P4 SwiftUI shell (gated on Scott; no gauge-render rebuild ahead of Tier 4), P5 Top Shelf.
+3. **Refreshed analysis.md / ARCHITECTURE.md / README.md** (**PR #142**): README drops the CarPlay
+   claim (verified absent) + corrects platform floors (watchOS 10.6, tvOS 17.6); ARCHITECTURE gains
+   the two-engine units truth + the three-list device-type fragility section + a WilhelmTV
+   description; analysis.md gains improvement items 11 (i18n/units) + 12 (positional device-type
+   lists), the corrected W2k root cause, and tier updates (CI revised to local-first on the private
+   repo; new tvOS Tier-4 item).
+4. **Reviewed the anchor Live Activity (PR #122)** and implemented its two ship-blocker fixes.
+   **Staleness:** a frozen "anchored" card used to keep its green tint when pushes stopped — now the
+   plugin (`b781069`, PR #13) stamps `stale-date` = now+60s on every push, and the app (`ba5b24f2`)
+   grays the tint + dims + shows "No data — updated N min ago". **Orphan cleanup:** `start()`
+   reconciles against the server's `navigation.anchor.position` (definitive null ends strays, errors
+   keep — fail-safe); a fresh drop ends activities not updated within 120s instead of bailing. Full
+   assessment in the git-excluded `ANCHOR-LA-ASSESSMENT.md`; feasibility verdict: solid
+   implementation, but the watch-first premise is undermined by Apple's push-to-start rationing +
+   watch-can't-wake-phone, leaving phone-first ambient display as the real value. On-device verify
+   of stale-date + throttling awaits Scott's next TestFlight build + a push-to-start budget reset.
+
 ## Current State (2026-06-12) — Units/localization plan PR #140 + connection-bug diagnostics
 
 Two threads. **(1) Units & Localization recommendation** — authored `.claude/units-localization-plan.md`
