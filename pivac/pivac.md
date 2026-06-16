@@ -10,6 +10,12 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-15 (session 8)*
+
+**Last worked on**: Wrote `docs/water-meter-monitoring-plan.md` (**PR #67, open**) — a plan to add **domestic water consumption monitoring** from the **Sensus iPerl** meter. Research established it's **wM-Bus** (T1, 868.95 MHz, AES-128-CBC, factory key), decoded by `wmbusmeters` — not NA SCM/rtlamr. Iterated the receiver across 5 revisions; **chosen = a remote UNO R4 WiFi node** (dumb radio forwarding raw telegrams over WiFi; `wmbusmeters` decodes on the Pi), picked for **$0** (parts on hand) over the lowest-effort-but-$100 Würth AMB8465-M USB dongle. **Next:** write the Arduino sketch + `pivac.WaterMeter` module (not started), then bench-test the on-hand **433** CC1101 (band-mismatched for 868 — test up close, may need an 868 module). **No code written / nothing deployed yet** — plan only.
+
+**Key facts**: CC1101 band trap (chip does 315/433/868/915, board matching is fixed per-band; 433 board ≈10–20 dB down at 868). Pi-direct GPIO rejected (header in use + would require opening the production Pi). US dongle source = Würth AMB8465-M, DigiKey PN 1917-1022-ND (iM871A is EU-only). SK path `environment.water.domestic.consumption`. ⚠️ `~/github/Arduino` not cloned on utilityserver.
+
 *Updated 2026-06-03 (session 7)*
 
 **Last worked on**: Grafana DHW panel polish. Made DHW pressure and recirc-loop
