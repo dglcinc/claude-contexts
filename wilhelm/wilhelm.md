@@ -4,6 +4,45 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-15) — On-device anchor LA test; root-caused the end-at-set bug
+
+A live on-device test run (David's iPhone + watch vs the mini test bed; TestFlight **v1.19.0 /
+build 231**; Claude drove only boat position). Root-caused the end-at-set bug and confirmed
+several items left unverified on 06-07. **Findings folded into the git-excluded
+`.claude/anchor-la-scott-writeup.md` (new "2026-06-15 UPDATE" section) + the session memory.**
+No code committed — the working tree stays as David's local-only debug WIP.
+
+**Confirmed working on device:** the **throttling fix** (distance tracks smoothly on the phone
+island over a gradual rode payout on the ~10s cadence — resolves the prior "unverified");
+phone-drop **local-start** spawns the island; **watch-drop push-to-start** spawns it on the
+phone and mirrors to the watch Smart Stack; **raise ends the activity correctly**.
+
+**BUG 1 (headline) — the activity ENDS at "set"**, reproduced on both local-start and
+push-to-start. **Not an app bug** (the app's `endLiveActivity` is reactive to ActivityKit
+`.ended`/`.dismissed`, `AnchorActivityManager.swift:108-109`). **Root cause = push-notifications
+plugin state machine:** anchoralarm `setRadius()` emits `anchoring.started→'normal'` +
+`anchoring.ended→'alert'`; the plugin's STARTED handler records `lastAnchoringStartedState='normal'`
+(`index.ts:1337`); the ENDED-`normal` end-branch is guarded only by
+`lastAnchoringStartedState !== 'alert'` (`index.ts:1357-1361`), meant to tell a real raise from
+the retained resting `ended='normal'` replayed during deploy — but `setRadius` flips `started`
+to `normal` itself, so when `anchoring.ended` settles back to resting `normal` after the
+transient `alert`, the guard mis-reads it as a raise and ends the activity. **Fix dir:**
+discriminate set-vs-raise off `navigation.anchor.position` (raise clears it, set doesn't) /
+never end while `anchorPhase==='set'` unless the position is gone — **plugin-side (PR #13),
+fixable + testable on the mini without an app build.**
+
+**BUG 2 (app-side)** — the compact Dynamic Island shows `rodeLength` (static) instead of
+`distanceFromBow` (the live distance); expanded shows both; the watch gauge correctly shows
+distance. Fix = the LA widget's Dynamic Island compact region. **Token registration** still
+needs a manual Settings→Notifications→Remote-Notifications OFF→ON toggle (flaky auto-register).
+**Watch UX:** the LA card (Smart Stack, from the face) and the watch app's anchor gauge are
+mutually exclusive — after a watch drop you're on the gauge, can't see the card.
+
+**David's decision: DROP the watch mirror;** pursue a phone-only ambient/live display only if
+BUG 1 + BUG 2 are fixed. **Next:** hand the writeup to Scott. Mini test bed **left running**
+(server up; rode-capable feeder `~/wilhelm-test/posfifo-writer-rode.cjs` reads `/tmp/feedrode`
+for `navigation.anchor.rodeLength` injection; feedpos recentered, rode off).
+
 ## Current State (2026-06-12) — Four docs/review PRs + anchor LA staleness/orphan fixes
 
 A documentation + review session, all output as PRs against `development` (plus one cross-repo
