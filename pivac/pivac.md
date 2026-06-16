@@ -10,6 +10,10 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-16 (session 9)*
+
+**Last worked on**: Ran down a full Pi outage that presented as "pivac hung again" but was the **whole host off the network** (ping "Host is down", ARP `incomplete`). Root cause: **WiFi power-save on a weak 2.4 GHz link** → association drop → DNS failures across all modules → host off the wire (needed a power-cycle). **Fix: migrated the Pi from WiFi to wired ethernet.** Final state: `eth0` **primary** (MAC `d8:3a:dd:b1:ad:4d`, UniFi-reserved → `10.0.0.82`, metric 100); `wlan0` **fallback** (`10.0.0.130`, SSID `redux` locked to **5 GHz** on a new utility-room AP @ ≈-45 dBm, power-save off, metric 600, auto-failover). Also recovered RedLink (stale in WilhelmSK was collateral from the DNS window — a clean `systemctl restart pivac-redlink` republished all 5 thermostats once DNS resolved). PR #67 (water-meter plan) **merged**. CLAUDE.md updated (Remote Access + Known Operational Behaviours). **Caveat:** port-forwards target `.82`/eth0 only — WiFi fallback keeps the Pi alive + SSH + collecting data, but external access wouldn't auto-fail-over.
+
 *Updated 2026-06-15 (session 8)*
 
 **Last worked on**: Wrote `docs/water-meter-monitoring-plan.md` (**PR #67, open**) — a plan to add **domestic water consumption monitoring** from the **Sensus iPerl** meter. Research established it's **wM-Bus** (T1, 868.95 MHz, AES-128-CBC, factory key), decoded by `wmbusmeters` — not NA SCM/rtlamr. Iterated the receiver across 5 revisions; **chosen = a remote UNO R4 WiFi node** (dumb radio forwarding raw telegrams over WiFi; `wmbusmeters` decodes on the Pi), picked for **$0** (parts on hand) over the lowest-effort-but-$100 Würth AMB8465-M USB dongle. **Next:** write the Arduino sketch + `pivac.WaterMeter` module (not started), then bench-test the on-hand **433** CC1101 (band-mismatched for 868 — test up close, may need an 868 module). **No code written / nothing deployed yet** — plan only.
