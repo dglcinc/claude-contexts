@@ -15,3 +15,5 @@ Machines:
 - **LookoutNas DS225+ at `10.0.0.3`** for backups. SSH as `root` from the Pi (via the pi user's RSA key). DSM admin account is `dlewis`.
 
 Prefers clean, maintainable systems over clever ones. Thinks through architecture before building. Asks probing questions to understand tradeoffs before committing to an approach.
+
+**Obsidian vault layout** (path + perimeter rules are in CLAUDE.md): `notes/` is organized **one folder per notebook** (Recipes, Paint Codes, Cars, Motorcycles, etc.), imported from Evernote in April 2026 via yarle. Resources (images, PDFs) live in per-note `_resources/` subfolders alongside the corresponding `.md`. When navigating or adding: don't flatten the notebook structure, and keep new resources in a sibling `_resources/` folder rather than a global assets dir.
