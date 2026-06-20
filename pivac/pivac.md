@@ -10,6 +10,21 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-20 (session 11 — water-meter hardware selection)*
+
+**Last worked on**: Settled the **hardware path** to replace the retired camera-CV domestic
+water meter with real **pulse-output meters**. Chose **DAE** meters — **AS200U-75P** (¾", 1
+gal/pulse) for **irrigation** → OpenSprinkler, and **MJ-75a** (¾", 0.1 gal/pulse) for
+**domestic** → the spare **UNO R4 WiFi** — plus a **U.S. Solid** motorized shutoff valve.
+Wrote the full domestic-node build spec (`docs/domestic-water-node-build-spec.md`, **PR #75**,
+open). Both meters **ordered**. **Key facts:** OS `fpr` resolution is 0.01, so a 1 gal/pulse
+meter (`fpr=1.00`) kills the contaminated `0.0025` override and makes OS app + Grafana agree;
+the GREDIA hall sensor was both too fine and >50 Hz over its range (bad for OS). Commercial
+units (Moen Flo/Phyn/Flume) rejected as cloud-only / iPerl-incompatible; local Arduino path
+chosen (pivac stays read-only — valve control + leak logic on the Arduino). **Next:** decide
+3 open spec items (valve variant, monitor-first vs auto-shutoff, confirm board is R4 WiFi);
+on arrival, wire AS200U → OS SN1+GND + `fpr=1.0`, then build the domestic node; decide PR #68.
+
 *Updated 2026-06-16 (session 10 — planning)*
 
 **Last worked on**: Planned the **camera/OCR water-meter** front end around `jomjol/AI-on-the-edge-device`. **Mid-session pivot:** discovered PR #68's branch already has a **validated custom-CV pipeline** reading the iPerl LCD (Tapo at `10.0.0.85`, reading `0626984.29 Gal`; warp → illumination-flatten → whole-glyph template-match, flow-aware decimals, monotonic guard). So the open question is **hardware form-factor, not software** — David's complaint is physical (the Tapo is bulky and its ~10″ USB light bar is clumsy in a tight pit). Wrote `docs/water-meter-camera-hardware-options.md` (on the PR #68 branch, commit `4dd8ed7`): AI-on-the-edge (compact ESP32-CAM, **flash-on-capture** = no permanent light) vs. keeping the validated Tapo+CV with a small off-axis LED. **Key catch:** the reflective LCD needs **off-axis diffused** light (proven in PR #68 §1), but the ESP32-CAM's flash is **on-axis** → glare is the hard gate for the compact all-in-one. Recommendation: cheap ~$12 **AI-Thinker ESP32-CAM** prototype gated on the glare test; Path B (validated CV + compact off-axis light) is the proven fallback.
