@@ -10,6 +10,18 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-20 (session 11b — irrigation meter installed + calibrated)*
+
+**Last worked on**: Completed the **irrigation flow-meter swap end-to-end**. Installed the
+**DAE AS200U-75P** (¾", 1 gal/pulse) on OpenSprinkler (`SN1`+`GND`, 2-wire reed, no power);
+a clean **meter-register calibration confirmed pivac `fpr=1.0`** — 28.0 gal over ~5.1 min ≈
+5.5 gpm matched pivac's 5.4–5.57 gpm (~1%). Purged **all** GREDIA-era data: InfluxDB
+irrigation measurements (~12k pts) **and** the full OpenSprinkler device log (`/dl?day=all`),
+and set the OS **device `fpr=1.00`** — so device / Grafana / pivac all agree from a clean
+slate. CLAUDE.md updated + pushed to master (`71ad5de`). Reusable calibration: clean zone run,
+read register before/after, `fpr_new = fpr × (true_gpm ÷ pivac_gpm)`. **Next:** build the
+**domestic** node (PR #75) when MJ-75a + valve arrive; decide PR #68.
+
 *Updated 2026-06-20 (session 11 — water-meter hardware selection)*
 
 **Last worked on**: Settled the **hardware path** to replace the retired camera-CV domestic
