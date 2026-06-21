@@ -9,9 +9,10 @@ Infrastructure is managed through GitHub (dglcinc). Personal content stays in iC
 
 Projects: bowling league web app (Flask/Python, mlb.dglc.com), pivac (HVAC monitoring on Pi), MacDownToo (macOS markdown editor), Arduino sketches, WilhelmSK (iPad layouts).
 
-Machines:
-- **Mac Mini at `10.0.0.84`** runs the bowling app (gunicorn) under user **`utilityserver`** — there is no `david` user on this Mac. Pi → Mac SSH must target `utilityserver@10.0.0.84`.
-- **Raspberry Pi at `10.0.0.82`** (`68lookout.dglc.com` externally) runs pivac, nginx TLS proxy, Grafana, InfluxDB, Signal K. User `pi`.
+Machines (David names Macs by Apple-silicon generation — "M4" = the Mac Mini, "M2" = the MacBook Pro; do not confuse with the network):
+- **Mac Mini "M4" at `10.0.0.84`** (hostname `UtilityServer-M4`, Apple M4, `Mac16,10`) runs the bowling app (gunicorn) and is the **MemPalace host**, under user **`utilityserver`** — there is no `david` user on this Mac. SSH targets `utilityserver@10.0.0.84`. Often David is physically on the MacBook SSH'd into here, so a session reporting as M4 can mean he's at M2.
+- **MacBook Pro "M2" at `10.0.0.83`** (hostname `david-m2`), user **`david`** (`/Users/david`). Reachable by key auth as `david@10.0.0.83`; thin MemPalace client. David's primary hands-on machine.
+- **Raspberry Pi "pivac" at `10.0.0.82`** (`68lookout.dglc.com` externally) runs pivac, nginx TLS proxy, Grafana, InfluxDB, Signal K. User `pi`.
 - **LookoutNas DS225+ at `10.0.0.3`** for backups. SSH as `root` from the Pi (via the pi user's RSA key). DSM admin account is `dlewis`.
 
 Prefers clean, maintainable systems over clever ones. Thinks through architecture before building. Asks probing questions to understand tradeoffs before committing to an approach.
