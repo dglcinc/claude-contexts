@@ -12,6 +12,8 @@ After significant changes — new architecture, bug fixes, new devices, deployme
 
 When a file path or directory is already known (from memory or a CLAUDE.md), go directly to it. Do not run `find`, glob, or other broad filesystem searches for things already recorded.
 
+Always look in MemPalace if you don't know the answer before guessing or asking me. See the **MemPalace Consultation** section below for which questions qualify and which tools to use.
+
 Write commit messages that explain why, not just what. Reference the problem being solved, not just the files changed.
 
 When explaining an approach or decision, write in sentences rather than fragmenting into bullet lists.
