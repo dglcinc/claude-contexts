@@ -4,6 +4,28 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-21) — Autopilot "Invalid adjustment: [object Object]" diagnosis → issue #143
+
+Diagnosed a Discord report (Raymarine via Yacht Devices YDWG-02 / SeaTalkNG): after an App Store
+update, autopilot heading-adjust fails with **"Unable to send autopilot command. Invalid
+adjustment: [object Object]"** while all instrument data flows fine. Drafted a Discord reply (not
+posted — David sends) and filed **sbender9/Wilhelm#143** to strengthen backwards compatibility. No
+code changes; tree clean.
+
+**Root cause (fully traced).** App commit `f5951515` ("autopilot V2 api support", shipped in
+release **v1.17.3+**) switched the in-app AP gauge to `PUT /signalk/v2/api/.../target/adjust` with
+body `{units:"deg", value:N}` and **removed the legacy fallback**. The error string is server-side,
+in provider plugin **`SignalK/signalk-autopilot`** (current **v2.6.0**; the v2 replacement for the
+deprecated `sbender9/signalk-raymarine-autopilot`, legacy-only at v1.3.1) — `Invalid adjustment:
+${value}` in its `putAdjustHeading` handler, which accepts only exact integer ±1/±10 (present since
+the 2020 initial commit). `[object Object]` = the raw `{units,value}` body reached that handler as
+the value rather than an extracted number → a **version mismatch** on the user's server. signalk-server
+core has extracted `req.body.value` + handled `units` since the v2 AP API debuted in **core v2.13.0**
+(2024-12-15), so the v2 path requires server ≥ 2.13.0. User fix: update signalk-server + signalk-autopilot.
+App fix (#143): capability-detect/legacy fallback, clearer error, resolve the gauge-vs-widget
+asymmetry (widget still PUTs legacy `steering.autopilot.actions.adjustHeading`). **Not** the recent
+connection-discovery bug — different subsystem.
+
 ## Current State (2026-06-15) — On-device anchor LA test; root-caused the end-at-set bug
 
 A live on-device test run (David's iPhone + watch vs the mini test bed; TestFlight **v1.19.0 /
