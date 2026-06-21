@@ -10,6 +10,19 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-21 (session 12 — OpenSprinkler localized-UI fork, spun off + shelved)*
+
+**Last worked on**: Spun off a **new project, `dglcinc/opensprinkler-localized-ui`** — a
+fork of OpenSprinkler-App that localizes the web UI to show irrigation flow in **gallons**
+(upstream hard-codes liters). v1 built, deployed reboot-savvy on the Pi (LAN-only nginx site
+`os-localized-ui` on :8088), **tested live (gallons confirmed)**, then **shelved** — user set
+the device to `fpr=1` (L/pulse) to keep the status quo (stock phone app + Grafana). On pivac:
+root-caused the OS liters/gallons confusion (firmware SI-only, no unit tag), added Grafana
+irrigation **Used** totals (PR #76, merged), and merged a UI-fork scope doc
+(`docs/opensprinkler-gallons-ui-fork-scope.md`, PR #77). **Pick up via
+`/set-context opensprinkler-localized-ui`.** ⚠️ Resuming the fork UI needs the device set
+back to `1 gal/pulse`; pivac/Grafana are unaffected either way.
+
 *Updated 2026-06-20 (session 11b — irrigation meter installed + calibrated)*
 
 **Last worked on**: Completed the **irrigation flow-meter swap end-to-end**. Installed the
