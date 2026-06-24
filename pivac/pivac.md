@@ -10,6 +10,23 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-23 (session 13 — Shelly plugs + UCG API access + MemPalace cleanup)*
+
+**Last worked on**: LAN-infra + memory, no pivac code. Set up **two Shelly Plug US Gen4** —
+**Arduinos** `10.0.0.61` (MAC `ac:eb:e6:f4:b9:30`; the two UNO-R4 pressure boards plug into it
+→ remote power-cycle) and **PivacPower** `10.0.0.118` (MAC `ac:eb:e6:f6:45:20`) — each pinned
+with a **UCG DHCP reservation** (left on DHCP so portable), names aligned across app/local-RPC/UCG
+(app/cloud label is rename-in-app-only). **Found + documented UCG API access** (was hard to
+find): the UniFi Network controller now runs **on the UCG Ultra at `https://10.0.0.1`** (not the
+Mac mini anymore), full-admin key at `~/.config/unifi/claude-agent.key` (`X-API-KEY`, works on
+both the v1 Integration and legacy Network APIs) → wrote `~/.claude/memory/tools/unifi.md` +
+index + `global.md` (pushed). **Cleaned 5 stale pre-migration UniFi drawers** from MemPalace
+(read IDs from the Chroma SQLite, deleted via MCP) that were misleading semantic search; added an
+authoritative drawer + KG facts. **Next:** optional Shelly Cloud token (off-LAN control) /
+`pivac.Shelly` module (W/Wh via `/rpc/Switch.GetStatus` → `electrical.*`); water-meter PRs
+#75/#68 still open. **Gotcha:** editing an already-mined memory note leaves the OLD drawers in
+the palace — fix is manual delete via Chroma-SQLite ID lookup.
+
 *Updated 2026-06-21 (session 12 — OpenSprinkler localized-UI fork, spun off + shelved)*
 
 **Last worked on**: Spun off a **new project, `dglcinc/opensprinkler-localized-ui`** — a
