@@ -22,9 +22,11 @@ Mac mini anymore), full-admin key at `~/.config/unifi/claude-agent.key` (`X-API-
 both the v1 Integration and legacy Network APIs) → wrote `~/.claude/memory/tools/unifi.md` +
 index + `global.md` (pushed). **Cleaned 5 stale pre-migration UniFi drawers** from MemPalace
 (read IDs from the Chroma SQLite, deleted via MCP) that were misleading semantic search; added an
-authoritative drawer + KG facts. **Next:** optional Shelly Cloud token (off-LAN control) /
-`pivac.Shelly` module (W/Wh via `/rpc/Switch.GetStatus` → `electrical.*`); water-meter PRs
-#75/#68 still open. **Gotcha:** editing an already-mined memory note leaves the OLD drawers in
+authoritative drawer + KG facts. Also **configured the Shelly Cloud key** (`~/.config/shelly/cloud.key` +
+`.../cloud.server`) for off-LAN read/control — verified via `/device/all_status`; confirmed the
+key **cannot** rename a device (Control API is status+relay only, rename is app-session-only).
+**Next:** optional `pivac.Shelly` module (W/Wh via `/rpc/Switch.GetStatus` → `electrical.*`);
+water-meter PRs #75/#68 still open. **Gotcha:** editing an already-mined memory note leaves the OLD drawers in
 the palace — fix is manual delete via Chroma-SQLite ID lookup.
 
 *Updated 2026-06-21 (session 12 — OpenSprinkler localized-UI fork, spun off + shelved)*
