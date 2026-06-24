@@ -86,6 +86,7 @@ Topic files:
 - ~/.claude/memory/tools/synology.md — DSM rsync-over-SSH gate (code 43); nasadmin + `--rsync-path='sudo rsync'` workaround; NFS+ACL recipe
 - ~/.claude/memory/tools/m365-graph.md — modern M365 tenants disable SMTP AUTH; use MSAL + Graph `sendMail` with client-credentials
 - ~/.claude/memory/tools/signalk.md — SignalK-server plugin admin: install topology, force-disable un-toggleable built-ins, mint an admin JWT, read in-app-browser 404s from the access log
+- ~/.claude/memory/tools/unifi.md — UCG access: controller now ON the UCG Ultra at `https://10.0.0.1` (not the Mac mini); API key `~/.config/unifi/claude-agent.key` via `X-API-KEY`; integration + classic API paths; client fixed-IP recipe
 
 ## Global Memory Reference Rule
 
