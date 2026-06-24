@@ -4,6 +4,23 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-06-24) — Autopilot #143 root cause CORRECTED from user's live server
+
+The affected Discord user (`disk3333`) sent his actual Signal K config (Victron Cerbo GX / VRM
+remote console), which overturned two assumptions in the 2026-06-21 diagnosis below. **(1)** His
+`signalk-server` core is **2.19.1** — well above the v2 autopilot API's 2.13.0 floor, and Cerbo cores
+are firmware-gated, so "update the server core" neither applies nor is possible. **(2)** He already
+runs **`@signalk/signalk-autopilot` with the V2 API enabled** (Autopilot Type = Raymarine NMEA2000),
+so "switch plugins" is moot. Refined root cause: `Invalid adjustment: [object Object]` = the v2
+`{units,value}` body reaching the plugin's *legacy* `putAdjustHeading` (±1/±10 only) → a
+plugin-version bug (Appstore showed 1 update pending); and the deeper blocker is the config's
+**"No EV-1 Found"** — the plugin isn't detecting the EV-1/ACU400 on the N2K bus (falls back to default
+id 204), so commands have no target. Verified the plugin source. Posted a correction comment on
+**sbender9/Wilhelm#143** (body left intact, core-version note marked superseded) and filed upstream
+**SignalK/signalk-autopilot#88** — smarter EV-1 detection (it keys off Product Information PGN 126996,
+not bus presence, so aggregating gateways like Venus OS break autodetect); cross-linked both ways.
+Helped David craft the Discord reply (he sends). No code changes; tree clean.
+
 ## Current State (2026-06-21) — Autopilot "Invalid adjustment: [object Object]" diagnosis → issue #143
 
 Diagnosed a Discord report (Raymarine via Yacht Devices YDWG-02 / SeaTalkNG): after an App Store
