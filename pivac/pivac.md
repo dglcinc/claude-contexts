@@ -10,7 +10,38 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-06-28 (session 14 — Sentry phantom-hundreds root-cause fix + Pi gh token recovery)*
+*Updated 2026-06-28 (session 14b — domestic water node: started scaffolding, moved to M2 — ACTIVE RESUME TARGET)*
+
+**Resuming on the M2** (`david@10.0.0.109`, Arduino repo at `~/github/Arduino` — NOT on
+utilityserver). Building the **domestic water node** to replace the retired camera-CV
+`pivac.WaterMeter`. David has the **DAE MJ-75a** meter (0.1 gal/pulse, 2-wire reed) + a
+**motorized shutoff valve** in hand; spare board confirmed **UNO R4 WiFi**. **Verified via the
+`dglcinc/Arduino` GitHub tree that no domestic-water sketch exists yet** (only the two pressure
+sketches; `ArduinoPSI_Domestic` is the DHW *pressure* board, not a meter; branch
+`feat/cc1101-watermeter-test` = abandoned RF approach). **Source of truth = the build spec**
+`docs/domestic-water-node-build-spec.md` on **PR #75** (read via
+`git show origin/docs/domestic-water-node-build-spec:docs/domestic-water-node-build-spec.md`) —
+it has the full BOM, wiring tables (§4), firmware skeleton (§5), pivac config (§6), and deploy
+checklist (§11).
+
+**Pick up here (in order):** (1) **confirm the valve variant** — A = 2-wire reverse-polarity
+(bistable, holds on power loss, no feedback, needs **DPDT** relay; *spec primary*) vs B = "Normally
+Open" 5-wire (needs continuous hold power + 2 feedback inputs via divider/opto). (2) **Scaffold the
+sketch** in `~/github/Arduino` reusing the `ArduinoPSI_*` WiFiS3/HTTP/watchdog scaffolding — adds
+**D2** reed ISR (`INPUT_PULLUP`, `FALLING`, ~3 ms debounce), EEPROM totalizer (save every 5 min),
+10 s rolling flow window, **D7** valve relay, `GET /` status + `GET /valve/open|/valve/close`.
+Status line is a **single-quoted Python literal, NOT JSON** (ArduinoSensor uses `ast.literal_eval`):
+`{'flow' : 2.50, 'volume' : 12345.6, 'flowing' : 1, 'valve' : 1}` (`volume = pulses × 0.1`).
+(3) **Still owe David the "how to get 12 V to the valve" wiring detail** — single 12 V/1–2 A adapter
+→ board VIN + relay COM; valve motor current flows **only through the relay contacts**, never an
+Arduino pin; common ground; RC snubber; DPDT reverses polarity to the 2 motor leads for Variant A.
+(4) **pivac config:** add `pivac.DomesticWater` (`module: pivac.ArduinoSensor`) →
+`environment.water.domestic.{flowRate,consumption,flowing,shutoffValve}`; clone a
+`pivac-arduino-*.service` → `pivac-domestic-water.service`. (5) DHCP-reserve the board IP by MAC.
+MJ-75a K-factor is factory-known (0.1 gal/pulse ±1.5%) — no fudge factor; start **monitor-only**,
+defer autonomous shutoff until a Grafana baseline.
+
+*Updated 2026-06-28 (session 14a — Sentry phantom-hundreds root-cause fix + Pi gh token recovery)*
 
 **Last worked on**: Root-caused and fixed the **Sentry boiler water-temp jitter**
 (idle ~84 °F intermittently read as 184/183/134, during idle *and* DHW). First
