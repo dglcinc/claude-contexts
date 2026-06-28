@@ -10,6 +10,27 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-06-28 (session 14 — Sentry phantom-hundreds root-cause fix + Pi gh token recovery)*
+
+**Last worked on**: Root-caused and fixed the **Sentry boiler water-temp jitter**
+(idle ~84 °F intermittently read as 184/183/134, during idle *and* DHW). First
+attempt was a cross-cycle jump-guard with physics assumptions; David pushed back —
+correctly — and the real fix went into the **recognition layer**: `_read_display`
+was computing the lit/off threshold **per-digit-crop**, so a **blank** hundreds
+digit (any temp < 100) had its bar set by its own IR-glare noise and manufactured
+a phantom "1". Replaced with **one display-wide threshold** `bg + factor*(p99-bg)`
+anchored to a genuinely-lit segment, applied to every digit → blank stays blank.
+Also **vote LED states across the cycle's frames** (burnerOn/status stop
+flickering). **PR #80 merged** (`501f000`), deployed live. New config keys
+`digit_threshold_factor` (0.65, display-wide) + `display_bg_percentile` (40).
+A Pi-local one-shot **`sentry-phantom-check.timer`** emails PASS/FAIL at 07:00
+2026-06-29 after an overnight idle period (definitive observable). Also **recovered
+the Pi's invalid gh token** by pulling the valid PAT from the **M4 Mac Mini**
+(`utilityserver@10.0.0.84`) hosts.yml and piping into `gh auth login` (M2 `.83`
+fails host-key from the Pi — use M4; recipe saved to `~/.claude/memory/tools/gh.md`).
+**Next:** check the 7 AM email; water-meter PRs #75/#68 still open; optional
+`pivac.Shelly` module.
+
 *Updated 2026-06-23 (session 13 — Shelly plugs + UCG API access + MemPalace cleanup)*
 
 **Last worked on**: LAN-infra + memory, no pivac code. Set up **two Shelly Plug US Gen4** —

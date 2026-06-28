@@ -95,3 +95,33 @@ Different setup from David's M2:
   The explicit-path form is what to use inside `ssh utilityserver bash -s
   <<EOF ... EOF` blocks (heredoc'd scripts), since bash invoked via `bash -s`
   is non-login.
+
+## Pi (`pi@10.0.0.82`) — refreshing an invalid gh token — 2026-06-28
+
+The Pi pushes git over SSH fine, but its `gh` **CLI/API** token in
+`~/.config/gh/hosts.yml` goes stale independently (it was last set 2026-05-31 and
+read "invalid" on 2026-06-28, blocking `gh pr create` with HTTP 401). The Pi has
+no keyring, so the token lives in plaintext `hosts.yml` (insecure-storage is the
+de-facto mode here — fine, it's a single-user box).
+
+The valid `dglcinc` PAT is **not** in file-memory or MemPalace by design, and the
+old shared `~/OneDrive/.../.github-token` file was deleted in the 2026-05-25
+SSH-migration cleanup. The recovery is to **pull the live token from the M4 Mac
+Mini** (`utilityserver@10.0.0.84`), which holds it in its own `hosts.yml`, and
+pipe it straight into the Pi's `gh` without ever printing it:
+
+```bash
+# validate the M4 token first (HTTP 200 expected), then install on the Pi:
+ssh utilityserver@10.0.0.84 \
+  'grep -m1 "oauth_token:" ~/.config/gh/hosts.yml | awk "{print \$2}"' \
+  | gh auth login --hostname github.com --git-protocol ssh --with-token
+gh auth status   # verify: "Logged in ... (~/.config/gh/hosts.yml)"
+```
+
+- **M4 = `utilityserver@10.0.0.84`** is SSH-reachable from the Pi (key auth) and
+  is the canonical source for the valid token.
+- **M2 (`david@10.0.0.83`) fails `Host key verification failed`** from the Pi
+  (no known_hosts entry) — use M4, not M2. (The `10.0.0.109` in old session
+  notes is stale; M2 is `.83`.)
+- The token is a 40-char classic `ghp_` PAT (scopes incl. `repo`, `project`,
+  `admin:org`). Same token works across machines (no IP restriction).
