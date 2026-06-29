@@ -10,7 +10,26 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-06-28 (session 14b — domestic water node: started scaffolding, moved to M2 — ACTIVE RESUME TARGET)*
+*Updated 2026-06-28 (session 15 — domestic water node: sketch built + wiring spec — ACTIVE RESUME TARGET)*
+
+Built the **domestic water node firmware** on the M2:
+`~/github/Arduino/DomesticWater/DomesticWater.ino` (Arduino branch `feat/domestic-water-node`,
+**PR #7**) — DAE **MJ-75a** reed on **D2** (ISR + 3 ms debounce, 0.1 gal/pulse), EEPROM
+totalizer (5-min persist + magic marker), 10 s rolling flow window, and a **DPDT relay on
+D7** for the **Variant-A reverse-polarity bistable valve** (David confirmed he has Variant A
+in hand). Reuses the `ArduinoPSI_*` WiFi/RA4M1-watchdog/bounded-HTTP scaffolding; serves the
+single-quoted `ast.literal_eval` dict + `/valve/open|/valve/close|/reset?confirm=1`.
+**Compiles clean for the R4 WiFi (30 % flash); NOT flashed — no board was connected.**
+Also **expanded the build spec's §4 wiring** (pivac **PR #75**) with the detailed
+**12 V-to-board+valve power path** and **crossed-contact DPDT reverse-polarity** wiring (the
+detail still owed), and resolved the §1 decisions (valve A, monitor-first, board R4). Sketch
+defaults the relay **active-LOW** so D7-idle-HIGH = OPEN (fail-open); persists commanded valve
+state to EEPROM so a watchdog reset holds position. **Pick up here:** flash the board when
+connected → bench-test (incl. power-loss-stays-open) → DHCP-reserve MAC → add
+`pivac.DomesticWater` config + `pivac-domestic-water.service` on the Pi → plumb + calibrate +
+Grafana monitor-only alerts. Stale pivac **#68** (old camera plan) still open — candidate to close.
+
+*Updated 2026-06-28 (session 14b — domestic water node: started scaffolding, moved to M2)*
 
 **Resuming on the M2** (`david@10.0.0.109`, Arduino repo at `~/github/Arduino` — NOT on
 utilityserver). Building the **domestic water node** to replace the retired camera-CV
