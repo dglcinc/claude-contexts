@@ -4,6 +4,33 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-07-01) — Autopilot #143: full command path verified correct; real issues are app build + EV-1 detection
+
+Diagnosis-only session (no code; tree clean). disk3333 sent more detail and I traced the whole
+heading-adjust chain against **actual source** (app + signalk-server core + signalk-autopilot plugin),
+superseding the earlier version-mismatch theories.
+
+**His facts:** WilhelmSK **1.17.4 build 249**; server **signalk-server 2.19.1**; plugin
+**@signalk/signalk-autopilot 2.6.0** (current — his Appstore screenshot via Victron VRM shows "Configure",
+and the "1" pending-update badge is a different plugin). **Mode + Tack work; +1/-1/±10 heading-adjust does
+NOT.** Autopilot **reachable only via his "YDWG" connection, "not reachable" via the Cerbo.**
+
+**Verified code path:** WilhelmSK's autopilot gauge is v2-only. Only heading-adjust carries a numeric body —
+state=string, tack=`{}`, adjust=`{units:"deg",value:N}` (legacy fallback removed in `f5951515`). The plugin's
+`putAdjustHeading` requires the pilot **engaged in auto/wind** and accepts **only ±1/±10**; signalk-server core
+≥2.13 (he's on 2.19.1) **converts deg→rad on the `target/adjust` route**; the round-trip lands ±1/±10 cleanly.
+**Conclusion:** on his stack the code is correct — `[object Object]`, deg-not-converted, and old-second-server
+theories are ruled out. Other EV-1 users work on a current stack **with the pilot engaged and the EV-1 detected.**
+Only two live causes remain, with different symptoms: (1) pressing +1 while **not engaged** → "Autopilot not in
+auto or wind mode"; (2) command accepted but **EV-1 not driven** (no error) → the #88 detection / source-id-204
+gap, which is exactly why the Cerbo reads "not reachable."
+
+**NEW build finding:** the W2K-1 connection bug (`BoatDeviceType` enum/array off-by-one) was **introduced in
+1.14.4** (per fix commit `ed4c095e`, 2026-06-05) and first fixed in **build 251**. disk3333's **build 249 still
+has it**, and **YDGW-02 is in the affected device-type range** (discovery can't tell a W2K-1 from a Yacht Devices
+gateway — both N2K-RAW over UDP 2002). So **step 1 for him is to UPDATE THE APP off build 249** (App Store 1.18.0
+/ TestFlight 1.19.0) and re-test connections before more autopilot debugging. Drafted a Discord reply (David sends).
+
 ## Current State (2026-06-24) — Autopilot #143 root cause CORRECTED from user's live server
 
 The affected Discord user (`disk3333`) sent his actual Signal K config (Victron Cerbo GX / VRM
