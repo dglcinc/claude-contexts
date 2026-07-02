@@ -10,6 +10,24 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-01 (session 16 — YOFF stuck pin root-caused: GPIO 26 silicon is dead; 1-wire recovery)*
+
+Root-caused the stuck YOFF input: **GPIO 26 (physical pin 37) is permanently dead** —
+floating it reads 0 under both pulls and even output-drive-HIGH can't raise it
+(internally shorted to ground). Killed by the 2026-06-23 power event (Shelly plug
+move): unpowered Pi + connected live field wiring. The Jun 23→Jul 1 YOFF "active"
+plateau in InfluxDB was dead-pin fabrication — **purged**. **YOFF is now disabled**
+(commented out in `/etc/pivac/config.yml`); the wire is physically still on dead
+pin 37 (move deferred). YOFF is **winter-only** (disables A/C), so 0 is its true
+state all summer — **rewire deadline = before heating season**: move wire to
+**pin 35 (GPIO 19, verified healthy)**, uncomment config, restart pivac-gpio. Also
+planned: ~1 kΩ series resistor per sense line (Pi end) against the
+unpowered-Pi-transient failure mode. Separately, recovered 1-wire after David's
+hard-reset experiment: service had started with pins disconnected → empty sensor
+list at import → silent no-publish; `systemctl restart pivac-1wire` fixed it (no
+reboot). Diagnostic recipes documented in pivac CLAUDE.md (`6afa447`, `5bf7025`).
+Water-node work below (session 15) remains the active resume target.
+
 *Updated 2026-06-28 (session 15 — domestic water node: sketch built + wiring spec — ACTIVE RESUME TARGET)*
 
 Built the **domestic water node firmware** on the M2:
