@@ -3,7 +3,7 @@
 - **2026-07-03** — Installed `arduino-cli` 1.5.1 on the Pi at `~/bin/arduino-cli`
   (not on PATH by default — invoke as `~/bin/arduino-cli`), with the
   `arduino:renesas_uno` 1.6.0 core (UNO R4 WiFi) and the `ArduinoGraphics` lib.
-  **Why:** the M2 (the previous compile host, `david@David-M2.local`) is a laptop and
+  **Why:** the M2 (the previous compile host, `david@10.0.0.83`) is a laptop and
   often unreachable; the Pi can now compile-verify UNO R4 sketches locally:
   `~/bin/arduino-cli compile --fqbn arduino:renesas_uno:unor4wifi <SketchDir>`.
   Benign warning every build: "library WDT claims to run on renesas architecture(s)".
