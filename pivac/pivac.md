@@ -10,6 +10,27 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-03 (session 17 — domestic water node: valve deferred, meter-only sketch FLASHED + verified)*
+
+David **dropped the shutoff valve from scope** — the domestic water node is now
+**meter-only**. Stripped the valve from `DomesticWater.ino` (Arduino **PR #7**,
+`5b46997`: no D7 relay, no `/valve/*`, no valve EEPROM; status dict =
+`{'flow','volume','flowing','uptime_ms'}`; **USB power only**) and updated the build
+spec to match (pivac **PR #75**; valve sections kept as marked reference; valve-era
+sketch stays in branch history). **Flashed the spare UNO R4 WiFi** (MAC
+`34:b7:da:65:99:1c`) from the M2 over SSH, **verified live** (`GET /` returns the
+dict), and **UniFi-reserved it to `10.0.0.188`** ("DomesticWater"). LED matrix shows
+whole-gpm flow (reads 0 with no meter). Wiring = reed leads → **D2 + GND** (no
+polarity) + USB power. Installed **arduino-cli on the Pi** (`~/bin`, renesas_uno
+core) for local compile-verify. Gotchas recorded in `tools/arduino-cli.md`: M2-over-SSH
+compiles hit macOS TCC on `~/Documents` libs (use `--libraries /tmp/ard-libs`); the
+Pi clone's `arduino_secrets.h` is a placeholder. Also corrected M2 network memory:
+**`.83` fixed wired = canonical**; Wi-Fi now **reserved `.95`** (mDNS resolves to the
+Wi-Fi addr — not a moved host). **Pick up here:** plumb meter + wire reed → add
+`pivac.DomesticWater` config (`ipaddr: 10.0.0.188`, spec §6) + service → Grafana
+monitor-only alerts → merge #75 + Arduino #7, decide stale #68. YOFF rewire
+(session 16) still pending before heating season.
+
 *Updated 2026-07-01 (session 16 — YOFF stuck pin root-caused: GPIO 26 silicon is dead; 1-wire recovery)*
 
 Root-caused the stuck YOFF input: **GPIO 26 (physical pin 37) is permanently dead** —
