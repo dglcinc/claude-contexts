@@ -27,8 +27,9 @@ with matching ramps — `house.bosch_bova` = 20x32 (confirmed), `utility_sub_pan
 plateau = almost certainly the 32x40's unit. Per the BOVA IOM the compressor
 modulates on suction pressure only (Y2 never reaches the condenser; open-loop on
 room temp), and both units already have SW4-4 accelerated ON → the lagging zone is
-**control-limited, not capacity-starved**. Plan: breaker-flip to confirm the
-subpanel mapping, **Force Mode** test on a hot afternoon (expect ~1.3 → ~3.5 kW +
+**control-limited, not capacity-starved**. Subpanel mapping since **confirmed by
+David** (utility subpanel = 32x40 BOVA + fridge + shop outlets only). Plan:
+**Force Mode** test on a hot afternoon (expect ~1.3 → ~3.5 kW +
 room recovery), then Unico CFM/outlet audit, subcooling check, lower-zone-cooler
 stairwell trick, pre-cooling. **Next:** merge #81/#75/Arduino #7, close #68 (all
 unchanged from 17b).
