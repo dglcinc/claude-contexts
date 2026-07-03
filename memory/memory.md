@@ -5,11 +5,12 @@ Read this file at session start. Load specific topic files only when relevant.
 | File | Description | Last updated |
 |------|-------------|--------------|
 | `general.md` | Cross-project conventions and preferences | 2026-05-14 |
-| `user.md` | David — user profile, setup, working style, machines, Obsidian vault layout | 2026-06-16 |
+| `user.md` | David — user profile, setup, working style, machines (M2 = DHCP, use `David-M2.local`), Obsidian vault layout | 2026-07-03 |
 | `tools/claude-hud.md` | claude-hud statusLine setup quirks (GNU grep `\t` workaround) | 2026-04-28 |
 | `tools/macos.md` | macOS hostname falls back to the gateway's reverse-DNS PTR (shows as `unifi`); fix with `scutil --set HostName` | 2026-06-16 |
 | `tools/unifi.md` | UCG access: controller now ON the UCG Ultra at `https://10.0.0.1` (NOT the Mac mini); API key `~/.config/unifi/claude-agent.key` via `X-API-KEY`; integration + classic API; fixed-IP recipe | 2026-06-23 |
-| `tools/gh.md` | macOS Security.framework TLS bug (OSStatus -26276): rebuild gh with CGO_ENABLED=0; git-lfs same bug; + Pi gh token recovery (pull valid PAT from M4 `utilityserver@10.0.0.84` hosts.yml → pipe into `gh auth login --with-token`) | 2026-06-28 |
+| `tools/gh.md` | macOS Security.framework TLS bug (OSStatus -26276): rebuild gh with CGO_ENABLED=0; git-lfs same bug; + Pi gh token recovery (pull valid PAT from M4 `utilityserver@10.0.0.84` hosts.yml → pipe into `gh auth login --with-token`); M2 = DHCP, use `David-M2.local` | 2026-07-03 |
+| `tools/arduino-cli.md` | arduino-cli 1.5.1 on the Pi at `~/bin` + renesas_uno core — local UNO R4 compile/flash; DomesticWater arduino_secrets.h on the Pi holds PLACEHOLDER creds (replace before flashing) | 2026-07-03 |
 | `tools/ralph.md` | Ralph loop — PLAN.md checklist + ralph.sh driver (~/github/claude-contexts/ralph.sh); each iteration spawns fresh sclaude for one task | 2026-05-22 |
 | `tools/mempalace.md` | MemPalace auto-populates via plugin-shipped Stop/PreCompact hooks (NOT settings.json); palace = mined own content, not seed data; drawers vs KG-triple layers | 2026-05-25 |
 | `tools/gh-stacked-prs.md` | Squash-merging parent w/ --delete-branch auto-closes child PRs; reopen blocked. Cherry-pick to recover. | 2026-05-08 |

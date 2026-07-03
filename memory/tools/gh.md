@@ -120,8 +120,10 @@ gh auth status   # verify: "Logged in ... (~/.config/gh/hosts.yml)"
 
 - **M4 = `utilityserver@10.0.0.84`** is SSH-reachable from the Pi (key auth) and
   is the canonical source for the valid token.
-- **M2 (`david@10.0.0.83`) fails `Host key verification failed`** from the Pi
-  (no known_hosts entry) — use M4, not M2. (The `10.0.0.109` in old session
-  notes is stale; M2 is `.83`.)
+- **M2 is DHCP and its IP drifts** (`.83` → `.109` → `.42` as of 2026-07-03) —
+  address it as `david@David-M2.local` (mDNS). Key auth from the Pi verified
+  working 2026-07-03 (the old "Host key verification failed" note is obsolete;
+  the host key is in the Pi's known_hosts now). M4 remains the canonical token
+  source since it's always on.
 - The token is a 40-char classic `ghp_` PAT (scopes incl. `repo`, `project`,
   `admin:org`). Same token works across machines (no IP restriction).

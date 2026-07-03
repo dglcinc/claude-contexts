@@ -49,7 +49,7 @@ Grafana monitor-only alerts. Stale pivac **#68** (old camera plan) still open �
 
 *Updated 2026-06-28 (session 14b — domestic water node: started scaffolding, moved to M2)*
 
-**Resuming on the M2** (`david@10.0.0.109`, Arduino repo at `~/github/Arduino` — NOT on
+**Resuming on the M2** (`david@David-M2.local` — DHCP, IP drifts, use mDNS; Arduino repo at `~/github/Arduino` — NOT on
 utilityserver). Building the **domestic water node** to replace the retired camera-CV
 `pivac.WaterMeter`. David has the **DAE MJ-75a** meter (0.1 gal/pulse, 2-wire reed) + a
 **motorized shutoff valve** in hand; spare board confirmed **UNO R4 WiFi**. **Verified via the
@@ -206,7 +206,7 @@ they share the *same explicit* placement (+ matching unit grouping); `auto` ≠
 
 **Last worked on**: Diagnosed a DHW-Arduino stale-data alarm — both pressure Arduinos dropped off 2.4 GHz WiFi and self-recovered ~2 h later. Proved via UniFi U6-Pro AP logs (`KitchenAP`, 10.0.0.78) + USG DHCP logs that the recovery was a WiFi re-association, **not** a reboot/power cycle (board sent `DHCPREQUEST`, kept its IP; a reboot sends `DHCPDISCOVER`, which both boards did at a *separate* ~12:23 PM power blip). Hardened the Arduino firmware (RA4M1 watchdog + escalating reconnect with `NVIC_SystemReset()` fallback + bounded HTTP + `uptime_ms`), recovered the weekend DS18B20 DHW-recirc temp firmware from the M2, merged both into one branch, and consolidated PRs → **Arduino `dglcinc/Arduino#6`** (open). Flash still pending. (Board mapping below — `.114`=DHW, `.219`=boiler — re-confirmed.)
 
-**Access notes**: M2 MacBook = `david@10.0.0.109` (SSH key from the Mini works; Arduino repo at `~/github/Arduino`, GUI IDE only). UniFi **APs** take SSH key auth as `dglcinc` (e.g. `KitchenAP` 10.0.0.78 — holds 2.4 GHz client logs); the **USG-3P** only takes username/password. This Mac's GitHub SSH had been broken — it caused a 25-commit-stale pivac checkout and repeated Arduino-mapping mislabeling; fixed by adding the Mini's `id_rsa` to GitHub. `gh` CLI token on the Mini is still invalid (HTTP 401).
+**Access notes**: M2 MacBook = `david@David-M2.local` (DHCP — IP was `.109` at the time of this note, `.42` as of 2026-07-03; always use the mDNS name. SSH key from the Mini works; Arduino repo at `~/github/Arduino`, GUI IDE only). UniFi **APs** take SSH key auth as `dglcinc` (e.g. `KitchenAP` 10.0.0.78 — holds 2.4 GHz client logs); the **USG-3P** only takes username/password. This Mac's GitHub SSH had been broken — it caused a 25-commit-stale pivac checkout and repeated Arduino-mapping mislabeling; fixed by adding the Mini's `id_rsa` to GitHub. `gh` CLI token on the Mini is still invalid (HTTP 401).
 
 *Updated 2026-06-01 (session 4)*
 
