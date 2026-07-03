@@ -10,7 +10,23 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-07-03 (session 17 — domestic water node: valve deferred, meter-only sketch FLASHED + verified)*
+*Updated 2026-07-03 (session 17b — domestic water meter COMPLETE end-to-end: plumbed, deployed into pivac, leak alerts live)*
+
+David plumbed the MJ-75a and the full pipeline is **live and verified**: real draw
+showed flow 0→3.0 gpm with the totalizer tracking. Deployed the Pi side (all on
+**PR #81**, already running): `pivac-domestic-water.service` + `pivac.DomesticWater`
+config (→ `pivac.ArduinoSensor`, `ipaddr: 10.0.0.188`, `daemon_sleep: 15`) →
+`environment.water.domestic.{flowRate,consumption,flowing}` confirmed in Signal K
+**and** InfluxDB. **Irrigation-aware leak alerts deployed + verified provisioned**
+(`grafana/provisioning/alerting/domestic-water.yaml` → graph-bridge email):
+continuous-flow 3h (suppressed if OpenSprinkler ran in-window — sprinkler water flows
+*through* this meter), burst = **net** (domestic − irrigation) > 12 gpm/15m (stays
+armed during runs), 30m freshness; irrigation NoData→0 so a down sprinkler service
+can't disarm leak alerting. CLAUDE.md fully updated. **Next:** merge #81/#75/Arduino
+#7, close stale #68; tune the 12 gpm / 3h thresholds after a usage baseline; optional
+register-vs-`consumption` accuracy check (±1.5%).
+
+*Updated 2026-07-03 (session 17a — domestic water node: valve deferred, meter-only sketch FLASHED + verified)*
 
 David **dropped the shutoff valve from scope** — the domestic water node is now
 **meter-only**. Stripped the valve from `DomesticWater.ino` (Arduino **PR #7**,
