@@ -87,6 +87,7 @@ Topic files:
 - ~/.claude/memory/tools/m365-graph.md — modern M365 tenants disable SMTP AUTH; use MSAL + Graph `sendMail` with client-credentials
 - ~/.claude/memory/tools/signalk.md — SignalK-server plugin admin: install topology, force-disable un-toggleable built-ins, mint an admin JWT, read in-app-browser 404s from the access log
 - ~/.claude/memory/tools/unifi.md — UCG access: controller now ON the UCG Ultra at `https://10.0.0.1` (not the Mac mini); API key `~/.config/unifi/claude-agent.key` via `X-API-KEY`; integration + classic API paths; client fixed-IP recipe
+- ~/.claude/memory/tools/arduino-cli.md — arduino-cli 1.5.1 on the Pi (`~/bin`) + renesas_uno core for local UNO R4 compile/flash; Pi's DomesticWater arduino_secrets.h has placeholder creds
 
 ## Global Memory Reference Rule
 
