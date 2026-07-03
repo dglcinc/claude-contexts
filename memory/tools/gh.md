@@ -123,9 +123,10 @@ gh auth status   # verify: "Logged in ... (~/.config/gh/hosts.yml)"
 - **M2 = `david@10.0.0.83` (fixed IP on its wired USB-ethernet `en7`)** — key auth
   from the Pi verified working 2026-07-03 (the old "Host key verification failed"
   was just a missing known_hosts entry; both `.83` and `.42` keys are stored now).
-  ⚠️ The M2's **Wi-Fi (`en0`) carries a second, DHCP address** (`.42` as of
-  2026-07-03; `.109` was an older lease) and **mDNS `David-M2.local` resolves to
-  the Wi-Fi one** — a non-`.83` sighting is the secondary interface, not a moved
-  host. M4 remains the canonical token source since it's always on.
+  ⚠️ The M2's **Wi-Fi (`en0`) carries a second address — reserved to `.95` as of
+  2026-07-03** (`.109`/`.42` were pre-reservation leases) and **mDNS
+  `David-M2.local` resolves to the Wi-Fi one** — a non-`.83` sighting is the
+  secondary interface, not a moved host. M4 remains the canonical token source
+  since it's always on.
 - The token is a 40-char classic `ghp_` PAT (scopes incl. `repo`, `project`,
   `admin:org`). Same token works across machines (no IP restriction).

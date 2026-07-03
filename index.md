@@ -23,7 +23,7 @@ Central navigation for all active projects. The vault root is `~/github/` — ev
 
 - **Mac Mini** `utilityserver@10.0.0.84` — hosts bowling app (gunicorn), mlb.dglc.com
 - **Raspberry Pi** `pi@10.0.0.82` — nginx TLS proxy for mlb.dglc.com, pivac HVAC monitoring, Grafana
-- **MacBook** `david@10.0.0.83` — primary development machine (fixed IP on wired USB-ethernet; Wi-Fi has a separate DHCP address that mDNS resolves to — ignore it)
+- **MacBook** `david@10.0.0.83` — primary development machine (fixed IP on wired USB-ethernet; Wi-Fi is separately reserved to `10.0.0.95` and is what mDNS resolves to)
 - **GitHub** account: `dglcinc`
 
 ## Archived / Dormant
