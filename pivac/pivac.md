@@ -10,6 +10,29 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-03 (session 18 — MJ-75a register calibration VERIFIED + Bosch BOVA zone analysis; no code changes)*
+
+Diagnostics/analysis session on the Pi. **(1) Meter node calibrated against its
+mechanical register**: register 79.056 ↔ Arduino `volume` 75.5 → **offset 3.556
+gal**; a ~6.2 gal bucket draw showed register delta 6.206 vs Arduino 6.3 — within
+one 0.1 gal pulse (pickup chain fully verified, no dropped/doubled pulses; details
+in Pi project memory `domestic-water-register-calibration.md`). A **Grundfos Scala2
+booster sits immediately downstream of the meter** — shapes flow-rate traces, can't
+affect totals. **Open item:** a toilet flush measured 2.9 gal (expected 1.2–1.6)
+but both flush tests had concurrent household draws — retest quiet-house; if it
+holds, inspect the toilet (gpf stamp / flapper), not the meter. **(2) HVAC 2-zone
+analysis** (2× BOVA-36HDN1-M18M + Unico 3036; 32x40 zone loses setpoint to 77 on
+hot days while 20x32 holds 75): Emporia shows both condensers at ~1.3 kW (~⅓ max)
+with matching ramps — `house.bosch_bova` = 20x32 (confirmed), `utility_sub_panel`
+plateau = almost certainly the 32x40's unit. Per the BOVA IOM the compressor
+modulates on suction pressure only (Y2 never reaches the condenser; open-loop on
+room temp), and both units already have SW4-4 accelerated ON → the lagging zone is
+**control-limited, not capacity-starved**. Plan: breaker-flip to confirm the
+subpanel mapping, **Force Mode** test on a hot afternoon (expect ~1.3 → ~3.5 kW +
+room recovery), then Unico CFM/outlet audit, subcooling check, lower-zone-cooler
+stairwell trick, pre-cooling. **Next:** merge #81/#75/Arduino #7, close #68 (all
+unchanged from 17b).
+
 *Updated 2026-07-03 (session 17b — domestic water meter COMPLETE end-to-end: plumbed, deployed into pivac, leak alerts live)*
 
 David plumbed the MJ-75a and the full pipeline is **live and verified**: real draw
