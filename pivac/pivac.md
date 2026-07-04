@@ -10,6 +10,29 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-04 (session 19 — post-outage recovery + Emporia paired-CT half-scale ROOT-CAUSED and fixed; all PRs merged)*
+
+Overnight power outage (~21:00 Jul 3 → ~15:30 Jul 4; generator flapping = 5 Pi
+boots). Recovered: 1-wire IN/CRW stuck at the DS18B20 **85 °C power-on value**
+(fresh `w1_slave` reads + `restart pivac-1wire`); hydronic Arduino `.219` never
+rejoined WiFi (cycled the Arduinos Shelly plug `10.0.0.61` — both boards back in
+seconds). **Emporia root-cause fix (PR #82, merged + live)**: David set dipswitch
+3 ON on the 32x40 BOVA (runs 75–77 Hz), clamp read 9.4–9.5 A/leg ≈ 2.27 kW vs
+Emporia ~1.15 kW — the house panel's four 240 V circuits (`utility_sub_panel`,
+`hall_subpanel`, `wall_oven`, `bosch_bova`) use **two CTs, one per leg** (correct
+hardware, mult 1.0), and `pivac.Emporia` emitted per channel so the second leg
+overwrote the first at the same SK path → half scale. Fix = sum same-named
+channels; energy balance closes; live step verified 16:21 EDT (bosch_bova 1.31 →
+2.65 kW). **Do not set app ×2 on those circuits** (apartment `air_cond` single-CT
+×2 is correct as-is). Pre-fix InfluxDB history stays half-scale. **Session-18
+zone analysis rescales: both BOVAs were ~75% max on hot days, not ⅓** — the
+32x40 zone now looks capacity/airflow-limited (and it has 23–24 Unico outlets,
+≥ recommended, so outlets aren't the constraint). Merged #75/#81/#82, closed
+stale #68, merged Arduino #7 (`28a66bf`) — **both repos clean, zero open PRs**.
+**Next:** watch the 32x40 zone on a hot afternoon at full Hz (if it still
+drifts: blower CFM tap, outlet audit, subcooling); quiet-house flush retest;
+leak-threshold tuning; YOFF rewire before heating season.
+
 *Updated 2026-07-03 (session 18 — MJ-75a register calibration VERIFIED + Bosch BOVA zone analysis; no code changes)*
 
 Diagnostics/analysis session on the Pi. **(1) Meter node calibrated against its
