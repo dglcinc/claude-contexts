@@ -4,6 +4,19 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-07-05) — domestic-water tile display lag root-caused to the app (handed off from pivac)
+
+New `environment.water.domestic.*` tiles (GPM / Run Time / Gallons) added to the iPhone + iPad
+layouts take **~20–40 s** to update after water starts, and the lag **grows with connection
+uptime**. Root-caused (from a pivac session) to the **WilhelmSK app**, not the data pipeline:
+a WebSocket subscriber on WilhelmSK's *exact* path (through nginx, `subscribe=all`) receives the
+deltas in **~1 s**, but the tile renders 20–40 s later. Ruled out node/pivac/Signal K/nginx (all
+~1 s) and delta volume (~7.6 deltas/s idle — trivial). A fresh app relaunch roughly halves it.
+**Full findings, the 4-point synchronized-monitor evidence, repro scripts, and app-side next
+steps (delta-handling / unbounded-growth / redraw-storm hypotheses) are in
+[`water-tile-lag-diagnosis.md`](water-tile-lag-diagnosis.md).** This is the active pick-up target
+for app-side work in `~/github/wilhelm`.
+
 ## Current State (2026-07-01) — Autopilot #143: full command path verified correct; real issues are app build + EV-1 detection
 
 Diagnosis-only session (no code; tree clean). disk3333 sent more detail and I traced the whole
