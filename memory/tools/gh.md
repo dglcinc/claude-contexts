@@ -42,7 +42,7 @@ gh auth login --hostname github.com --with-token --insecure-storage
 ## Pitfalls
 
 - **Don't `brew install gh` to "upgrade" later.** That puts the broken cgo bottle back. To bump versions, repeat step 2 with the new `@v2.x.y` tag. If you must use brew, follow with `brew unlink gh && cp $HOME/go/bin/gh /opt/homebrew/bin/gh` again.
-- **Don't drop `--insecure-storage`** when re-auth'ing. The macOS keyring entry on this machine is corrupted (`gh auth status` shows "The token in keyring is invalid" before this fix). `--insecure-storage` writes the token to `~/.config/gh/hosts.yml` instead.
+- **Don't drop `--insecure-storage`** when re-auth'ing. The keyring itself is **not** corrupted — verified 2026-06-02: `login.keychain-db` opens fine and the `gh:github.com` entry reads back cleanly via `security find-generic-password`. The `gh auth status` message "The token in keyring is invalid" only means the *stored token* was rejected by GitHub (401 — expired/revoked), not that the keychain is damaged. The one genuinely broken thing on this machine is `SecTrustEvaluate` (the cert-trust bug above), which is unrelated to credential storage. `--insecure-storage` writes the token to `~/.config/gh/hosts.yml` instead, keeping token handling consistent and out of the keyring.
 - **Don't drop `GOPROXY=direct`** during the build — without it, `go install` itself hits the same TLS bug fetching modules from `proxy.golang.org`.
 - **Sandbox**: Claude Code's sandbox blocks writes to `/opt/homebrew`, `~/go`, and `~/.cache`. The build steps above need `dangerouslyDisableSandbox: true`.
 

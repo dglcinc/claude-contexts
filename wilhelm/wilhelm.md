@@ -4,6 +4,30 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-07-05 PM) — Drift gauge "- -" root cause → PR #145; GMI20 wind+current gauge (#146 + plan PR #147)
+
+Greg Young (Discord) reported a Drift gauge showing "- -" while a numeric gauge on
+`environment.current.drift` shows 0, plus a wish to emulate a Garmin GMI20 wind page (AWA dial +
+center drift readout + heading-relative set arrow).
+
+**Root cause (verified end-to-end):** `DriftGauge`/`SetGauge` read the SignalK-spec **object
+value** at `environment.current` (`{setTrue, drift}` — the n2k-signalk PGN 129291 shape), but the
+**Derived Data plugin emits leaf paths** (`environment.current.drift`, `.setTrue`, …; verified in
+`setDrift.ts` back to tag 1.37.0). With leaf deltas the gauge's map lookup returns tree nodes
+(`{value, timestamp, $source}`), the units conversion rejects the dictionary (nil, no crash) →
+"- -"; a numeric gauge on the leaf path works. **Fix = PR #145** (unwrap the node's `value` in
+both gauges; no-op for the object shape; build-verified). Stationary boat still shows Set "- -"
+correctly (Derived Data emits `setTrue: null` at rest).
+
+**GMI20 gauge:** issue **#146** + implementation plan `.claude/current-gauge-plan.md` (**PR #147**),
+referenced from the issue. De-risked: `AWACOGGauge` already proves 2 needles + center readout on
+one dial; heading-relative math is its `getSecondValue:` with COG→setTrue; 5-target membership
+mapped; replay log confirmed to carry STW/heading/variation so Derived Data setDrift yields live
+sim test data. Awaiting Scott's call on v1 scope + naming, then ~a few hours to implement.
+
+**NEW RULE:** repo is **private** — no PR/issue URLs or numbers in outward-facing text (Discord
+etc.); say "filed a PR" generically. (Memory: `no-repo-links-in-public-replies`.)
+
 ## Current State (2026-07-05) — domestic-water tile display lag root-caused to the app (handed off from pivac)
 
 New `environment.water.domestic.*` tiles (GPM / Run Time / Gallons) added to the iPhone + iPad
