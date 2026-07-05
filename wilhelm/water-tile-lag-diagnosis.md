@@ -1,4 +1,39 @@
-# WilhelmSK display-lag diagnosis — domestic water tiles (open, app-side)
+# WilhelmSK display-lag diagnosis — domestic water tiles (RESOLVED — pivac-side, NOT the app)
+
+**RESOLVED (2026-07-05 evening, follow-up wilhelm session): the app was exonerated; the
+real root cause was in `pivac-provider.py`, fixed in dglcinc/pivac#86.** The "app-side"
+conclusion below was wrong — it rested on spot observations that couldn't distinguish
+"current" from "N seconds stale", and on standalone WS subscribers that happened to sample
+during healthy windows.
+
+**Actual root cause:** Signal K's ws interface heartbeats every client each `wsPingInterval`
+(default 30 s) and terminates any client that hasn't ponged by the next sweep
+(`dist/interfaces/ws.js`). Python `websocket-client` only auto-answers pings inside
+`recv()` — and the pivac provider was **send-only, never reading its socket**. So every
+pivac provider connection was heartbeat-killed ~60 s after connect, then `send()` silently
+discarded deltas for up to ~30 s (the server's close frame sat unread, so writes didn't
+error) until `Broken pipe` forced a re-login. Chronic ~90 s connect/blackout/reconnect
+cycle on **all nine pivac services** (~6 re-logins/min in the server log, all day) —
+invisible on slow thermostat paths, glaring on the 1 Hz water tiles. Evidence trail: an
+instrumented WilhelmSK sim build (branch `debug/water-tile-lag`, local-only) showed deltas
+arriving 0.01 s and tiles rendering within ~1 s of arrival, while InfluxDB showed the exact
+same ~34 s gaps as the sim — i.e. the server had nothing to give ANY consumer during the
+blackouts. **Fix (pivac#86):** a daemon reader thread per provider connection drains the
+socket, so pings get answered and a server-side close is detected immediately. Verified:
+re-login rate 0/min post-fix, gap-free 1 Hz water stream. Remaining ~6 s tap-to-tile
+latency = physics floor (0.1 gal/pulse meter + 1 Hz pivac poll + ~1 Hz app refresh).
+
+**App-side findings worth keeping** (from the instrumented build): PSWebSocket delivers all
+messages on the main queue; delta processing is ~1 ms each; `timedRefresh` throttles UI
+refresh to ~1 Hz and the winning delta's paths are irrelevant because every refresh
+refreshes all gauges (BaseViewController's path filter is commented out). None of this
+causes user-visible lag at ~8 deltas/s. The WilhelmSK connection "Refresh Rate" setting
+(non-zero → per-path server-side subscription `period`) was also ruled out (David's was 0),
+but it IS a real server-side throttle to remember for other users' reports.
+
+---
+
+*Original (superseded) diagnosis below, kept for the record:*
 
 **Status (2026-07-05):** Root-caused to the **WilhelmSK app**, not the data pipeline.
 Handed off from a `pivac` session to be pursued in the `wilhelm` app codebase
