@@ -10,6 +10,31 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-05 (session 20 — domestic-water run timer + per-flow gallons + WilhelmSK tiles; display-lag root-caused to the WilhelmSK app)*
+
+Built out **domestic water monitoring** end-to-end. **(1)** Reflashed the UNO R4 node
+(`10.0.0.188`, Arduino#9) with a **low-lag per-pulse flow model** — `flowing`/run-timer fire on
+the **first meter pulse** instead of a 10 s tumbling window (detection now ~1–3 s at fixture flow,
+the meter's physical floor of 1 pulse/0.1 gal), EMA inter-pulse `flowRate`, 10 s stop-tail. **(2)**
+Three new SK values: `environment.water.domestic.runDuration` (s) + `.runningFor` (mm:ss string,
+node-emitted `run_s`/`runtime`) and **`.runVolume`** (gallons of the current draw, **held after
+flow stops**, computed **Pi-side**). `pivac.DomesticWater` is now a **real module**
+(`pivac/DomesticWater.py`) wrapping `ArduinoSensor` + appending `runVolume`; live config dropped
+the `module:` override and runs `daemon_sleep: 1` (1 Hz). **(3)** Added **WilhelmSK tiles** (Water
+GPM / Run Time / Gallons) to both iPad (three-across in the freed Outside row; whole row
+redistributed to equal widths) and iPhone (relays column shortened for three stacked boxes; the
+four water-temp gauges equalized to 77 px so DHW Recirc's font matches) — `dglcinc/wilhelm-sk` #3,
+copied to `~/OneDrive - DGLC/Claude/{ipad,iphone}.wlyt`. **(4) Root-caused the ~20–40 s WilhelmSK
+display lag to the app itself** — a 4-point synchronized monitor proved the delta reaches
+WilhelmSK's exact WebSocket path (through nginx, `subscribe=all`) in ~1 s while the tile renders
+20–40 s later (worsens with connection uptime); ruled out node/pivac/SignalK/nginx and delta
+volume (~7.6/s). Handed off to the **wilhelm** context — see
+`claude-contexts/wilhelm/water-tile-lag-diagnosis.md`. Added `proxy_buffering off` +
+`proxy_read_timeout 3600s` to nginx `/signalk/` (correct for WS, didn't fix the app lag). **All
+PRs merged** (Arduino #8/#9, pivac #83/#84/#85, wilhelm-sk #3); zero open. **Next:** pursue the
+lag in `~/github/wilhelm`; import the layouts; sanity-check the meter registers under sustained
+flow (froze at 905.0 in one test).
+
 *Updated 2026-07-04 (session 19 — post-outage recovery + Emporia paired-CT half-scale ROOT-CAUSED and fixed; all PRs merged)*
 
 Overnight power outage (~21:00 Jul 3 → ~15:30 Jul 4; generator flapping = 5 Pi
