@@ -88,6 +88,7 @@ Topic files:
 - ~/.claude/memory/tools/signalk.md — SignalK-server plugin admin: install topology, force-disable un-toggleable built-ins, mint an admin JWT, read in-app-browser 404s from the access log
 - ~/.claude/memory/tools/unifi.md — UCG access: controller now ON the UCG Ultra at `https://10.0.0.1` (not the Mac mini); API key `~/.config/unifi/claude-agent.key` via `X-API-KEY`; integration + classic API paths; client fixed-IP recipe
 - ~/.claude/memory/tools/arduino-cli.md — arduino-cli 1.5.1 on the Pi (`~/bin`) + renesas_uno core for local UNO R4 compile/flash; Pi's DomesticWater arduino_secrets.h has placeholder creds
+- ~/.claude/memory/reference/mountain-lakes-code.md — Mountain Lakes NJ municipal code as a grep-indexed local KB (corpus in `~/OneDrive - DGLC/Claude/mountain-lakes-code/`); water rates + watering rules + zoning/building; INDEX.md → grep → cite §
 
 ## Global Memory Reference Rule
 

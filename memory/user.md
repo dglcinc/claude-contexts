@@ -7,6 +7,8 @@ David is an experienced developer working primarily on Mac, with a Raspberry Pi 
 
 Infrastructure is managed through GitHub (dglcinc). Personal content stays in iCloud (Obsidian dglcinc vault) and OneDrive. The separation between these two worlds is a core principle he cares about.
 
+**Home address:** 68 Lookout Road, Mountain Lakes, NJ 07046. (House #**68** is even — the same "68" as `68lookout.dglc.com` / the pivac Pi's external hostname. Even house number drives the town's even-day outdoor-watering rule — see `reference/mountain-lakes-code.md`.)
+
 Projects: bowling league web app (Flask/Python, mlb.dglc.com), pivac (HVAC monitoring on Pi), MacDownToo (macOS markdown editor), Arduino sketches, WilhelmSK (iPad layouts).
 
 Machines (David names Macs by Apple-silicon generation — "M4" = the Mac Mini, "M2" = the MacBook Pro; do not confuse with the network):
