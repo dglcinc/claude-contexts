@@ -10,6 +10,22 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-16 (session 23 — stale hydronic root-caused to a power failure; added freshness alerts + an auto-recovery watchdog for the pressure Arduinos)*
+
+Hydronic boiler PSI (`.219` board, `electrical.ac.arduinoThermPSI.psi`) was stale ~16h. Root
+cause = a **mains power failure ~17:15 EDT Jul 15** (confirmed by David) that cycled both
+Shelly-powered pressure Arduinos and rebooted the Pi; `.114` rejoined WiFi, `.219` didn't, and
+the pressure boards had **no freshness alert**, so it failed silently. Power-cycled the `.61`
+Shelly to recover it. Full log review otherwise clean (SignalK WS re-logins 0/hr = PR #86 fix
+holding; all 9 services healthy; no other stale sensors). **PR #88 (merged, deployed live):**
+(1) two Grafana freshness alerts `arduino-{dhw,hydronic}-psi-stale` → graph-bridge email at 30m;
+(2) `arduino-watchdog.timer` — polls both boards every 5m and auto-power-cycles the `.61` Shelly
+when either is unreachable >15m (rate-limited ≤1/hr, state in tmpfs, only touches the Arduinos'
+plug). All watchdog branches tested; both repos on master `7358343`; timer active+enabled.
+**Next:** confirm the watchdog/alerts fire on a real outage; carryover — verify irrigation volume
+halved after the Jul-6 even-day change, review OpenSprinkler weather level (149%), YOFF rewire
+before heating season.
+
 *Updated 2026-07-06 (session 22 — town-code KB import + OpenSprinkler watering-schedule optimization; no pivac code change)*
 
 Non-pivac-code session. **Imported the Mountain Lakes NJ municipal code (eCode360 MO1514) as a grep-indexed local KB** at `~/OneDrive - DGLC/Claude/mountain-lakes-code/` (70 chapter files + `INDEX.md` + distilled `water-schedule-reference.md` + rebuild script; eCode360's WAF blocks automated fetch → browser PDF export → pymupdf split). Promoted it to **global memory** (`reference/mountain-lakes-code.md`, synced via the claude-contexts symlink) so any session can answer town-code questions via INDEX→grep→cite-§. Used it to **optimize irrigation**: confirmed a borough sprinkler/deduct meter is **not required** (§ 237-4C) — David has none, so irrigation bills at domestic tiers **+ sewer** (marginal ≈ $1.19/100gal); and the § 237-10A restriction (June–Sept alternate-days-by-house-#, only 12:01–10am & 6–12pm, none Jul31/Aug31) was **being violated** by an every-day program. Fix: **set OpenSprinkler Program 1 restriction = Even days** (house #68 even; OS even/odd auto-skips the 31st), kept the compliant 1:00am start — David applied it in the app. Expect ~50% volume cut (was ~830 gal/run-day, 8,486 gal/30d via the AS200U → InfluxDB). Also saved David's **home address (68 Lookout Rd)** to `user.md`. **Next:** verify the volume halves in ~2 weeks; review the 149% weather level (manual vs Zimmerman); optional — put the text corpus in the repo for Pi access. Pivac carryover unchanged: **merge PR #86** then Pi master pull + restart.
