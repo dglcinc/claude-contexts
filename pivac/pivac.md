@@ -10,6 +10,21 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-21 (session 25 — recovered a session lost to a power outage; merged the stranded work)*
+
+A **power outage** (~14:50 EDT 2026-07-21) interrupted work before a save, so the saved state
+falsely read "master / no PRs" while three commits sat unmerged (and live) on
+`fix/sentry-gas-idle-fill`. Reconstructed from git + reflog + Pi state: **(1) Sentry gas idle-fill**
+(`pivac/Sentry.py` emits `gasInputValue=0` every cycle when the burner LED is off but the display
+didn't rotate to gas mode — kills a 14–19 min idle gap that looked stale; never fabricates while
+firing); **(2) two Grafana flow-panel axis fixes** (drop custom units so ticks fit the pinned
+`axisWidth`, size axes to real data gal/min ~12 / gal/hr ~700 — still gross flow). Opened **PR #92**,
+squash-merged → master **`cf135d0`**; Mac + Pi back on master. **No restart** — squash was
+byte-identical to the branch already running live. **Post-outage recovery clean this time:** all 3
+Arduino boards rejoined WiFi (watchdog + `initial_state=on`; contrast Jul-15's 16h `.219` stale),
+signalk WS re-logins 0, all 13 services active. **Next:** YOFF rewire before heating season; confirm
+the watchdog fires on a real outage; verify irrigation volume halved after the Jul-6 even-day change.
+
 *Updated 2026-07-20 (session 24 — Sentry LED misread root-caused + fixed; Grafana Sentry→TimeSeries alignment; water net-of-irrigation + hourly bars; Arduino watchdog)*
 
 Big session, all merged to master `7e4a9e8`. **(1) Sentry boiler LED misread fixed (PR #90):**
