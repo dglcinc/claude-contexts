@@ -10,6 +10,25 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-20 (session 24 — Sentry LED misread root-caused + fixed; Grafana Sentry→TimeSeries alignment; water net-of-irrigation + hourly bars; Arduino watchdog)*
+
+Big session, all merged to master `7e4a9e8`. **(1) Sentry boiler LED misread fixed (PR #90):**
+burner/pump read 0 for most of every DHW call — camera locked in IR/Night dims the green LEDs to
+~1.13× bg, under the 1.15 threshold. Split into `led_ratio=1.05` (dim green status LEDs) +
+`indicator_ratio=1.15` (bright indicators); proved via `gasInputValue>0` cross-check + live lit-LED
+measurement during a forced hot-water call. **(2) Grafana (PRs #89/#91):** Sentry Boiler Status →
+aligned **Time Series** (colored stepped lines + legend); pinned `axisWidth=50` on every panel +
+dropped the DHW panel's `PSI + °F` axis label → all time axes line up. Water: **Domestic shown NET
+of irrigation** on the three "Used" stats + new bottom panel **"Water consumption by hour — last 7
+days"** (stacked hourly bars, green domestic-net / yellow irrigation). **(3) Arduino watchdog (PR
+#88):** freshness alerts for both pressure boards + `arduino-watchdog.timer` auto-power-cycles the
+`.61` Shelly on a >15m board outage (root-caused a 16h `.219` stale after a Jul-15 power failure).
+**Key infra learned:** Grafana is on **port 4000** sub-path `/grafana/`; live dashboards live in the
+`resource` table of grafana.db (legacy `dashboard` table is stale); Grafana InfluxQL cross-measurement
+math needs joinByField+calculateField with both aggregates forced to one `GROUP BY time(3650d)` bucket.
+**Next:** optionally net the flow-rate panels 18/19; YOFF rewire before heating season; watch the
+watchdog fire on a real outage.
+
 *Updated 2026-07-16 (session 23 — stale hydronic root-caused to a power failure; added freshness alerts + an auto-recovery watchdog for the pressure Arduinos)*
 
 Hydronic boiler PSI (`.219` board, `electrical.ac.arduinoThermPSI.psi`) was stale ~16h. Root
