@@ -10,6 +10,28 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-23 (session 26 — storm-drain clog-sensor spec + full Pi software update + fanless-Pi4 Sentry thermal retune)*
+
+Two threads. **(1) New storm-drain clog-sensor node designed** (spec only): iterated live from
+"contact sensor" → single binary threshold (clog is binary; standing water = the signal) →
+**stainless M10 mini reed float in a 1½" PVC stilling well mounted to the 10×10" driveway grate**,
+mounted **NC** so a cut cable self-alarms. Spec merged (**PR #93**); float lock-in **PR #94 OPEN**.
+AG-1250E rejected (24 VAC solid-state — needs opto stage); SS2 condensate float + XKC-Y25 clamp-on
+capacitive kept as documented alternatives. **(2) Full Pi software update + review:** 149 apt
+packages incl. **kernel 6.12→6.18**, **Signal K 2.28-beta→2.30.0**, **Grafana 13.1.1**, **InfluxDB
+2.9.1**, venv upgraded (**opencv HELD at 4.13** — the 4→5 major would risk the Sentry 7-seg CV;
+verified fine under new numpy 2.5.1). Verified end-to-end: 14 services active, 0 errors, data
+flowing, SK WS fix (PR #86) holding on 2.30.0, external Grafana OK, nginx manually restarted
+(doesn't auto-start post-reboot). **nginx already latest stable** (`deb13u7`); recent 2026 CVEs
+await a trixie backport that `unattended-upgrades` will auto-apply. **Key finding: the host is a
+fanless Raspberry Pi 4** (not a Pi 5 as assumed) — Sentry's multi-core CV burst grazes the 80 °C
+soft-limit no matter the config. Retuned live `/etc/pivac/config.yml`: `daemon_sleep: 30` +
+`cycle_timeout: 20` (was 15/30; `cycle_timeout` had drifted to 30) → CPU ~1.6→~1.25 cores, floor
+~76 °C, continuous throttle cleared; residual ~83 °C peaks are **benign** (< 85 °C hard limit) and
+**cooling-bound — the only real fix is a fan**. CLAUDE.md thermal note on master `0252f5b`.
+**Next:** merge PR #94; decide on a Pi cooling fan; build the storm-drain node (needs a NEW UNO R4
+WiFi — all 3 deployed); carryover — YOFF rewire before heating season.
+
 *Updated 2026-07-21 (session 25 — recovered a session lost to a power outage; merged the stranded work)*
 
 A **power outage** (~14:50 EDT 2026-07-21) interrupted work before a save, so the saved state
