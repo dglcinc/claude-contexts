@@ -10,6 +10,22 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-07-23 (session 27 — CDP relay + RPi-label rework plan for the single-chiller conversion)*
+
+Planning only, nothing built. David is decommissioning both old UniChillers for **one new chiller**
+and adding a **BOS2** monitoring relay. Full plan: **`docs/cdp-chiller-rework-plan.md`** (branch
+`docs/rpi-relay-label`). Key decisions: **CHIL** takes RCHL's pin (BCM 5/29, rename only — chiller
+wire never moves); **BOS2** takes LCHL's pin (BCM 6/31, reclaim the LCHL relay *in place* and reuse
+its existing contact wire); **YOFF** stays on BCM 26/37 (label typo "Y2OFF"→"YOFF"; new Pi silicon
+fixes the old dead pad — ohm the wire to GND first); Y2ON/Y2FAN freed, **YALT relay removed**. Net:
+9 active inputs, 3 spares, **zero header wires relocated**. Software: `pivac.GPIO` renames + delete
+Y2ON/Y2FAN; fix `config.yml.sample`; rework `pivacr.json` + `chiller-time-r.json` Grafana panels.
+**Highest risk:** YOFF's seasonal cutoff currently interrupts YALT — with YALT gone it must be
+re-inserted into the new direct chiller call path or the winter cutoff fails **silently**; prove it
+before closing the panel. Control-logic claims in plan §3 are inferences from HVAC Manual v1.7, not
+live tracing — confirm at the panel. **Next:** David adds "other things" to the label docx → commit
++ open PR (base `master`) → build new Pi (capture eth0 MAC, DHCP-reserve to `.82`).
+
 *Updated 2026-07-23 (session 26 — storm-drain clog-sensor spec + full Pi software update + fanless-Pi4 Sentry thermal retune)*
 
 Two threads. **(1) New storm-drain clog-sensor node designed** (spec only): iterated live from
