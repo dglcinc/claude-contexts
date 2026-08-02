@@ -10,6 +10,27 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-02 (session 28 — GPIO relay roster reconfigured for the single-chiller conversion)*
+
+Reconfigured the **relay array behind the WilhelmSK Control Relays tile** on both the iPad and
+iPhone dashboards. Reclaimed **LCHL's pin (BCM 6) as `BOS1`** and **RCHL's (BCM 5) as `BOS2`** —
+rename in place, no header wire moved — and dropped **Y2ON (13)**, **Y2FAN (16)** and the **old
+BOS1 (24)**. Live `/etc/pivac/config.yml` updated + verified: Signal K returns exactly **7
+relays** (ZV, DHW, BLR, BOS2, BOS1, DEHUM, SCALA), all 9 services active, WS re-logins 0/min.
+**PR #96** carries `config.yml.sample`, the README example, both Grafana dashboards, a CLAUDE.md
+note. **Two findings:** (1) **no `.wlyt` change is ever needed for a relay change** — both
+SwitchBank widgets carry only `"path": "electrical.ac.switch.utility"` and enumerate children
+dynamically, settling the session-27 "encoded SK paths" open question; (2) **retiring a relay
+needs a `signalk` restart** — SK keeps a retired path frozen at its last value, so after
+`restart pivac-gpio` alone the four dead names still sat in the API and would have shown on the
+dashboards. Recipe: config edit → restart pivac-gpio → restart signalk. **Diverges from the
+session-27 plan** (`RCHL→CHIL`, `LCHL→BOS2`): there is now **no CHIL relay** — deliberate, the
+new chiller doesn't work in a way that gives it a call relay; the chiller's call state is
+therefore unmonitored. **Next:** merge #96 → Pi pull; **update `docs/cdp-chiller-rework-plan.md`
++ the label docx** (both committed on `docs/rpi-relay-label`, no PR) since they still describe
+the superseded scheme and would mislead the new-Pi build; merge #95/#94; YOFF rewire before
+heating season.
+
 *Updated 2026-07-23 (session 27 — CDP relay + RPi-label rework plan for the single-chiller conversion)*
 
 Planning only, nothing built. David is decommissioning both old UniChillers for **one new chiller**
