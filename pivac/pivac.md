@@ -10,6 +10,33 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-06 (session 29 — CRW/AMB DS18B20s repurposed as buffer-tank UBT/LBT; outdoor 1-wire retired)*
+
+David moved two DS18B20s onto the **buffer tank**: `0316a00f04ff` (was **CRW**) → **UBT** (upper)
+and `0516a36816ff` (was the outdoor **AMB** probe) → **LBT** (lower). Bus is still 4 sensors —
+IN, UBT, LBT, OUT. **There is no physical outdoor sensor any more:**
+`environment.outside.temperature` is gone and outdoor air comes solely from RedLink's
+`environment.outside.thermostat.temperature`. Shipped and deployed: pivac **#97** (config, alerts,
+Grafana panel) + **#98**, and wilhelm-sk **#4/#5/#6** (3→4 HVAC gauges, iPhone column equalized,
+iPad PSI stack equalized). All verified live — 13 services active, 0 WS re-logins; both `.wlyt`
+files synced to OneDrive and **awaiting import on the devices** (the only step left).
+**Diagnosis note:** David reported a "new" sensor, but its printed code decoded to the *existing*
+AMB id — **the printed 8-byte ROM reverses its 6 serial bytes to form the w1 name**
+(`28FF1668A316054F` → `28-0516a36816ff`). CRC-8 validation + 12 stable CRC-valid reads ruled out
+a duplicate-address clone, and InfluxDB showed the outdoor path diverging 82→51 °F while the
+thermostat held 80 °F.
+**Two gotchas worth more than the work:** (1) **Grafana alert-rule provisioning is ADDITIVE** —
+deleting a rule from the YAML does *not* remove it (it keeps evaluating with `provenance=file`,
+uneditable in the UI). The table held 16 rules against a 7-rule YAML, and two dead
+`noDataState: Alerting` rules would have emailed on every evaluation. A restart *looks* successful
+because new rules do get created. Fix = a permanent top-level `deleteRules:` block; always verify
+against the `alert_rule` table afterwards. (2) **`valueLabelPaddChars` centring trap** — a gauge
+whose rendered string is shorter than the reservation gets padded and reads off-centre; do not
+"fix" it by rounding sibling gauges, which spreads the problem.
+**Next:** import the layouts; confirm UBT/LBT really are at different tank heights (both read
+46.1 °F on install); merge #96/#95/#94; update `docs/cdp-chiller-rework-plan.md` + the label docx;
+YOFF rewire before heating season.
+
 *Updated 2026-08-02 (session 28 — GPIO relay roster reconfigured for the single-chiller conversion)*
 
 Reconfigured the **relay array behind the WilhelmSK Control Relays tile** on both the iPad and
