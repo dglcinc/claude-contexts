@@ -4,6 +4,49 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-08-07) — Two Discord reports root-caused: template-delete no-op (#148 + PR #149), VRM auth deprecation (#150)
+
+A user-report triage session. No local work is blocked; both threads now await Scott.
+
+**1. Undeletable "redundant" custom templates → #148 + PR #149.** A user had accumulated
+near-identical templates in Settings → Layouts & Templates, couldn't delete them on his iPad, and
+asked which directory on his Raspberry Pi to delete them from. The premise was wrong and the
+delete failure is a real bug. Swipe-to-delete was guarded by `if (refereces.count == 0)` with
+**no else branch** (`NPagesTableViewController.m`), so a still-referenced template produced no
+alert, no error, no visual change — and `getCustomPagesForUI:usingTemplate:` (`Settings.m`) scans
+**every layout** for the UI, so the blocking page is usually in a layout the user isn't looking
+at. They accumulate because templates auto-name `"1"`, `"2"`, `"3"`… and `addNewTemplate` mints a
+fresh number each time one is added from an existing page/template without cleaning up the source.
+**PR #149** adds a "Template In Use" alert naming the blocking layouts + page counts, resets the
+swiped row (`reloadRowsAtIndexPaths:`, not `setEditing:NO` — row counts depend on `isEditing`),
+stops the `showBlank` segue firing on a refused delete, and fixes the reference check to use
+in-memory pages when editing another device's layout. Build-verified. Left alone deliberately:
+`deleteLayoutNamed:` (the editor's Delete button) removes a template with **no** reference check —
+the inverse bug; noted in #148 for Scott to decide which behaviour wins.
+
+**Storage truth (corrected a wrong claim in the project `CLAUDE.md`):** layouts
+(`pages.<layout>.<ui>`) and templates (`customLayouts.<ui>`) live only in
+`[NSUserDefaults standardUserDefaults]`; the `NSUbiquitousKeyValueStore` branches in
+`listLayouts`/`removeLayout` are **commented out**. They are device-local and do **not** sync via
+iCloud. Nothing reaches the SignalK server unless the user hits "Save To Server", which writes a
+key path *inside* one `~/.signalk/applicationData/{global|users/<user>}/WilhelmSK/1.0.json` — not
+a directory of files.
+
+**2. VRM "Invalid Login" → #150.** A second user's VRM connection started failing. The string
+fires on **exactly HTTP 401** from `vrmapi.victronenergy.com/v2/auth/login`, and
+`loginToVRMSignalK` does a fresh username/password POST on every connect — so not a stale-token
+bug. Cause is external: Victron's VRM changelog **2026-07-15 (1.117.0)** — "API Login: Return
+deprecation message when user and password are used to authenticate against Victron OneID" — with
+a community thread reporting hard 401s opened **2026-08-03**, the same day as the report. The
+replacement is a Personal Access Token sent as `X-Authorization: Token <value>`; the app sends
+`Bearer` and has no token field anywhere. **Both** VRM connection types break (SignalK-over-VRM
+and the plain Venus MQTT path) since both route through `getVRMPortalInfo`. Not confirmed whether
+`/v2/auth/login` is fully removed or a staged per-account rollout. Secondary finding: `rawSendHTTP`
+hardcodes `"Unauthorized"` for any 401 without reading the body, and the VRM screen discards even
+that for a literal "Invalid Login" — so Victron's explanatory message was in hand and thrown away.
+Migration path (token field, `Bearer`→`Token`, `idUser` via `/v2/users/me`, existing-connection
+prompt, `WidgetBoat.swift` mirror, Keychain) is written up in #150, awaiting Scott's UX call.
+
 ## Current State (2026-07-05 PM) — Drift gauge "- -" root cause → PR #145; GMI20 wind+current gauge (#146 + plan PR #147)
 
 Greg Young (Discord) reported a Drift gauge showing "- -" while a numeric gauge on
