@@ -4,6 +4,61 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-08-10) — Template pile-up root-caused to layout import → PR #151
+
+The #148 reporter came back on Discord with three observations, all now explained, and both of
+his hunches were right. He had removed the offending pages from every layout but one and still
+saw **six** near-identical templates; the **new** layouts editor showed only **one**; and no
+amount of dragging deleted them.
+
+**1. Deleting pages was never going to help (not a bug).** Templates (`customLayouts.<ui>`) are
+stored independently of layouts and pages (`pages.<layout>.<ui>`); nothing in the page-delete
+path touches the template store.
+
+**2. No drag deletes a template.** In the traditional editor (`PageManagerViewController.m:311-402`;
+sections 0 "Your Pages", 1 "Builtin Page Templates", 2 "Custom Page Templates") the rules are
+0→0 reorder, 1→0 / 2→0 add a page, **0→1 deletes a PAGE** (the "mid section" trick he found),
+1→2 / 0→2 clone into custom templates. Dragging *from* section 2 falls through to a bare
+`reloadData`. The real delete is a **tap** on the section-2 thumbnail (`handleTapGesture:`,
+`:502-529`) → opens the layout editor with `config:nil` → Delete button visible
+(`LayoutEditorViewController.m:94-119`) → `deleteLayoutNamed:`, which has **no reference check**
+at all (the inverse of the swipe path), so it blanks any page still using the template.
+
+**3. The new editor shows only one** because its Templates section lists just
+`getCustomTemplatesUsedByLayout:forUI:` (`NPagesTableViewController.m:94`) — templates used by
+the layout currently open, undeduped. Orphans and other layouts' templates are structurally
+invisible and undeletable there.
+
+**Root cause of the accumulation = layout import — PR #151.** `Settings.m -importLayout:toName:`
+read builtin templates as `pageLayouts[ui][name]`, but that dict holds only `baseSize` and
+`pages` (`Wilhelm/layouts.json`; UI keys `iPad`/`iPadPortrate`/`iPadCompact`/`Main`/`TV`) — the
+templates are one level down under `pages`, which is how every other call site reads them. The
+lookup missed every time, so every imported page was treated as using a custom template, and the
+clone-on-collision branch ran **per page rather than per template**: a six-page layout minted six
+numbered near-identical copies, each referenced by exactly one page, hence each "in use" and
+refusing to delete (silently, pre-#149). `NPagesTableViewController -getLayoutExportData` had the
+same missing `[@"pages"]`, so new-editor server saves omitted builtin template definitions; the
+two combined could repoint a page at a template name that was never created (blank page), which
+fits his old-editor/new-editor back-and-forth. **PR #151** fixes both lookups, dedups per
+template, skips the clone when the incoming template is identical, never repoints a page at a
+name it does not create, and guards `findAvailableCustomLayoutName:` returning nil after 100.
+Build-verified. Commented the root cause on **#148** with three calls for Scott: should the new
+editor list unused templates, should the editor's Delete button get #149's in-use check, and
+does he want a one-time dedupe-on-load migration (#151 stops new duplicates but migrates nothing).
+
+**"Should he edit on a computer and upload instead?" — no.** There is no desktop editor, and
+every route back into the app (server download, `.wlyt` file open, AirDrop) funnels through the
+same `importLayout:toName:` that is the bug (`RealBasicAppDelegate.m:1501-1531`), so the advice
+would have multiplied his templates. Correct advice: tidy up on the iPad, hold off re-importing
+from the server until the fix ships. Aside: the project **does** set `SUPPORTS_MACCATALYST = YES`
+on the main app + widgets targets, contrary to the platform list in the project `CLAUDE.md` —
+same code, same bug.
+
+**New convention (in the project `CLAUDE.md`, "## Discord Replies"):** always draft Discord
+replies as **one single block with no line breaks** — Discord sends on Enter, so any newline
+becomes a half-sent message on paste. No bullets or lists; prose connectives carry the structure.
+The private-repo rule still stands: no PR/issue numbers or URLs in outward-facing text.
+
 ## Current State (2026-08-07) — Two Discord reports root-caused: template-delete no-op (#148 + PR #149), VRM auth deprecation (#150)
 
 A user-report triage session. No local work is blocked; both threads now await Scott.
