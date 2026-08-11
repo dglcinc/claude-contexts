@@ -10,6 +10,41 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-10 (session 30 — merged #99/#96/#95; chiller rework plan rewritten against reality; ≈86 gal loop volume + glycol; defect caught in #95)*
+
+**⚠️ PICK UP HERE: master has undeployed changes.** The Pi is at `e6d0bf4`, master at `79afc21`
+— PR **#95**'s `Sentry.py`, its service file (loglevel `ERROR`→`WARNING`) and a **new**
+`sentry-boiler.yaml` alerting file are merged but **not on the Pi**. Merge **#100** first so the
+fix ships in the same deploy, then pull + copy service + `daemon-reload` + `restart pivac-sentry`
++ copy alerting YAMLs (chown/chmod incl. `sentry-boiler`) + `restart grafana-server`, and
+**verify the `alert_rule` table** (13 → 16) — provisioning is additive, so never trust the restart.
+
+Merged **#99** (chiller rework plan + Phoenix Contact label docx — the branch had never been
+pushed, so both were single-copy on the MacBook), **#96** (GPIO relay rename, repo catching up to
+the live Pi config) and **#95** (Sentry calibration drift). Most of the session went into
+rewriting `docs/cdp-chiller-rework-plan.md`, which described a scheme that was superseded before
+it was built: shipped was `RCHL→BOS2` / `LCHL→BOS1` with **no CHIL Pi input**, not the planned
+`RCHL→CHIL` / `LCHL→BOS2`. **David corrected three wiring assumptions in sequence**, each
+invalidating more of the doc: (1) the BOS sense relays are a **parallel tap, not a series
+element** — each air handler drives its compressor directly and its call relay separately
+energizes the reclaimed CDP relay, so monitoring can't break cooling, there are **no new
+conductors**, and the series records the *call* rather than proof the compressor ran; (2) the
+**CHIL relay exists** (HZ432 Y → Chiltrix) and only its Pi input was dropped, with a **manual,
+unlabeled override relay** bridging the same Y contacts because the Chiltrix maintains
+buffer-tank temp on its **own internal return-water sensor**, independent of zone demand; (3)
+**YOFF is retired entirely**, winter shutdown is now a **manual breaker-off**. That last one
+killed the plan's highest-risk item and made several steps actively wrong to follow — and
+**CLAUDE.md was carrying the BCM 19 rewire as a live "before heating season" deadline**, now
+marked CANCELLED (`e2df235`). **Defect caught in #95 before deploying:**
+`sentry-outdoor-divergence` queries `environment.outside.temperature`, retired on 08-06 when the
+AMB probe became LBT — and with `noDataState: OK` it **fails quiet**, so it would have sat
+provisioned and permanently silent while looking like coverage. **PR #100** repoints it at
+RedLink (also Kelvin, so the K→°F math is unchanged). Also recorded **≈86 gal** post-conversion
+loop volume (was 92) and the glycol move: **drain 5.7 gal, add 5.7 gal** of 100% inhibited PG to
+go 25%→30%, which matters more now that the loop overwinters unpowered and static.
+**Next:** merge #100 → deploy; merge #94 (expect a CLAUDE.md conflict like #96's); zone-by-zone
+BOS1/BOS2 test (a crossed pair is invisible in config); label the override relay; glycol top-up.
+
 *Updated 2026-08-06 (session 29 — CRW/AMB DS18B20s repurposed as buffer-tank UBT/LBT; outdoor 1-wire retired)*
 
 David moved two DS18B20s onto the **buffer tank**: `0316a00f04ff` (was **CRW**) → **UBT** (upper)
