@@ -10,6 +10,35 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-13 (session 31 — Emporia CT rework end-to-end: two real module bugs fixed; Chiltrix idle misread diagnosed; chiller docs finished; HVAC manual v1.8 drafted)*
+
+Master `11875a5`, Pi in sync, all services active, **only #94 open** (#95, #96, #99–#113 merged and
+deployed). Three threads. **(1) Chiller documentation finished** — David corrected the physical
+picture four times and the plan doc now reflects all of it: the BOS relays are a **parallel tap, not
+a series element** (monitoring can't break cooling; no new conductors); **`CHIL` is the DEMAND side,
+not the run command** — it means chilled water is being drawn from the buffer tank while the
+Chiltrix starts its own compressor on an internal return-water thermostat, with a manual unlabeled
+override relay able to run it with `CHIL` idle; **YOFF, YALT and CRWA are all decommissioned** so
+winter shutdown is a **manual breaker-off** and the BCM 19 rewire is **cancelled** (it had been a
+live "before heating season" item); and the **zone map** is Chiltrix→MBR/Dstrs-Fam/Kids,
+BOS1→Kitchen, BOS2→Great Room. **(2) HVAC System Manual v1.8 drafted** (23 paragraphs text-only, all
+38 images and the paragraph count preserved; figure-bearing sections left for David + new photos).
+**(3) Emporia rework** after David re-arranged CTs — the substantive engineering. Two real bugs
+fixed: **channel names were cached for the daemon's life**, so renames in the app never propagated —
+and because the channel name *becomes the SK path*, it presents as a **stale sensor** rather than a
+naming problem (now on an hourly TTL, keeps old names on API failure, logs renames); and
+**`_sanitize` passed punctuation through**, where the latent case was a `.` silently nesting the SK
+path an extra level. Diagnosed the **Chiltrix reading ~0 W idle**: 24h of InfluxDB showed 0 samples
+≤0.5 W with min 1 W — the CT never truly read zero. **Single-CT-doubled is only valid for a balanced
+240 V load**; the compressor is balanced but the pump/controls are 120 V on one leg, and the CT was
+on the other. A merged pair now shows ~10 W idle. **Gotcha: reset the multiplier to 1.0 on a merged
+pair.** House Power panel rebuilt: stacked, `main` excluded from the stack, `balance` plotted as
+**"Everything else"** (without it the stack can't reach main), and the **great-room BOVA netted out
+of the utility subpanel** since it's metered there. **Next:** identify channel 8 (`dont_know`,
+~25 W); **verify the netting when the great-room BOVA actually runs** (0 W throughout, so untested);
+merge #94 (expect a CLAUDE.md conflict like #96's); zone-by-zone BOS1/BOS2 test; label the override
+relay; glycol 5.7 gal swap.
+
 *Updated 2026-08-10 (session 30 — merged #99/#96/#95; chiller rework plan rewritten against reality; ≈86 gal loop volume + glycol; defect caught in #95)*
 
 **⚠️ PICK UP HERE: master has undeployed changes.** The Pi is at `e6d0bf4`, master at `79afc21`
