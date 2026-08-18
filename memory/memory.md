@@ -7,6 +7,7 @@ Read this file at session start. Load specific topic files only when relevant.
 | `general.md` | Cross-project conventions and preferences | 2026-05-14 |
 | `user.md` | David — user profile, setup, working style, machines (M2 = fixed `10.0.0.83` wired; Wi-Fi reserved `.95`, is what mDNS resolves to), home address, Obsidian vault layout | 2026-07-06 |
 | `reference/mountain-lakes-code.md` | Mountain Lakes NJ municipal code as a grep-indexed local KB (`~/OneDrive - DGLC/Claude/mountain-lakes-code/`) — water rates/watering rules + zoning/building; how to query | 2026-07-06 |
+| `reference/signalk-server-architecture.md` | Architectural review of upstream SignalK/signalk-server (2026-06-06, v2.28.0-beta.2) — report at `~/github/signalk-server-architecture-review.md` (uncommitted loose file); `app` god-object + whole-`app` plugin-API leak are the standing liabilities; core churns hard so treat line refs as stale; AI-PR governance recs (CODEOWNERS + arch-alignment criteria) | 2026-08-18 |
 | `tools/claude-hud.md` | claude-hud statusLine setup quirks (GNU grep `\t` workaround) | 2026-04-28 |
 | `tools/macos.md` | macOS hostname falls back to the gateway's reverse-DNS PTR (shows as `unifi`); fix with `scutil --set HostName` | 2026-06-16 |
 | `tools/unifi.md` | UCG access: controller now ON the UCG Ultra at `https://10.0.0.1` (NOT the Mac mini); API key `~/.config/unifi/claude-agent.key` via `X-API-KEY`; integration + classic API; fixed-IP recipe | 2026-06-23 |
