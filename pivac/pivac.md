@@ -10,52 +10,68 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-*Updated 2026-08-18 (session 32 — Grafana colour grouping shipped; 1-wire ΔT precision bug found + fixed; Unico/BOVA instrumentation plan drafted, #117 OPEN for review)*
+*Updated 2026-08-18 (session 32 — Grafana colour grouping; TWO temperature-precision bugs fixed; Unico/BOVA plan drafted and rewritten, #117 OPEN for review; global prose-style system added)*
 
-Master `e5898a4`+, Pi in sync, **#117 and #94 open**. **⚠️ #117 is deliberately unmerged —
-David will review and suggest changes; do NOT duplicate its content into `CLAUDE.md` until it
-lands.** Three threads. **(1) Grafana colours** (#115/#116, merged + deployed + verified in the
-`resource` table): House Power regrouped by **load family** — blue = cooling (Chiltrix + both
-BOVAs), yellow = subpanels, green = individual loads, grey catch-all, and `main` moved
-dark-blue→**purple** so the unstacked overlay can't read as a fourth cooling series; Apartment
-Power matched to the same scheme. Explicit hex, because adjacent Grafana named shades aren't
-separable across ten bands. **(2) A real precision bug, found mid-design and fixed** (#118,
-merged + deployed + verified): `OneWireTherm` reads `Unit.KELVIN` for Signal K output
-(`OneWireTherm.py:99`) and the live config had `rounding: 0`, so **every 1-wire temperature in
-InfluxDB was quantised to whole Kelvin = 1.8 °F.** Fine for absolute readings, **fatal for ΔT** —
-~18 % error on a 10 °F loop delta, ~45 % on the ~4 °F primary delta. Now `rounding: 2`; verified
-safe first (InfluxDB `_value` is already `double`, no orphaning, no signalk restart). **Not
-retroactive — ΔT analysis starts 2026-08-18.** `pivac.RedLink` has the **same defect** at
-`RedLink.py:329` and should get the same fix. **(3) The design session** →
-`docs/unico-air-handler-btu-monitoring-plan.md` (~1,435 lines). **David set the objective: summer
-comfort + capacity for both the BOVAs and the chiller; efficiency secondary; heating monitor-only
-(he's fine with the boiler not condensing).** Architecture learned: boiler + chiller each carry
-their **own primary pump** (boiler UP26-99F, chiller **Taco — model still pending**) into a
-header; two secondary loops tap it via **closely spaced tees**, one UP26-99F each; **HZ-432
-drives one zone valve per zone, no dampers**; primary return goes to the boiler loop in heating
-and the buffer tank in cooling, so **cooling is buffered and heating isn't**. Taps: primaries
-**HIGH**, secondaries **LOW**; **Loop B set LOW this session and must be raised before heating
-season** (1 zone summer / 3 winter) — a manual seasonal item alongside the **25→30 % glycol**
-top-up (`fluid_k` ≈481→≈476). **The key structural insight: `IN`/`OUT` bracket the tees**, so
-`IN−OUT` is the whole-system capacity signal and — because tees mix — **ΔT_primary/ΔT_secondary
-*is* GPM_secondary/GPM_primary**, making the flow ratio readable from thermometers alone (>1 =
-reverse mixing). That re-sequenced everything: **four DS18B20s on the secondary loops + one
-*primary* flow meter beat a per-coil meter**, and the Arduino node dropped to step 4. **BOVA
-control path settled against the actual IOM** (text extracted locally with `pdftotext`): **`Y2`
-appears zero times** — outdoor block is `C Y B D/W`, so there is no second-stage input to wire;
-speed modulates on **evaporator pressure**, target adjustable only via **SW4-3/SW4-4, both
-already set** on the great room (75–77 Hz). **So the compressor is already maxed and the
-constraint is downstream — charge or airflow.** Suction pressure is the *load signal*, not an
-input: the only honest way to raise it is more CFM. **And SW4-3 may be hurting comfort** — the
-manual ties SW4 to dehumidification *and* capacity, which trade off. **Dynamic airflow is out**
-(Smart Controller is USB-only and pauses on fan-speed change), so **CFM is static and is the knob
-that biases the compressor's operating point** — reducing this to a finite two-knob tuning
-exercise (CFM × SW4-3) scored on droop *and* humidity. **Next:** David reviews #117; run the
-zero-cost droop-vs-power-vs-humidity analysis (**all three cooling units are now individually
-metered** — the missing term in the July analysis); fix `RedLink` rounding; two NTCs in the great
-room; four DS18B20s on the secondary loops; **restore leak detection** (regression from the BCM 25
-`SCALA`→`CHIL` rename); plus session-31 carryovers (channel 8 `dont_know` now reads 42.6 W; verify
-House Power netting with the great-room BOVA running; #94; label the override relay).
+Master current, Pi in sync, **#117 and #94 open**. **⚠️ #117 is deliberately unmerged — David
+will review and suggest changes; do NOT duplicate its content into `CLAUDE.md` until it lands.**
+
+**(1) Grafana colours** (#115/#116, deployed, verified in the `resource` table): House Power
+regrouped by **load family** — blue for cooling (Chiltrix + both BOVAs), yellow for subpanels,
+green for individual loads, grey catch-all, and `main` moved to **purple** so the unstacked
+overlay cannot read as a fourth cooling series. Apartment Power matched. Explicit hex, because
+adjacent Grafana named shades are not separable across ten bands.
+
+**(2) Two temperature-precision bugs, both found mid-design and both fixed.**
+`OneWireTherm` reads `Unit.KELVIN` for Signal K output and the live config held `rounding: 0`,
+so every 1-wire temperature reached InfluxDB **quantised to 1.8 °F** (#118). `RedLink` was
+worse: `int(ktemp)` at `RedLink.py:329` **truncated rather than rounded**, so every zone read up
+to 1.8 °F cold, always downward, **biasing droop low** — and setpoints truncated the same way,
+discarding Honeywell's half-degree steps (#119). Caught live: `MASTER_BR` stored 297 K (75.2 °F)
+against `coolset` 76, reading as below setpoint when the true value was 76.0. Both merged,
+deployed, verified; InfluxDB `_value` was already `double` in both cases so nothing orphaned.
+**Not retroactive — quantitative ΔT and droop analysis starts 2026-08-18.**
+
+**(3) The design plan** → `docs/unico-air-handler-btu-monitoring-plan.md` (1444 lines).
+**David's objective: summer comfort + capacity for both the BOVAs and the Chiltrix; efficiency
+secondary; heating monitor-only.** Architecture: boiler and chiller each carry **their own
+primary pump** (boiler UP26-99F, chiller **Taco — model still pending**) into a header; two
+secondary loops tap it via **closely spaced tees**, one UP26-99F each; **HZ-432 drives one zone
+valve per zone, no dampers**; primary return goes to the boiler loop in heating and the buffer
+tank in cooling, so **cooling is buffered and heating is not**. Taps: primaries **HIGH**,
+secondaries **LOW**; **Loop B set LOW and must be raised before heating season** (1 zone summer
+/ 3 winter), alongside the **25→30 % glycol** top-up (`fluid_k` ≈481→≈476). **Key structural
+insight: `IN`/`OUT` bracket the tees**, so `IN−OUT` is whole-system capacity and, because tees
+mix, **ΔT_primary/ΔT_secondary *is* GPM_secondary/GPM_primary** — the flow ratio from
+thermometers alone, >1 being reverse mixing. Four DS18B20s + one *primary* flow meter therefore
+beat a per-coil meter, and the Arduino node dropped to step 4.
+
+**(4) BOVA findings, from the actual IOM** (text extracted locally with `pdftotext`). **`Y2`
+appears zero times** — the outdoor block is `C Y B D/W` and the condenser takes one 24 V call,
+staging internally. **But `Y2` drives the air handler's second-stage fan**, so a second-stage
+call reaches the compressor *through airflow*. **David found the great room's setpoint loss: its
+`Y2` fan wire had been disabled.** He reconnected it and raised base CFM, so **that complaint is
+resolved** — but the zone now carries **three sensible-biased settings at once** (`Y2`, raised
+CFM, `SW4-3` on), so **watch humidity there, not temperature**, and give `SW4-3` back first if
+it reads clammy. Compressor speed modulates on evaporator pressure; SW4-3/SW4-4 are the only
+adjustments and **both are already set**, so any remaining constraint is charge or airflow.
+**Dynamic airflow is out** — the Smart Controller is USB-only and pauses on fan-speed change —
+so **CFM is static and sets where the compressor operates**, reducing this to a two-setting
+tuning exercise scored on droop and humidity.
+
+**(5) A global prose-style system**, since David wants concise Strunk-and-White writing rather
+than AI voice. A **19-bullet `### Prose style` section in `global.md`** plus a new **`/style`
+skill** — both in this repo, so they reach every machine on pull (`~/.claude/CLAUDE.md` →
+`global.md`, `~/.claude/skills` → `skills/`). Four rules merged from
+[yzhao062/agent-style](https://github.com/yzhao062/agent-style). The whole plan was then
+rewritten against them: bold spans **452 → 19**, em-dashes **237 → 3**, banned vocabulary
+**60+ → 0**. That rewrite surfaced three real content errors, which argues for hand-rewriting
+over word substitution.
+
+**Next:** David reviews #117; run the zero-cost droop-vs-power-vs-humidity analysis (all three
+cooling units are individually metered); two NTCs in whichever BOVA zone it identifies; four
+DS18B20s on the secondary loops; **restore leak detection** (regression from the BCM 25
+`SCALA`→`CHIL` rename); plus session-31 carryovers (channel 8 `dont_know` now reads 42.6 W;
+verify House Power netting with the great-room BOVA running; #94; label the override relay).
 
 *Updated 2026-08-13 (session 31 — Emporia CT rework end-to-end: two real module bugs fixed; Chiltrix idle misread diagnosed; chiller docs finished; HVAC manual v1.8 drafted)*
 
