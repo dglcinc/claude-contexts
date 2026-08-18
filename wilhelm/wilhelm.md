@@ -4,6 +4,63 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-08-18) — Discord support run: three PRs, two issues, one correction
+
+A user-support session across three reporters. No local work is blocked; everything now sits with
+Scott. Thirteen of David's PRs are open against `development`.
+
+**Custom-template pile-up (Greg) — PRs #151 and #149, issue #148.** The accumulation traces to
+layout import. `Settings.m -importLayout:toName:` read builtin templates as `pageLayouts[ui][name]`,
+but that dict holds only `baseSize` and `pages`; the templates sit under `pages`, which is how every
+other call site reads them. The lookup missed every time, so every imported page was treated as
+using a custom template, and the clone-on-collision branch ran per page rather than per template. A
+six-page layout minted six numbered near-identical copies, each referenced by exactly one page,
+hence each "in use" and refusing to delete. **PR #151** fixes both lookups (the same missing
+`[@"pages"]` was in `NPagesTableViewController -getLayoutExportData`, which dropped builtin template
+definitions from server saves), dedups per template, skips identical clones, never repoints a page
+at a name it does not create, and guards `findAvailableCustomLayoutName:` returning nil at 100.
+
+**A correction worth remembering.** David's first answer to Greg was that the traditional editor
+could delete a template by tapping the thumbnail and pressing Delete. Greg said there was no such
+button and he was right. `-[LayoutEditorViewController deleteLayout:]` is an IBAction with no
+connection in `LayoutEditor.storyboard` and no `addTarget:` anywhere, so `deleteLayoutNamed:` is
+unreachable; the `deleteButton` outlet points at the `minus.circle` button whose action is
+`deleteGauge:`. **Verify UI claims against the storyboard, not the `.m`** — `deleteButton.hidden = NO`
+read like proof and was not. That made #148 larger than "the swipe fails silently": the new editor
+listed only templates used by the open layout while the delete refused anything any page
+referenced, so a listed template was in use by construction and an unused one had no row to swipe.
+A custom template could not be deleted from anywhere in the app. A second commit on **#149** lists
+every custom template for the UI, so orphans get a row that deletes cleanly.
+
+**V2 Notifications API (Greg) — PR #152, issue #153.** With the "Use V2 Notification API" box
+ticked he could no longer clear an alarm. Verified against `signalk-server` 2.27.0: the server sets
+`status.canClear = false` for every external alarm (anything raised by a delta, so all plugin and
+NMEA notifications), `Alarm.clear()` throws for those, and `Alarm.acknowledge()` empties
+`value.method` without touching `value.state` — so acknowledging mutes rather than clears, which is
+his "goes grey but the server doesn't change". The app then disables Clear via
+`canClearNotification:` = `useV2 && canClear`. Server design rather than an app defect, but the app
+presents it as a dead button, so **issue #153** proposes falling back to the v1 `state=normal` PUT.
+One real app bug found and fixed in **PR #152**: Silence All posted to `/notifications/silanceAll`,
+a typo for the server's `silenceAll`, so it 404'd. The MOB button appearing top-left is deliberate
+(`TopBarHandler.m:152-154` hides it unless V2 is on). The V2 setting is **global**, not per
+connection. Greg is running a TestFlight build from `feature/anchor-live-activity`, identifiable
+because his token line reads "Has Device Token | Push-to-Start Token: No", a format that exists only
+on that branch.
+
+**VPN remote access (Andrew Maci) — advisory, no code.** A VPN works and is the better answer for
+him, since it bypasses Victron's cloud entirely and makes the VRM auth deprecation behind #150
+irrelevant. Three verified points: the connection must be added manually because Bonjour will not
+traverse a tunnel; Local Push Notifications are SSID-gated
+(`iOSStreamingBoat.m:69-77`, `supportsLocalPushNotifications` = `getLocalPushSSIDs.count > 0`) so
+they go unavailable ashore while Remote Push keeps working; and the cellular low-bandwidth throttle
+is merged but has no UI (`wsk_cellularLowBandwidth`, default off), so users should be pointed at the
+per-connection Refresh Rate setting instead.
+
+**Convention added to the project `CLAUDE.md`:** Discord replies are always drafted as **one block
+with no line breaks**, because Discord sends on Enter and any newline becomes a half-sent message on
+paste. Also corrected there: the project sets `SUPPORTS_MACCATALYST = YES` on the main app and
+widgets targets, contrary to the iOS/tvOS/watchOS platform list.
+
 ## Current State (2026-08-10) — Template pile-up root-caused to layout import → PR #151
 
 The #148 reporter came back on Discord with three observations, all now explained, and both of
@@ -19,10 +76,11 @@ path touches the template store.
 sections 0 "Your Pages", 1 "Builtin Page Templates", 2 "Custom Page Templates") the rules are
 0→0 reorder, 1→0 / 2→0 add a page, **0→1 deletes a PAGE** (the "mid section" trick he found),
 1→2 / 0→2 clone into custom templates. Dragging *from* section 2 falls through to a bare
-`reloadData`. The real delete is a **tap** on the section-2 thumbnail (`handleTapGesture:`,
-`:502-529`) → opens the layout editor with `config:nil` → Delete button visible
-(`LayoutEditorViewController.m:94-119`) → `deleteLayoutNamed:`, which has **no reference check**
-at all (the inverse of the swipe path), so it blanks any page still using the template.
+`reloadData`. Tapping a section-2 thumbnail (`handleTapGesture:`, `:502-529`) opens the layout
+editor, but that screen has no working delete either: `-[LayoutEditorViewController deleteLayout:]`
+is an IBAction with no storyboard connection and no `addTarget:`, so `deleteLayoutNamed:` is
+unreachable, and the `deleteButton` outlet points at the `minus.circle` button whose action is
+`deleteGauge:`. The traditional editor cannot delete a custom template at all.
 
 **3. The new editor shows only one** because its Templates section lists just
 `getCustomTemplatesUsedByLayout:forUI:` (`NPagesTableViewController.m:94`) — templates used by
