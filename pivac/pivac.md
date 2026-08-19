@@ -10,6 +10,49 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-18 (session 33 — #117 rewritten as an assessment with a verdict; hydraulics
+settled from real topology, datasheets and live data)*
+
+Master current, **#117 and #94 open**. **⚠️ #117 remains deliberately unmerged** — David reviews
+first; do not duplicate its content into `CLAUDE.md` until it lands.
+
+PR #117 is now an assessment rather than a build plan, renamed
+`docs/unico-air-handler-btu-monitoring-plan.md` → **`docs/unico-cooling-assessment-and-tuning.md`**
+(~2,460 lines, sections 1–9 + TOC, reference material in appendices A–I). Fifteen commits.
+
+**Topology, David-confirmed.** Loop A = kids (M1218) → master (M2430, attic coil); Loop B = lower
+family/utility (M2430) → kitchen (M3036) → great room (M3036). Kitchen and great room are **DX in
+cooling** with hot-water hydronic modules for heat, so summer Loop A carries 2 chilled coils and
+Loop B 1. **Four-pipe VCT37C tank** (37 gal = 304 BTU/°F, 8.6 gal/ton); chiller ↔ tank on the
+CX75's **own modulating pump**; **the Taco 0015-MSF3-IFC is the DISTRIBUTION pump**, confirmed on
+HIGH. Header 6 ft of 1½" copper; mains 1¼" PEX (ID ~1.07", frictions like 1" copper).
+
+**The ΔT question is answered.** Primary flow is fixed at ~14.5 GPM, so `IN − OUT` reads house
+load — 7.4 °F at the CX75's full rating, 4.3 °F at 2.5 tons. Measured 5.34 °F ≈ 3.1 tons on an
+80 °F evening. **The 8–12 °F band arrives at design load and not before**, and chasing it means
+cutting flow, which costs capacity and dehumidification.
+
+**Every zone holds setpoint** (zero droop, chiller idle 54 %), so the measured shortfall is
+humidity: 60 % MASTER_BR / 59 % KIDS_ROOM against 48.6 % in the DX kitchen. **The kids room is a
+latent load, not a capacity shortfall** — laundry plus two full baths in a small space, highest
+duty in the house (51.4 %) yet dead on setpoint. A *bigger* handler would be worse. Fixes are
+lower CFM on that handler and bath/laundry exhaust.
+
+**Pump settings from calculation** (Unico published coil ΔP + the UPS26-99FC curve): MEDIUM Loop A
+(David set it), LOW Loop B summer, **HIGH Loop B winter** — LOW leaves the great room at 67 % of
+design. **No pump purchase warranted**; primary and secondary are matched at 14.5–16.4 vs 15.8 GPM.
+
+**Modbus register map found** ([jasipsw/homeassistant-chiltrix-modbus](https://github.com/jasipsw/homeassistant-chiltrix-modbus)):
+203/202 water out/in, **257 flow**, 260 pump speed, 256 power, 281 compressor starts. **Register
+257 means the flow meter stays off the list** — the tank decouples flow but conserves energy, so
+`Q_house = Q_chiller − 304 × d(UBT)/dt` gives distribution flow to ±10 %. David is building the
+feed this weekend.
+
+**Next:** David reviews #117; Modbus feed; four DS18B20s on the secondary loops (**on the copper
+at the tees, not the PEX**); kids-room CFM + exhaust; Loop B to HIGH before heating season with
+the 25→30 % glycol top-up; restore leak detection (BCM 25 regression).
+
+
 *Updated 2026-08-18 (session 32 — Grafana colour grouping; TWO temperature-precision bugs fixed; Unico/BOVA plan drafted and rewritten, #117 OPEN for review; global prose-style system added)*
 
 Master current, Pi in sync, **#117 and #94 open**. **⚠️ #117 is deliberately unmerged — David
