@@ -10,6 +10,60 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-19 (session 34 — master-bedroom Y2 goal added to #117; the old UniChillers turn out
+to be a controlled experiment and they indict the chilled-water temperature)*
+
+**⚠️ If this session is on the M2 MacBook, the job is the DS18B20 bench work.** David has the four
+secondary-loop probes and is addressing and calibrating them on an Arduino over USB. The procedure is
+**`~/github/pivac/docs/ds18b20-provisioning.md`** on branch `docs/unico-btu-monitoring-plan` (pull it
+first; it is not on master yet). It covers the enumeration sketch, tying each ROM to a physical probe
+by hand-warming rather than by its printed tag, the CRC-8/Maxim check, the printed-ROM to w1-name
+byte reversal, and two-point matched-pair calibration. **Fill in and commit the ROM map in §7 before
+anything is installed.** Two probes go on Loop A supply/return and two on Loop B, mounted on copper
+at the tees. While Arduino tooling is out on that machine, also **re-capture the .114 DHW board's
+recirc-temperature sketch** — it exists only on the M2 and on the board, was never committed, and
+reflashing that board from the repo would silently drop the recirc temperature.
+
+**Plan David chose:** free and cheap steps first, **chiller setpoint deliberately deferred** to
+collect more data. That is the right order — Y2 and the loop probes give a pre-change baseline that
+would not exist if the setpoint moved first.
+
+**The finding that reorders everything.** Two 5-ton Unico UniChillers ran the house until they failed
+4 July, on/off, controlling **leaving** water at 38 °F with a 10 °F differential, so the loop
+sawtoothed 38–48 °F. The same sensors logged them, which makes this a before/after on one house.
+Binned by outdoor air, `IN` sampled only while the master bedroom called: the loop now runs **6–8 °F
+warmer at every band**, the zone runs **46 % → 68 %** of the time in the 80–85 °F band, and it sits
+**5–10 points wetter**. The new era is the *milder* of the two (90.1 °F peak vs 98.3 °F), and `IN`
+barely moves with load in either era, so neither plant is capacity-bound — the gap is a setting.
+Warmer water costs ~17 % of sensible capacity at every coil and lifts the coil outlet to the room dew
+point, against a few per cent for the master coil's 74 %-of-design flow. **Water temperature is the
+large term; distribution is the small one.**
+
+**The remedy is one parameter, when he chooses to take it.** Chiltrix targets **return** water and
+the fully mixed tank settles there. Set to **50 °F with a 2 °C restart hysteresis** (band 50–53.4),
+and 50 °F is exactly the floor **P109=0** allows. **P109=1** opens the range to 41 °F, conditioned on
+glycol not freezing at −10 °C — 25 % PG sits on that line, 30 % clears it, so the glycol top-up moves
+off the heating-season list onto the critical path. A 42 °F target should put `IN` near 39–41 °F and
+reproduce the old plant. Capacity falls with the target and the CX75 is 4.3 tons against the 5-ton
+UniChiller, so step it and watch for `IN` rising above target.
+
+**Y2 needs a wire; Honeywell has no stage data.** The Total Connect payload was read directly:
+`EquipmentOutputStatus` is off/heat/cool only and `fanData` gives the user's fan mode. Y2 fraction
+(stage-2 time over cooling-call time, denominator already logged as `statenum`) is a better metric
+than droop, which reads a flat zero. Cheapest path is a 24 VAC relay on the spare pair to a free Pi
+input under `pivac.GPIO`. **David's feedback-loop question is answered by the CX itself**: Dynamic
+Humidity Control lowers the water target on room humidity (P114) or room temperature (P115) from one
+indoor sensor, off from the factory — P115 covers what a Y2 feedback wire would carry, so Y2 stays a
+measurement and pivac stays read-only.
+
+Thermostat is a **THX9421R5021WW** (Prestige IAQ 2.0). Read **ISU 3010 first** — on Basic it hides
+3020 (Finish With High Cool Stage), 3030 and 3140. Master fan mode is **circulate**, which re-wets
+the room from a wet coil between calls. Appendices J and K of the assessment carry the ISU list and
+the Chiltrix parameters.
+
+#117 remains **open and unmerged pending David's review**, now ~3,160 lines.
+
+
 *Updated 2026-08-18 (session 33 — #117 rewritten as an assessment with a verdict; hydraulics
 settled from real topology, datasheets and live data)*
 
