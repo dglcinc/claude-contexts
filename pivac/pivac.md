@@ -10,6 +10,30 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-22 (session 36 — bench-calibrated the ten DS18B20 secondary-loop probes end to end;
+PR #120 open)*
+
+Ten DS18B20 probes addressed, labelled **PA1A–PA5B**, ice-point calibrated, and cross-check verified
+on the Mac (UNO R4 WiFi over USB, `arduino-cli`). Identified each by ice-water insertion, calibrated
+against a Thermapen ONE in a circulating slush, then confirmed by pulling them out one at a time —
+all ten removal IDs matched the insertion assignments. Record committed in **PR #120**
+(`docs/ds18b20-PA1-5-calibration.md`): ROM/w1 map, offsets in °F and K, per-pair ΔT-zero corrections.
+Pair A–B agreement reproducible to ~0.05 °F, absolute offsets to ±0.2 °F. Single-point (ice) only;
+45 °F slope point deferred.
+
+**Two things worth carrying forward.** The DS18B20 bus reads zero devices on a breadboard — diagnose
+with a raw-OneWire sketch reporting the presence pulse and the pin's idle level (LOW idle = pull-up
+not on the D2 node); a soldered/connector bus fixed it. And ice-bath calibration needs a *stable,
+uniform* fixed point: loose probes and under-iced/stagnant baths gave 1.4–2.8 °F non-uniformity and
+non-reproducible offsets (one run warmed 2.8 °F between captures while the Thermapen still read 32.0
+— reference and probes in different water). A circulating chiller + packed crushed-ice slush, probes
+bundled tips-together with the Thermapen co-located, gave a flat plateau (SD <0.06 °F) that
+reproduced.
+
+**On install:** verify each `28-…` under `/sys/bus/w1/devices/` on the Pi before trusting config,
+apply offsets in **Kelvin** (pivac stores temps in K), mount on **copper at the tees, not PEX**.
+`arduino-cli` lives on the Mac at `/opt/homebrew/bin` (renesas_uno + OneWire/DallasTemperature).
+
 *Updated 2026-08-21 (session 35 — the colder-target experiment ran, worked, and locked the chiller
 out on E14; root-caused to P59 and whole-°C setpoint rounding)*
 
