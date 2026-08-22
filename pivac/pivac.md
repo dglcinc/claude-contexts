@@ -10,6 +10,41 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-21 (session 35 — the colder-target experiment ran, worked, and locked the chiller
+out on E14; root-caused to P59 and whole-°C setpoint rounding)*
+
+**⚠️ Chiller incident, resolved.** David set P109 = 1 and dropped the return target to 46 °F at ~21:30
+on 20 Aug. **E14 "System anti freeze level one twice" locked the chiller out at 19:01 on 21 Aug**, and
+**the "Error reset" button did not clear it — a breaker power cycle was required.** Target is back at
+**50 °F** and the chiller is running. **Cause: `P59` "AC anti-freezing temperature" defaults to 3 °C =
+37.4 °F and watches *leaving* water**, and the unit runs ~9 °F below its *return* target, so the
+lowest safe target is ~49 °F. **The controller also stores the target in whole °C**, so °F entries
+land low — 50 °F = 10 °C exactly, but 48 °F = 8 °C = 46.4 °F, putting leaving water exactly on the
+trip. **Set it in °C.** Order for any retry: **glycol → P59 → target**; P109 only opens the range.
+`P53` (pump minimum 40 %) lets the ΔT widen at low demand, which is when it tripped. Recorded in
+project `CLAUDE.md`.
+
+**The experiment worked, which is the point.** The one usable afternoon: master-bedroom dew point
+**56.5 → 54.7 °F while outdoor dew point ROSE** (73.3 vs 73.0/72.4), room temp pinned at 76.0 all
+three days. And only part of the change landed — `IN` averaged 46.6 against a stored 44.6 target
+because the protection clipped every cycle — so **1.2–3.6 °F of real water bought 1.7 °F of dew
+point** and the full change has more to give. Kids zone: **read duty, not cycle count** — 48.8 % at
+73.0 °F out → 40.5 % at 76.7 °F, but cycles got shorter and more numerous, which is arithmetic at
+lower duty.
+
+**No further target change until the Modbus feed can watch leaving water while it moves** (David's
+decision). Registers 202/203 give the real part-load evaporator ΔT — the number that decides whether
+P59 needs touching at all — and 257/260 show whether the pump drops to its P53 minimum at low demand.
+
+Everything else from session 34 stands: the master-bedroom **Y2 goal** (Honeywell exposes no stage
+data, verified against the raw payload, so Y2 needs a wire), the **old-UniChiller comparison** (loop
+6–8 °F warmer at every matched outdoor band), and the **M2 bench task** —
+`~/github/pivac/docs/ds18b20-provisioning.md` on branch `docs/unico-btu-monitoring-plan`, plus
+re-capturing the .114 recirc sketch that exists only on that machine.
+
+#117 remains **open and unmerged pending David's review**, now ~3,300 lines.
+
+
 *Updated 2026-08-19 (session 34 — master-bedroom Y2 goal added to #117; the old UniChillers turn out
 to be a controlled experiment and they indict the chilled-water temperature)*
 
