@@ -10,6 +10,48 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-22 (session 37 — the chiller's repeated P5 alarms traced to a clogged Y-strainer;
+Modbus connection settled and a scanner sketch written; PR #121 opened)*
+
+**The chiller was failing and it was a clogged strainer.** Repeated **P5 "indoor unit water flow
+error"**, which is the **low-flow alarm**: `P65` sets the threshold at **20 L/min** on cx65/cx75,
+`P64` selects the flow meter, and `C13` is the live readout. The Y-strainer came out **heavily
+clogged with calcium-looking scale** migrating from the boiler side of the shared four-pipe loop.
+**After cleaning, `C13` reads over 54 L/min.** The signature was unmistakable in InfluxDB: runtime
+collapsed to **169 min against 626–1,012 min on each of the prior ten days**, the loop warmed from
+~45 °F to **77 °F**, and only the chiller's zones drifted while the two DX zones held. Pressure held
+21–23 psi throughout and the unit still made cold water when it ran, so capacity was fine and the
+protection was stopping it. Margin is thin by design here — ~30,000 BTU/hr at the 9 °F design ΔT
+needs ~25 L/min against a 20 L/min trip. **`C13` reads 0 at idle and that is normal**: the pump only
+runs during a call, and the 1–2 minute pump-only window at the start of each run is when to read it.
+
+**Do not raise the autofill to recover pressure.** On a glycol system the feed valve should stay
+closed — an autofill carries in the calcium and oxygen that caused this, dilutes the glycol
+silently, and hides leaks. Top up manually with premixed glycol to the usual 21–23 psi. The open
+question is whether makeup water has been entering at all, and a week of the logged pressure trace
+with the feed closed answers it.
+
+**The Modbus feed is now unblocked.** The CX's BMS terminals are **`DA1` = A, `DA2` = B**, and
+Chiltrix's own ProtoAir gateway guide gives **Modbus RTU 9600/N/8/1, Node-ID 1**. The chiller is a
+**slave** on that port, so polling on demand works. **The two community register maps contradict
+each other** — jasipsw (CX50-2) and gonzojive (CX34) disagree on nearly every address and neither
+covers a CX75 — so §4.2 of the assessment now carries both plus the verification requirement. The
+shortcut worth trying first: in the CX34 map **register 53 is `P53`**, so if parameter numbers are
+register addresses the answer is exactly **40**.
+
+**M2 task:** run `ChiltrixScan` (in `~/OneDrive - DGLC/Claude/chiltrix-sketches/`, compile-verified
+for the UNO R4) — `d`, then `p`, then `k`. DFRobot **DFR0259** shield, both DIP switches **AUTO** and
+**ON**. Cable has two conductors plus a drain outside the foil: **A and B only, drain at the chiller
+end alone, nothing on the Arduino GND**. Then commit both sketches to `~/github/Arduino`, and
+re-capture the .114 recirc sketch that still exists only on that machine.
+
+**PR #121** fixes the last module emitting integer Kelvin (`ArduinoSensor`), which matters because
+the Modbus inlet/outlet registers are 0.1 °C and the evaporator ΔT is the number that decides
+whether `P59` needs touching. #117 remains **open and unmerged pending David's review**.
+
+Four Chiltrix PDFs are now in `~/OneDrive - DGLC/Claude/HVAC Manuals/`. Chiltrix publishes no CX75
+manual; the CX65 is the closest sibling.
+
 *Updated 2026-08-22 (session 36 — bench-calibrated the ten DS18B20 secondary-loop probes end to end;
 PR #120 open)*
 
