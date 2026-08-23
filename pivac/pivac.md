@@ -10,38 +10,74 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Chiltrix Modbus bring-up, continue on the M2 (2026-08-23)
+> ### ▶ ACTIVE HANDOFF — Chiltrix: the Arduino end is proven, ask the rep (2026-08-23)
 >
 > **Read `docs/chiltrix-modbus-bringup.md` first. It is on branch `docs/chiltrix-modbus-bringup`
 > (PR #125), not on master:** `git -C ~/github/pivac fetch && git -C ~/github/pivac checkout
-> docs/chiltrix-modbus-bringup`. It is written to be read cold and contains everything below in
-> full.
+> docs/chiltrix-modbus-bringup`. It is written to be read cold.
 >
-> **Do not re-test what is already eliminated:** A/B polarity (swapped, no change), the terminals
-> (verified against the board silkscreen — `P6` = `DA1`/`DA2`/`GND`), parity (vendor doc fixes
-> 8N1), a Modbus parameter on the CX (**the entire `P00`–`P119` table was read; no such setting
-> exists**), `SW1` (it is the **compressor model encode**, `C38` — **do not touch it**; as found
-> 1 off, 2 on, 3 off, 4 on), a ground offset (common mode 60 mV), and the R4's serial port (the
-> sketches already use `Serial1`).
+> **Do not re-test the Arduino end. It is measured, not assumed.** Fail-safe bias is fitted
+> (680 Ω +5 V→A, 680 Ω B→GND, Arduino end only) and the idle pair reads **0.44 V**, clearing the
+> 200 mV receiver threshold. Transmit is proven by the `RS485Blast` sketch — continuous `0x55` on
+> `Serial1` moves the pair to **1.085 V**, which no fixed divider can do. Ids **1–32 at 9600 in
+> both polarities** return a flat "no" with **zero CRC errors**, ever. Also already eliminated:
+> terminals (`P6` = `DA1`/`DA2`/`GND`, verified against silkscreen), 8N1, a Modbus parameter on the
+> CX (the whole `P00`–`P119` table was read), `SW1` (compressor model encode — **do not touch**),
+> ground offset (60 mV), and the R4's serial port.
 >
-> **Cause found:** the RS-485 pair has **no fail-safe bias from either end** — A−B ≈ **10 mV**,
-> A and B each ≈**60 mV** to the drain, i.e. a floating line, far under the **200 mV receiver
-> threshold**, so the receiver free-runs on noise. The DFR0259 has no bias network and its AUTO
-> mode tri-states between frames.
+> **The cable is proven too, by arithmetic on the idle reading.** `V_AB = 5 × R/(1360+R)` at 0.44 V
+> solves to R ≈ 130 Ω, a 120 Ω terminator at the far end; the transceiver's own ~12 kΩ would have
+> left the pair above 4 V.
 >
-> **The untested fix:** `+5 V ─[680 Ω]─ A` and `GND ─[680 Ω]─ B`, **at the Arduino end only** (no
-> chiller-panel work, 240 V side stays shut; no risk — 5 V through 680 Ω is 7.4 mA into a short).
-> Pull-up on A, pull-down on B; reversed inverts idle and is worse. **Still no terminator.**
-> Verify with a meter first: **A−B must go from 10 mV to volts** (expect 1–4 V unterminated).
+> **`P6` is probably not the route.** Not one byte has ever arrived from the far end, including the
+> polling the wired controller must be doing at `P4`. Two connectors sharing a UART would show each
+> other's traffic. Chiltrix's guide has the Remote Gateway inserting itself as master, so a
+> terminated, silent `P6` on a gateway-less CX75 may be designed behaviour.
 >
-> **Then run capital `P`, not lowercase `p`** — `p` probes slave id 1 only, `P` sweeps 1–32.
-> Console is 115200; DFR0259 ON/OFF switch **OFF to upload, ON to run**. Capture the transcript;
-> the three branches (responds / `0xE3` CRC / flat "no") each mean something different and are
-> spelled out in §4 of the runbook.
+> **Next action is the rep, visiting ~week of 2026-08-30.** Lead question: *what is the supported
+> way to attach a device that logs everything the wired controller sees?* Full list in §5 of the
+> runbook. In Modbus terms the device is a **master**; the chiller is the slave.
 >
-> **While on the M2:** commit both sketches to `~/github/Arduino`, and **re-capture the `.114` DHW
-> recirc sketch** — it exists nowhere else, and flashing the repo's psi-only sketch onto that board
-> would silently drop `environment.inside.hvac.dhw.recirc.temperature`.
+> **Two traps that cost an evening.** The DFR0259 `ON/OFF` switch reads identically to a dead
+> shield — the L LED is driven by the sketch and flashes either way while the pair sits at exactly
+> the bias voltage. And an AC-volts transmit test cannot work: `P` is ~0.1 % duty and `w` ~0.3 %,
+> which a meter averages to nothing.
+>
+> **The wired controller is the standard CX controller, NOT a Psychrologix** — that is a separate
+> product for indoor Chiltrix zone units this house does not have. There is **no ProtoAir on the
+> network** either. Earlier notes saying otherwise were wrong.
+>
+> **While on the M2:** commit `ChiltrixScan`, `ChiltrixModbus` and `RS485Blast` to
+> `~/github/Arduino`, and **re-capture the `.114` DHW recirc sketch** — it exists nowhere else, and
+> flashing the repo's psi-only sketch onto that board would silently drop
+> `environment.inside.hvac.dhw.recirc.temperature`.
+
+*Updated 2026-08-23 (session 40 — the Modbus link's Arduino end proven good; the strainer cleaning
+reviewed against InfluxDB and it qualifies #117's central finding)*
+
+**The clogged Y-strainer sat underneath the water-temperature comparison, and cleaning it recovered
+part of the gap on its own.** Matched 09:00–17:45 windows at the 50 °F target: pre-clean (12–20 Aug)
+return water held **52.4–54.4 °F, mean 53.3**, with running power averaging **1593 W**; post-clean
+(23 Aug) return water was **51.9 °F** on **1423 W** at a 75.4 °F outdoor average — the lowest of any
+day in the window, on an above-median day. Runtime does not explain it, since 19 Aug ran longest
+(513 min) and still returned warmer water than 23 Aug did at 446 min.
+
+**A chiller meeting its load sits at target; this one ran 2.4–4.4 °F above it every afternoon.**
+That is what restricted evaporator flow produces, so **part of the 6–8 °F gap #117 attributes to the
+setpoint is the chiller failing to hold the setpoint it already had.** #117 now carries §6.4 saying
+so, and **§7's target walk-down is gated on two weeks of clean-flow data at 50 °F.** The E14 lockout
+reads differently too: low flow widens the evaporator ΔT onto the `P59` trip, so the restriction
+likely contributed to the 21 Aug trip at 46 °F.
+
+**Zone comfort shows no change yet, and the perception should not be trusted over the data.** All
+three chiller zones sat on setpoint on 23 Aug as they did on 19–20 Aug; chiller-zone humidity against
+the DX kitchen and great room as a control sits inside the pre-clean spread. Caveats: one post-clean
+day, the tank probes were swapped 22 Aug, and zone temperatures before 18 Aug are truncated to whole
+Kelvin.
+
+**`C13` is the cheap recurring check** — read it in the 1–2 minute pump-only window at the start of a
+call (>54 L/min after cleaning, `P65` trips at 20). The scale comes from the boiler side of a shared
+loop, so it will foul again.
 
 *Updated 2026-08-23 (session 39 — the Sentry warp drifted again and was recalibrated; the RPI-BC
 relay-input rebuild designed; the 1-wire bus-topology doc written)*
