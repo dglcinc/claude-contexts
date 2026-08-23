@@ -10,6 +10,38 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-22 (session 38 — the calibrated DS18B20s went on; the four loop probes took the
+w1 bus down and came back off; PR #122 opened)*
+
+**The buffer tank now carries bench-calibrated probes and the secondary loops do not, yet.** David
+installed the PA1–PA5 set: **PA3A/PA3B replaced the two repurposed tank probes** (the former CRW and
+outdoor AMB sensors, now decommissioned), and supply/return pairs went onto both secondary loops.
+**Connecting the four loop probes took the whole bus down** — the kernel search enumerated 64
+phantom devices and the count settled at **zero**, taking IN and OUT with it after six clean days.
+They came back off for the night; the bus is stable at four.
+
+**`w1_search: max_slave_count 64 reached` is an electrical fault, not 64 sensors.** The search walks
+the ROM tree bit by bit, and on unreliable bit timing it takes both branches at every node until it
+hits the ceiling. **Read the pin before assuming a short:** `raspi-gpio get 4` showed `level=1`, so
+the line idled high and the pull-up was alive. Ranked causes when the device count doubles: one
+4.7 kΩ pull-up no longer driving the added cable capacitance, star topology, or a probe with DQ and
+VDD swapped. **The failure is silent in pivac** — the service stays `active` and logs only
+`bus now has 0 sensor(s)`; the 30-minute freshness alerts are what reported it.
+
+**PR #122** adds the `offset` key `OneWireTherm` never had, which is what made PR #120's calibration
+unusable — a difference of a few degrees measured with probes that spread 1.4 °F. Stated in Kelvin,
+with a dependency-free test asserting that correcting both ends of a pair moves the loop ΔT by the
+pair's ice-point difference. Also a `Secondary Loop Supply / Return` panel and four loop freshness
+alerts, **shipped paused** because an unpaused rule on a metric that has never existed emails on
+every evaluation.
+
+**Two naming traps worth carrying.** The probe pair numbers and the loop letters deliberately
+differ: **pair PA1 serves loop B**, pair PA2 serves loop A. And **3A is upper, 3B is lower** on the
+tank — they read within 0.11 °F, so the data cannot tell them apart.
+
+**Next:** bisect the bus one probe at a time starting with PA1A (it logged `err=-5`); merge #122 and
+pull on the Pi to activate the offsets; unpause the loop alerts once they publish.
+
 *Updated 2026-08-22 (session 37 — the chiller's repeated P5 alarms traced to a clogged Y-strainer;
 Modbus connection settled and a scanner sketch written; PR #121 opened)*
 
