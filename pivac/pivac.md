@@ -10,6 +10,38 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+*Updated 2026-08-23 (session 39 — the Sentry warp drifted again and was recalibrated; the RPI-BC
+relay-input rebuild designed; the 1-wire bus-topology doc written)*
+
+**The `sentry-outdoor-divergence` alert was correct, and silencing it would have hidden a dead
+reader.** The `display_warp` quad had drifted 4 px: **`water_temp` decoded 4.5 % clean (6/133) and
+`air` nothing at all (0/153)**, while live `outdoorTemp` read 88–96 °F against RedLink's 68.
+`gas_input` still read 155/155 because the idle-fill emits 0 regardless, which is exactly why the
+service looked healthy from outside. New corners `TL(1150,649) TR(1318,641) BR(1307,717)
+BL(1142,728)` give **99.8 % clean over 441 frames** and zero `nothing decoded` warnings.
+
+**This drift recurs — twice in 26 days — and the camera mount is the fix.** Onset was ~Aug 21,
+coinciding with the DS18B20 install and the Y-strainer work, so assume boiler-room work bumps the
+camera and check the decode rate afterwards. Two techniques worth carrying: the `nothing decoded`
+warning added after July **worked** (3,137 in three days dated the onset), and **day/night lock is
+checkable with no Tapo credentials** — IR/Night is true greyscale, so colour-channel deltas of 0.00
+rule out a mode flip. **PR #124** commits the tooling, which imports the module's own decode rather
+than duplicating it, the flaw that left `scripts/sentry-calibrate.py` stale and misleading.
+
+**The 1-wire hub is outside the enclosure.** The trunk leaves the extension board on one 3-position
+header, so the enclosure side is already right and the branching happens at the first breakout —
+inspect that node. The outdoor ambient run is a **second branch** and likely the longest cable, so
+it dominates the RC budget; measure capacitance with it connected and restore that probe **last**.
+`docs/ds18b20-bus-topology.md` (on #122) carries the daisy-chain rules, the verified DS2482
+migration, and the fact that damping resistors work per branch and not on the trunk.
+
+**PR #123** designs the RPI-BC relay inputs as **optoisolated** rather than resistor-conditioned —
+GPIO 26 is already dead and no pull-up arrangement prevents that. 12 channels on four 4-position
+PTSM connectors with a common each.
+
+**Next:** bisect the w1 bus from PA1A; try the free fixes first (pull-up 2.2 kΩ, one 100 Ω at
+GPIO 4 with the pull-up on the cable side); then order the DS2482s and LTV-847s.
+
 *Updated 2026-08-22 (session 38 — the calibrated DS18B20s went on; the four loop probes took the
 w1 bus down and came back off; PR #122 opened)*
 
