@@ -10,6 +10,39 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+> ### ▶ ACTIVE HANDOFF — Chiltrix Modbus bring-up, continue on the M2 (2026-08-23)
+>
+> **Read `docs/chiltrix-modbus-bringup.md` first. It is on branch `docs/chiltrix-modbus-bringup`
+> (PR #125), not on master:** `git -C ~/github/pivac fetch && git -C ~/github/pivac checkout
+> docs/chiltrix-modbus-bringup`. It is written to be read cold and contains everything below in
+> full.
+>
+> **Do not re-test what is already eliminated:** A/B polarity (swapped, no change), the terminals
+> (verified against the board silkscreen — `P6` = `DA1`/`DA2`/`GND`), parity (vendor doc fixes
+> 8N1), a Modbus parameter on the CX (**the entire `P00`–`P119` table was read; no such setting
+> exists**), `SW1` (it is the **compressor model encode**, `C38` — **do not touch it**; as found
+> 1 off, 2 on, 3 off, 4 on), a ground offset (common mode 60 mV), and the R4's serial port (the
+> sketches already use `Serial1`).
+>
+> **Cause found:** the RS-485 pair has **no fail-safe bias from either end** — A−B ≈ **10 mV**,
+> A and B each ≈**60 mV** to the drain, i.e. a floating line, far under the **200 mV receiver
+> threshold**, so the receiver free-runs on noise. The DFR0259 has no bias network and its AUTO
+> mode tri-states between frames.
+>
+> **The untested fix:** `+5 V ─[680 Ω]─ A` and `GND ─[680 Ω]─ B`, **at the Arduino end only** (no
+> chiller-panel work, 240 V side stays shut; no risk — 5 V through 680 Ω is 7.4 mA into a short).
+> Pull-up on A, pull-down on B; reversed inverts idle and is worse. **Still no terminator.**
+> Verify with a meter first: **A−B must go from 10 mV to volts** (expect 1–4 V unterminated).
+>
+> **Then run capital `P`, not lowercase `p`** — `p` probes slave id 1 only, `P` sweeps 1–32.
+> Console is 115200; DFR0259 ON/OFF switch **OFF to upload, ON to run**. Capture the transcript;
+> the three branches (responds / `0xE3` CRC / flat "no") each mean something different and are
+> spelled out in §4 of the runbook.
+>
+> **While on the M2:** commit both sketches to `~/github/Arduino`, and **re-capture the `.114` DHW
+> recirc sketch** — it exists nowhere else, and flashing the repo's psi-only sketch onto that board
+> would silently drop `environment.inside.hvac.dhw.recirc.temperature`.
+
 *Updated 2026-08-23 (session 39 — the Sentry warp drifted again and was recalibrated; the RPI-BC
 relay-input rebuild designed; the 1-wire bus-topology doc written)*
 
