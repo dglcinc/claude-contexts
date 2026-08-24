@@ -52,6 +52,39 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > flashing the repo's psi-only sketch onto that board would silently drop
 > `environment.inside.hvac.dhw.recirc.temperature`.
 
+*Updated 2026-08-24 (session 41 — IN and OUT moved to calibrated probes; #122 merged, so ice-point
+offsets are live on every 1-wire sensor on the Pi bus)*
+
+**Every DS18B20 on the Pi's w1 bus is now a bench-calibrated PA-batch probe with its ice-point
+offset applied.** The two primary-loop sensors bracketing the closely spaced tees were replaced on
+the pipe with **PA4A → IN** (`28-000000c98b14`, +0.468 K) and **PA4B → OUT** (`28-0000001aa0a8`,
++0.143 K); UBT and LBT have been PA3A/PA3B since 22 Aug. The probes they replace, `0516a36332ff`
+and `0516a365d8ff`, are off the bus. **PA5 is the only spare pair left**, which is what the outdoor
+ambient restore now has to draw on.
+
+**A probe swap fails silently in a way worth recognising.** Until the config was edited, `IN` and
+`OUT` sat frozen in Signal K at their last values while the two new probes published under their
+raw ROM IDs — the service was `active`, the journal clean, and the dashboards showed flat lines
+rather than gaps. The recipe is unchanged: **config edit → `restart pivac-1wire` → `restart
+signalk`**, the second restart being what drops the raw-ID paths.
+
+**Check the sign after swapping a pair.** `IN − OUT` is the whole-system capacity measurement, and
+a reversed pair inverts it without ever going stale. InfluxDB showed OUT running ~5 °F warmer than
+IN across 21–23 Aug and it read 6.3 °F warmer straight after the swap, which is what ruled that out.
+
+**PR #122 is merged (`7978d70`) and deployed**, so `offset` is live rather than inert. Verified on
+the Pi by reading `/sys` and the Signal K value **in the same command** — sampled seconds apart,
+loop drift swamps the correction and every sensor looks wrong by a common term. Agreement is within
+one DS18B20 LSB (0.0625 °C) because the two are separate conversions. `sensor-freshness.yaml` is
+deployed: **20 rules, the four loop rules paused as designed, no orphans**, so the `deleteRules:`
+block is doing its job.
+
+**Two limits on the calibration.** It is **single-point at the ice bath** while the loop runs near
+45 °F, so slope is unverified. And **the DHW recirc probe is not calibrated at all** — it hangs off
+the Arduino at `.114` and reaches Signal K through `pivac.ArduinoSensor`, which has no `offset`
+support; the key exists only in `OneWireTherm`. Activating the offsets also puts a **+0.325 K
+(+0.585 °F) step in `IN − OUT`** at 23 Aug, on top of the 18 Aug precision change.
+
 *Updated 2026-08-23 (session 40 — the Modbus link's Arduino end proven good; the strainer cleaning
 reviewed against InfluxDB and it qualifies #117's central finding)*
 
