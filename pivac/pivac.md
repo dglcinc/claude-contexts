@@ -52,6 +52,27 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > flashing the repo's psi-only sketch onto that board would silently drop
 > `environment.inside.hvac.dhw.recirc.temperature`.
 
+*Updated 2026-08-25 (session 43 — what the DS2482 migration is still worth now that the bus is
+healthy)*
+
+**The DS2482 is optional rather than indicated.** The bridge changes the master, and everything
+downstream of its IO pin is the same copper with the same capacitance. What it buys is 1-Wire
+timing generated in hardware instead of bit-banged through kernel interrupt jitter, plus an active
+pull-up that drives the rising edge — which is what the 4.7 kΩ → 2.2 kΩ change already bought on
+this bus.
+
+**If it does go in, two things at the master end come out.** The **discrete pull-up**, because the
+DS2482 supplies its own weak pull-up plus the active one and an external resistor fights it; and
+the **driver-side 22–100 Ω series resistor**, whose whole job is softening a weakly driven edge and
+which therefore works against the part's only contribution. Per-branch damping resistors at a hub
+would survive a master swap untouched, since reflections are indifferent to what silicon drives the
+line — but this bus is a chain and does not want them either way. Two wiring conditions carry over:
+match the DQ rail to the sensors' **3.3 V**, which `w1-gpio` pinned for you and the bridge does
+not, and flip `dtparam=i2c_arm=off` in `/boot/firmware/config.txt`.
+
+**Master advanced four commits during this session**, so an answer read off the on-disk bus doc was
+stale within the hour. Re-fetch before answering from a checkout on a long session.
+
 *Updated 2026-08-25 (session 42 — all eight probes on the w1 bus; the 22 Aug collapse root-caused
 to RC and fixed with a 2.2 kΩ pull-up; loop alerts live, panel 21 rebuilt as a ΔT panel)*
 
