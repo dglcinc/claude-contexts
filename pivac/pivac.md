@@ -52,6 +52,42 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > flashing the repo's psi-only sketch onto that board would silently drop
 > `environment.inside.hvac.dhw.recirc.temperature`.
 
+*Updated 2026-08-25 (session 42 — all eight probes on the w1 bus; the 22 Aug collapse root-caused
+to RC and fixed with a 2.2 kΩ pull-up; loop alerts live, panel 21 rebuilt as a ΔT panel)*
+
+**The w1 bus carries all eight probes and the collapse is closed.** The fix was the pull-up, 4.7 kΩ
+to 2.2 kΩ, and the cause was cable capacitance against pull-up strength rather than topology or a
+bad probe. Measured: main loop **1.75 nF**, outdoor run **1.95 nF** bare. The inventory closes to
+the digit — 45.5 ft of conductor at **112 pF/m** plus 200 pF of DS18B20 pins is the 1.75 nF read.
+
+**The rise budget in the earlier analysis was the guaranteed worst case, not the operative one.**
+A DS18B20 may sample a write slot anywhere from 15 to 60 µs after the falling edge and only the
+15 µs end is promised; real parts sample near 30 µs, so the working budget is ~24 µs rather than 9.
+Against 24 µs the history fits exactly: the configuration that ran for months needed 20.9 µs and
+the one that died needed 24.3. Design to 9, expect failure near 24. David's objection that the old
+four-sensor bus had included the outdoor run is what surfaced this — the arithmetic said it should
+never have worked.
+
+**Cable pairing is the variable, not category or gauge.** Jacketed 3-conductor puts DQ between VDD
+and GND with both at AC ground, so it sees two grounded neighbours where a twisted pair gives it
+one. That is 112 pF/m against ~50. CAT5e and CAT6 are identical here because `C = 1/(Z₀·v)` forces
+both, so the old note calling thermostat wire an RC bargain was wrong.
+
+**Topology was never the problem.** Three Phoenix ST 1,5/S QUATTRO headers distributed along the
+run, trunk in and out, probes on spare terminals — a chain. So RC binds this bus rather than
+reflection, and the 100 Ω damping resistors were never needed.
+
+**Deployed:** #127 unpaused the four loop freshness rules (20 rules, 0 paused, verified in
+`alert_rule`), and #128 rebuilt panel 21 as three ΔT lines — primary `OUT − IN` and `RET − SUP` per
+loop, warm minus cold throughout, axis centred on zero and autoscaling so a winter inversion or a
+backwards pair stays visible. All eight offsets verified *applied*, each within one LSB. **#126 is
+open** with the doc corrections plus a health-measurement section and the planned end state.
+
+**Free headroom remains:** the eight untrimmed 2 ft leads are 16 ft of the 45.5 ft total, so
+trimming plus de-slacking cuts ~37% and is most of what puts the outdoor probe back on this bus.
+Backlogged by choice; the bus runs with margin as it stands (320 reads, 0 CRC failures, 40 of 40
+clean ROM searches).
+
 *Updated 2026-08-24 (session 41 — IN and OUT moved to calibrated probes; #122 merged, so ice-point
 offsets are live on every 1-wire sensor on the Pi bus)*
 
