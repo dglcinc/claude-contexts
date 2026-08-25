@@ -104,6 +104,21 @@ loop, warm minus cold throughout, axis centred on zero and autoscaling so a wint
 backwards pair stays visible. All eight offsets verified *applied*, each within one LSB. **#126 is
 open** with the doc corrections plus a health-measurement section and the planned end state.
 
+**⚠️ Two open hardware issues at hand-off.** First, **two loop probes are reading room air**:
+`LOOPA_SUP` (`1ac0a9`, PA2A) and `LOOPB_RET` (`c99b56`, PA1B) sit at ~64 °F with 1.5 °F of swing
+while the good probes swing 7–11 and track `IN`/`OUT` at 0.98. One supply and one return, one per
+loop, so both loops are genuinely flowing. They worked correctly for 2.5 h after install and both
+broke in the same 30-minute bucket at 01:00 EDT, during normal operation, while David was fastening
+wire bundles to the wall — a cable tug sliding the tube out from under its worm clamp, invisible
+under intact insulation. Chips, wiring, mounting quality and stagnation are all ruled out with
+reasons; the fix is unmount, ice-test, re-seat, and strain-relieve at the probe.
+
+Second, **the bus went intermittent after the cable was re-seated at the Pi** — a complete 6-minute
+blackout of all eight sensors at 12:55–13:00 UTC on 25 Aug, self-recovered by the per-cycle rescan.
+New since the previous night's 40/40 clean sweep. Re-seat the connector properly. It exposed two
+monitoring holes: the freshness rules are 30-minute so a 6-minute outage never alerts, and
+`pivac-1wire` logged no state change, leaving the InfluxDB gap as the only trace.
+
 **Free headroom remains:** the eight untrimmed 2 ft leads are 16 ft of the 45.5 ft total, so
 trimming plus de-slacking cuts ~37% and is most of what puts the outdoor probe back on this bus.
 Backlogged by choice; the bus runs with margin as it stands (320 reads, 0 CRC failures, 40 of 40
