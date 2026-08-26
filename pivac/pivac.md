@@ -10,7 +10,34 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Chiltrix: the Arduino end is proven, ask the rep (2026-08-23)
+> ### ▶ ACTIVE HANDOFF — Chiltrix: try `A3`/`B3`, and the register map is settled (2026-08-26)
+>
+> **Chiltrix's own Modbus document arrived** — `cx34-123&cx50-2&cx35-1 Modbus User Document.docx`
+> in `~/OneDrive - DGLC/Claude/HVAC Manuals/`. Two things follow.
+>
+> **The connection is `A3` and `B3`, A/B only, no ground at the Arduino**, drain grounded at the
+> chiller end alone. That is the next thing to try, ahead of the rep. Flash `ChiltrixScan`, run
+> **`P`** (capital — lowercase `p` tests slave id 1 only), then `k`. **Expect the idle A–B voltage
+> to change and do not read it as a fault:** 0.44 V on the old `DA1`/`DA2` pair solved to a ~120 Ω
+> terminator at the far end, and an unterminated pair loads the bias divider only with the
+> transceiver's ~12 kΩ, so several volts is normal. Anything well above 200 mV passes. Keep the
+> 680 Ω bias; still no terminator.
+>
+> **The register map is Chiltrix's, not a community map.** It agrees with gonzojive (CX34) on all
+> six shared addresses and contradicts jasipsw (CX50-2) on all seven — and jasipsw is what
+> `ChiltrixModbus` was built on, so six registers were wrong. Corrected in **PR
+> dglcinc/Arduino#10**, which also imports all three sketches into `~/github/Arduino` for the first
+> time. Full table in project `CLAUDE.md`. **Nothing has been compiled or run.**
+>
+> **`pivac` PR #121 is now a blocker**: `ArduinoSensor` rounds to whole Kelvin, 1.8 °F, which is
+> useless on a 4–5 °F evaporator ΔT. Merge it before trusting any Chiltrix temperature. The inputs
+> also need `scale: celsius`, and a ΔT field must **not** carry `type: temperature`.
+>
+> **The rep still visits ~week of 2026-08-30.** Lead question if `A3`/`B3` is also silent: what is
+> the supported way to attach a device that logs everything the wired controller sees? Full list in
+> §5 of `docs/chiltrix-modbus-bringup.md` (PR #125).
+>
+> ### What is already eliminated at the Arduino end
 >
 > **Read `docs/chiltrix-modbus-bringup.md` first. It is on branch `docs/chiltrix-modbus-bringup`
 > (PR #125), not on master:** `git -C ~/github/pivac fetch && git -C ~/github/pivac checkout
@@ -34,9 +61,7 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > other's traffic. Chiltrix's guide has the Remote Gateway inserting itself as master, so a
 > terminated, silent `P6` on a gateway-less CX75 may be designed behaviour.
 >
-> **Next action is the rep, visiting ~week of 2026-08-30.** Lead question: *what is the supported
-> way to attach a device that logs everything the wired controller sees?* Full list in §5 of the
-> runbook. In Modbus terms the device is a **master**; the chiller is the slave.
+> In Modbus terms the device being attached is a **master**; the chiller is the slave.
 >
 > **Two traps that cost an evening.** The DFR0259 `ON/OFF` switch reads identically to a dead
 > shield — the L LED is driven by the sketch and flashes either way while the pair sits at exactly
@@ -47,10 +72,53 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > product for indoor Chiltrix zone units this house does not have. There is **no ProtoAir on the
 > network** either. Earlier notes saying otherwise were wrong.
 >
-> **While on the M2:** commit `ChiltrixScan`, `ChiltrixModbus` and `RS485Blast` to
-> `~/github/Arduino`, and **re-capture the `.114` DHW recirc sketch** — it exists nowhere else, and
-> flashing the repo's psi-only sketch onto that board would silently drop
-> `environment.inside.hvac.dhw.recirc.temperature`.
+> **Both M2 chores from this thread are done.** The three sketches are in `~/github/Arduino` on
+> `feat/chiltrix-modbus` (PR #10), and the `.114` DHW recirc firmware turns out to be on `main`
+> already — `ArduinoPSI_Domestic.ino` defines `ONE_WIRE_BUS 2` and the shared impl header guards
+> the DS18B20 code on it, so reflashing that board from the repo is safe.
+
+*Updated 2026-08-26 (session 44 — Chiltrix's own Modbus document settles the register map; the
+sketches are in version control for the first time)*
+
+**Chiltrix's register map is now documented rather than guessed, and the guess was wrong.**
+`cx34-123&cx50-2&cx35-1 Modbus User Document.docx` gives thirteen holding registers at 9600 8N1
+slave 1, function 03. It **agrees with gonzojive (CX34) on all six addresses they share and
+contradicts jasipsw (CX50-2) on all seven** — and jasipsw is what `ChiltrixModbus` was built on.
+Six registers were wrong: 202 is ambient air rather than inlet water, outlet is 205, inlet is 281,
+flow is 213 in L/min rather than 257 in tenths, and 256 is input AC current rather than power in
+watts. The bridge would have published fresh, plausible, wrong numbers into Signal K, which is the
+decoupled-DS18B20 and drifted-Sentry failure again.
+
+**The addresses the document omits are dropped from the poll rather than kept on a guess** —
+243/244 state and error, 258–260 speeds, 264 hours, 281 read as compressor starts. The scanner
+keeps them as candidates. **The document has no fault-code register at all**, which is the gap
+worth closing, and the only way to settle it is to read 243, 244 and 284 while the panel shows a
+live P5 or E14.
+
+**Two scales the document leaves unstated**, flow and current: it annotates "(to get C divide by
+10)" on every temperature and says nothing on those two, so raw units are what it implies. Both sit
+behind `FLOW_SCALE` and `CURRENT_SCALE` with the cross-check written down — `C13` in the pump-only
+window for flow, the Emporia chiltrix circuit over 240 V for current. One digit off on flow turns
+the strainer-fouling signal from useful into misleading.
+
+**The three sketches are in `~/github/Arduino` for the first time** (PR #10), imported unchanged in
+one commit so the corrections read as a diff in the next. They had lived only in
+`~/OneDrive - DGLC/Claude/chiltrix-sketches/`, which is now a flash-convenience mirror with a README
+pointing at the repo. **Nothing has been compiled or run** — there is no `arduino-cli` on the M4 —
+so the checks are static only: delimiters, `snprintf` 18-for-18, payload 348 chars against a
+640-byte buffer, and `%f` already proven in production by `ArduinoPSI_impl.h`.
+
+**`pivac` PR #121 is now on the critical path.** `ArduinoSensor` rounds temperatures to whole
+Kelvin, 1.8 °F, which is useless on a 4–5 °F evaporator ΔT — the same defect that made `IN − OUT`
+meaningless before the 18 Aug precision fix.
+
+**The `.114` DHW recirc firmware is not lost.** `ArduinoPSI_Domestic.ino` defines `ONE_WIRE_BUS 2`
+on Arduino `main` and the shared impl header guards the DS18B20 code on it, so the Domestic build
+emits `'temp'` and reflashing from the repo is safe. That retires a task carried since May and
+corrects a warning in project `CLAUDE.md`.
+
+**Both session-42 hardware faults are still open and untouched** — the two decoupled loop probes,
+and the w1 bus going intermittent after the Pi-end connector was re-seated.
 
 *Updated 2026-08-25 (session 43 — what the DS2482 migration is still worth now that the bus is
 healthy)*
