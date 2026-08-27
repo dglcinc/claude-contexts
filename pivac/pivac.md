@@ -10,54 +10,49 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Chiltrix Modbus is LIVE; watching for the fouling-alert baseline (2026-08-26)
+> ### ▶ ACTIVE HANDOFF — the fouling signal is not flow; the logger is fixed and collecting (2026-08-27)
 >
-> **The link works.** `A3`/`B3`, 9600 8N1, slave 1, function 03, **no ground, no bias, no
-> terminator**. The chiller biases the pair itself (3.18 V across it with nothing connected), so
-> the 680 Ω network the dead `DA1`/`DA2` pair needed would fight it. Every documented register is
-> confirmed against the unit — not against another document.
+> **Nothing is pending on the machine.** `chiltrix-logger.service` is running on the Pi and now
+> actually writing. Read it with `python3 ~/chiltrix/tally_log.py [since_YYYY-MM-DD_HH:MM]`. The next
+> physical work is David's CAT6 rewire.
 >
-> **Nothing needs doing.** `chiltrix-logger.service` is running on the Pi collecting the baseline.
-> Read it with `python3 ~/chiltrix/tally_log.py [since_YYYY-MM-DD_HH:MM]`.
+> **⚠️ The recorded flow ÷ Hz candidate was wrong and is retired.** At a **constant 55 Hz** the flow
+> ranged **42.5–52.9 L/min**, a 20% spread, giving flow ÷ Hz of **0.773–0.962**. Speed was pinned and
+> flow moved anyway. Flow correlates **+0.96 with outlet temperature and −0.96 with ΔT**: the
+> controller trims pump speed to hold an evaporator ΔT (`P53` floor 40%), with glycol viscosity
+> pushing the same way as the water cools. The narrow 0.96–1.03 band came from reading only the
+> ramp-down, where Hz and flow fell together; the ramp-*up* reaches **3.78**, because at 14–35 Hz the
+> pump is already at full 52.9 while the compressor spools.
 >
-> **The one open question is the alert signal.** Raw flow is wrong: flow tracks compressor speed
-> almost 1:1 (**52.9 L/min at 55 Hz, 51.7 at 50, 37.9 at 37**), so a fixed threshold near 35 L/min
-> false-fires at part load on a clean strainer. The candidate is the ratio **flow ÷ Hz ≈ 0.96–1.03**,
-> which is load-independent. A few days of real cooling load settles it.
+> **Build the alert on `281` vs `142` instead** — inlet water against the cooling target. A restricted
+> chiller sits above its own return-water target, the documented signature of the August clog
+> (52.4–54.4 °F against a 50 °F target for ten days). No flow scaling, no Hz gate, no ratio.
 >
-> **⚠️ The 65% frame loss under load was a floating cable shield.** Same cable, one evening: drain
-> ungrounded at both ends gave **0.0% at idle and 65.3% at 55 Hz**; grounding it **at the Arduino
-> end alone** gave **0.0% across 635 reads**. A shield does nothing unless grounded at one end, and
-> 50 ft of pair sharing a tray with an inverter has no defence without it. **Common mode was the
-> wrong theory** — the wired controller's four-wire cable (`A1`/`B1` + `GND` + `+12V`) made the
-> missing ground reference look like the difference. **Do not open the chiller**; the 100 Ω
-> drain-to-`GND` job is unnecessary.
+> **⚠️ The logger had run `active` for 18 hours having written ZERO rows**, with an empty journal.
+> **Opening the port does not reset an UNO R4** — uptime survived repeated connects across 19.7 h — so
+> a prior session had left the sketch in `watch`. A running watch consumes **exactly one character** to
+> stop, so the service's `w 281 205 …` had its leading `w` eaten and the rest discarded. The read loop
+> had no timeout and blocked forever. `logger.py` now quiesces the board to its prompt first and raises
+> after 60 s of silence. **Any future serial client to this sketch needs both properties.**
 >
-> **The reusable lesson: link quality measured at idle is meaningless**, because nothing radiates
-> with the drive off. What made it tractable was printing **`TMO` vs `CRC`** per failed read instead
-> of a bare `--` — 17% of failures were CRC/E0/E1, which proved corruption rather than silence.
+> **The two WiFi pressure Arduinos come back to the Pi via the Modbus board's own ADC, not an
+> ADS1115.** The R4's ADC reference is its own 5 V rail, so powering the transducers from that board
+> keeps the measurement ratiometric and supply drift cancels in hardware — deleting the rail monitor,
+> the dividers and the ratio arithmetic an ADS1115 needs purely to reconstruct it, and keeping the same
+> conversion constants so **no scale step appears partway through the InfluxDB series**. This retires
+> the `.61` Shelly, `arduino-watchdog.timer` and the `.219`-goes-dark failure mode outright; recovery
+> becomes a USB reset instead of a mains cycle. **A serial port is exclusive, so it must be ONE pivac
+> module and one service.** Keep the inverted `arduinoPSI` / `arduinoThermPSI` paths.
 >
-> **Both unstated scales are `÷10`, measured not inferred.** Flow: register 213 read raw 69 while
-> the panel showed **1.8 gpm** → 1.82 gpm. Current: 256 read 109 at 55 Hz while Emporia's `chiltrix`
-> circuit read **2660.5 W** → 10.9 A × 240 V = 2616 W, within 1.7%. Raw flow would have been 10×
-> high, which silently makes the fouling alarm unfireable. **PR dglcinc/Arduino#10 carries both
-> corrections**, plus the inter-frame gap and the `TMO`/`CRC` split.
+> **#121 stops being a blocker** — serial needs its own module regardless, and the DHW recirc probe
+> moves to the 1-wire bus, leaving `ArduinoSensor` with no temperature consumers.
 >
-> **⚠️ Compare temperatures at IDLE.** Outlet moved 4.7 → 9.8 °C in the three minutes after a stop,
-> which made one comparison look like a 3 °F calibration error. It was drift. The chiller also
-> restarts on **its own ~2 °C hysteresis** (12 °C against a 10 °C target), not on a zone call.
->
-> **Next, in order:** rewrite `ChiltrixModbus` for USB serial with **block reads** (five
-> transactions instead of forty) and **raw paths for the unidentified registers** — 243/244/284 can
-> only be identified during a live `P5` or `E14`, and that moment cannot be recaptured; then a new
-> `pivac.ChiltrixModbus` module (`ArduinoSensor` is HTTP-only, so it needs `pyserial` in the venv
-> and a udev rule pinning `/dev/ttyACM0` by serial `E8F60AA93AA8`); then the alert.
->
-> **The ADM2587E is now optional, not a fix** — `EVAL-ADM2587EARDZ`, ~$62, Arduino-shield form
-> factor, at Mouser and DigiKey. Worth it only if losses return above the 55 Hz tested.
+> **The CAT6 rewire has ~150 ft of spare capacitance budget**, so the outdoor probe goes back on and
+> the lead-trimming task retires. **Do not share one cable between the 1-wire DQ and the pressure
+> pairs.**
 
-*Updated 2026-08-26 (session 45 — the Chiltrix Modbus link came up; a floating cable shield was
-costing two thirds of the frames under load)*
+*Updated 2026-08-27 (session 46 — the flow ÷ Hz signal fell over, the logger had been silently dead
+for 18 hours, and the pressure sensors get a route home that keeps them ratiometric)*
 
 **The chiller answers.** `A3`/`B3` at 9600 8N1 slave 1, function 03, with no ground, no bias and no
 terminator, because the chiller biases the pair itself at 3.18 V. Every documented register is now
