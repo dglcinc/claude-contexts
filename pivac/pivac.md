@@ -10,72 +10,78 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Chiltrix: try `A3`/`B3`, and the register map is settled (2026-08-26)
+> ### ▶ ACTIVE HANDOFF — Chiltrix Modbus is LIVE; watching for the fouling-alert baseline (2026-08-26)
 >
-> **Chiltrix's own Modbus document arrived** — `cx34-123&cx50-2&cx35-1 Modbus User Document.docx`
-> in `~/OneDrive - DGLC/Claude/HVAC Manuals/`. Two things follow.
+> **The link works.** `A3`/`B3`, 9600 8N1, slave 1, function 03, **no ground, no bias, no
+> terminator**. The chiller biases the pair itself (3.18 V across it with nothing connected), so
+> the 680 Ω network the dead `DA1`/`DA2` pair needed would fight it. Every documented register is
+> confirmed against the unit — not against another document.
 >
-> **The connection is `A3` and `B3`, A/B only, no ground at the Arduino**, drain grounded at the
-> chiller end alone. That is the next thing to try, ahead of the rep. Flash `ChiltrixScan`, run
-> **`P`** (capital — lowercase `p` tests slave id 1 only), then `k`. **Expect the idle A–B voltage
-> to change and do not read it as a fault:** 0.44 V on the old `DA1`/`DA2` pair solved to a ~120 Ω
-> terminator at the far end, and an unterminated pair loads the bias divider only with the
-> transceiver's ~12 kΩ, so several volts is normal. Anything well above 200 mV passes. Keep the
-> 680 Ω bias; still no terminator.
+> **Nothing needs doing.** `chiltrix-logger.service` is running on the Pi collecting the baseline.
+> Read it with `python3 ~/chiltrix/tally_log.py [since_YYYY-MM-DD_HH:MM]`.
 >
-> **The register map is Chiltrix's, not a community map.** It agrees with gonzojive (CX34) on all
-> six shared addresses and contradicts jasipsw (CX50-2) on all seven — and jasipsw is what
-> `ChiltrixModbus` was built on, so six registers were wrong. Corrected in **PR
-> dglcinc/Arduino#10**, which also imports all three sketches into `~/github/Arduino` for the first
-> time. Full table in project `CLAUDE.md`. **Nothing has been compiled or run.**
+> **The one open question is the alert signal.** Raw flow is wrong: flow tracks compressor speed
+> almost 1:1 (**52.9 L/min at 55 Hz, 51.7 at 50, 37.9 at 37**), so a fixed threshold near 35 L/min
+> false-fires at part load on a clean strainer. The candidate is the ratio **flow ÷ Hz ≈ 0.96–1.03**,
+> which is load-independent. A few days of real cooling load settles it.
 >
-> **`pivac` PR #121 is now a blocker**: `ArduinoSensor` rounds to whole Kelvin, 1.8 °F, which is
-> useless on a 4–5 °F evaporator ΔT. Merge it before trusting any Chiltrix temperature. The inputs
-> also need `scale: celsius`, and a ΔT field must **not** carry `type: temperature`.
+> **⚠️ The 65% frame loss under load was a floating cable shield.** Same cable, one evening: drain
+> ungrounded at both ends gave **0.0% at idle and 65.3% at 55 Hz**; grounding it **at the Arduino
+> end alone** gave **0.0% across 635 reads**. A shield does nothing unless grounded at one end, and
+> 50 ft of pair sharing a tray with an inverter has no defence without it. **Common mode was the
+> wrong theory** — the wired controller's four-wire cable (`A1`/`B1` + `GND` + `+12V`) made the
+> missing ground reference look like the difference. **Do not open the chiller**; the 100 Ω
+> drain-to-`GND` job is unnecessary.
 >
-> **The rep still visits ~week of 2026-08-30.** Lead question if `A3`/`B3` is also silent: what is
-> the supported way to attach a device that logs everything the wired controller sees? Full list in
-> §5 of `docs/chiltrix-modbus-bringup.md` (PR #125).
+> **The reusable lesson: link quality measured at idle is meaningless**, because nothing radiates
+> with the drive off. What made it tractable was printing **`TMO` vs `CRC`** per failed read instead
+> of a bare `--` — 17% of failures were CRC/E0/E1, which proved corruption rather than silence.
 >
-> ### What is already eliminated at the Arduino end
+> **Both unstated scales are `÷10`, measured not inferred.** Flow: register 213 read raw 69 while
+> the panel showed **1.8 gpm** → 1.82 gpm. Current: 256 read 109 at 55 Hz while Emporia's `chiltrix`
+> circuit read **2660.5 W** → 10.9 A × 240 V = 2616 W, within 1.7%. Raw flow would have been 10×
+> high, which silently makes the fouling alarm unfireable. **PR dglcinc/Arduino#10 carries both
+> corrections**, plus the inter-frame gap and the `TMO`/`CRC` split.
 >
-> **Read `docs/chiltrix-modbus-bringup.md` first. It is on branch `docs/chiltrix-modbus-bringup`
-> (PR #125), not on master:** `git -C ~/github/pivac fetch && git -C ~/github/pivac checkout
-> docs/chiltrix-modbus-bringup`. It is written to be read cold.
+> **⚠️ Compare temperatures at IDLE.** Outlet moved 4.7 → 9.8 °C in the three minutes after a stop,
+> which made one comparison look like a 3 °F calibration error. It was drift. The chiller also
+> restarts on **its own ~2 °C hysteresis** (12 °C against a 10 °C target), not on a zone call.
 >
-> **Do not re-test the Arduino end. It is measured, not assumed.** Fail-safe bias is fitted
-> (680 Ω +5 V→A, 680 Ω B→GND, Arduino end only) and the idle pair reads **0.44 V**, clearing the
-> 200 mV receiver threshold. Transmit is proven by the `RS485Blast` sketch — continuous `0x55` on
-> `Serial1` moves the pair to **1.085 V**, which no fixed divider can do. Ids **1–32 at 9600 in
-> both polarities** return a flat "no" with **zero CRC errors**, ever. Also already eliminated:
-> terminals (`P6` = `DA1`/`DA2`/`GND`, verified against silkscreen), 8N1, a Modbus parameter on the
-> CX (the whole `P00`–`P119` table was read), `SW1` (compressor model encode — **do not touch**),
-> ground offset (60 mV), and the R4's serial port.
+> **Next, in order:** rewrite `ChiltrixModbus` for USB serial with **block reads** (five
+> transactions instead of forty) and **raw paths for the unidentified registers** — 243/244/284 can
+> only be identified during a live `P5` or `E14`, and that moment cannot be recaptured; then a new
+> `pivac.ChiltrixModbus` module (`ArduinoSensor` is HTTP-only, so it needs `pyserial` in the venv
+> and a udev rule pinning `/dev/ttyACM0` by serial `E8F60AA93AA8`); then the alert.
 >
-> **The cable is proven too, by arithmetic on the idle reading.** `V_AB = 5 × R/(1360+R)` at 0.44 V
-> solves to R ≈ 130 Ω, a 120 Ω terminator at the far end; the transceiver's own ~12 kΩ would have
-> left the pair above 4 V.
->
-> **`P6` is probably not the route.** Not one byte has ever arrived from the far end, including the
-> polling the wired controller must be doing at `P4`. Two connectors sharing a UART would show each
-> other's traffic. Chiltrix's guide has the Remote Gateway inserting itself as master, so a
-> terminated, silent `P6` on a gateway-less CX75 may be designed behaviour.
->
-> In Modbus terms the device being attached is a **master**; the chiller is the slave.
->
-> **Two traps that cost an evening.** The DFR0259 `ON/OFF` switch reads identically to a dead
-> shield — the L LED is driven by the sketch and flashes either way while the pair sits at exactly
-> the bias voltage. And an AC-volts transmit test cannot work: `P` is ~0.1 % duty and `w` ~0.3 %,
-> which a meter averages to nothing.
->
-> **The wired controller is the standard CX controller, NOT a Psychrologix** — that is a separate
-> product for indoor Chiltrix zone units this house does not have. There is **no ProtoAir on the
-> network** either. Earlier notes saying otherwise were wrong.
->
-> **Both M2 chores from this thread are done.** The three sketches are in `~/github/Arduino` on
-> `feat/chiltrix-modbus` (PR #10), and the `.114` DHW recirc firmware turns out to be on `main`
-> already — `ArduinoPSI_Domestic.ino` defines `ONE_WIRE_BUS 2` and the shared impl header guards
-> the DS18B20 code on it, so reflashing that board from the repo is safe.
+> **The ADM2587E is now optional, not a fix** — `EVAL-ADM2587EARDZ`, ~$62, Arduino-shield form
+> factor, at Mouser and DigiKey. Worth it only if losses return above the 55 Hz tested.
+
+*Updated 2026-08-26 (session 45 — the Chiltrix Modbus link came up; a floating cable shield was
+costing two thirds of the frames under load)*
+
+**The chiller answers.** `A3`/`B3` at 9600 8N1 slave 1, function 03, with no ground, no bias and no
+terminator, because the chiller biases the pair itself at 3.18 V. Every documented register is now
+confirmed against the unit rather than against a second document: 142 read 10 against the 50 °F
+panel target, 202 read 23.9 °C against RedLink's outdoor sensor at 23.89 °C, 281 and 205 tracked
+the controller's own displays to within 0.4 °F, and 227 and 256 fell to zero together when the
+compressor stopped while inlet and outlet converged with the pump still running. The map predicts
+the physics, which no document comparison can establish.
+
+**Both scales the document leaves unstated are `÷10`, and both were measured.** Flow against the
+panel's 1.8 gpm, current against Emporia's 2660.5 W. Raw flow would have published ten times high
+and left the fouling alarm permanently unfireable, since 505 clears any threshold set against a
+20 L/min trip.
+
+**The link then lost two thirds of its frames the moment the compressor ran, and the cause was a
+cable shield floating at both ends.** Grounding the drain at the Arduino end alone took running
+loss from 65.3% to 0.0% across 635 reads at up to 55 Hz. Common mode was the wrong theory; the
+controller's four-wire cable made the missing ground reference look like the difference. Two
+methods carried the diagnosis: measuring under load rather than at idle, and printing `TMO` versus
+`CRC` per failed read instead of a bare `--`.
+
+**The alert signal is not raw flow.** Flow tracks compressor speed almost 1:1, so a fixed threshold
+false-fires at part load on a clean strainer. `flow ÷ Hz` looks load-independent at 0.96–1.03 and a
+logger is running on the Pi to confirm it over real cooling load.
 
 *Updated 2026-08-26 (session 44 — Chiltrix's own Modbus document settles the register map; the
 sketches are in version control for the first time)*
