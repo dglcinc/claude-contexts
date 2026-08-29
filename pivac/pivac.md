@@ -10,7 +10,63 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — the flow decline may be the controller, not the plumbing (2026-08-28)
+> ### ▶ ACTIVE HANDOFF — eight probes calibrated at three bath points, one retired (2026-08-29)
+>
+> **Nothing is pending on the machine.** The four loop probes are back on the wall, all eight
+> 1-wire sensors publish with correct signs on every pair, and the DHW Arduino reads pressure and
+> a coupled recirc probe. The Pi config, the repo doc on PR #120, the memory file and CLAUDE.md all
+> match what is deployed.
+>
+> **The calibration is three-point now** — ice at 32.10 °F plus a sous vide at 100.0 and 144.5 °F —
+> and the deployed offsets are stated **at 45 °F**, the chilled-loop operating point, rather than at
+> the ice point. Slopes all sit within 0.2% of unity, so the old single-point values were never far
+> wrong; the 45 °F column moves each probe by at most 0.043 K.
+>
+> **⚠️ Calibrate near the operating point; a better-controlled bath does not compensate for
+> distance.** Applying the 100 °F offset at 45 °F costs up to 0.316 °F against the ice offset's
+> 0.043, because 45 is 13 degrees from the ice point and 55 from the circulator. **The third point
+> earned its place in winter, not summer**: it moved every 45 °F offset by ≤0.014 K but the 140 °F
+> offsets by up to 0.157 K, since two points cannot be extrapolated 40 degrees past the last anchor.
+>
+> **⚠️ The bench rig needs 5 V on BOTH the probe supply and the pull-up.** An UNO R4 runs 5 V logic,
+> so a 3.3 V pull-up idles below the input-high threshold and the bus answers a reset with a presence
+> pulse while the ROM search returns nothing. `presence=1 roms=0` versus `presence=0` is the fastest
+> split on this bus: the first is a live chip with marginal timing, the second is nothing seeing the
+> bus at all. That test retired `28-0516a36332ff`, whose cap seal had been repaired with heat shrink
+> and whose leads are presumed broken there.
+>
+> **The four recovered probes are now calibrated spares** — PA6A, PA6B (the DHW recirc probe), PA7A
+> and PA7B. **PA6B's +0.274 K is stated at 120 °F** and parked on its `config.yml` entry, inert until
+> that probe joins the Pi's bus, because `ArduinoSensor` has no offset support.
+>
+> **Merged: #121** (ArduinoSensor stops quantising to whole Kelvin — the recirc path now publishes
+> 296.46 rather than 296) and **#132** (ΔT panel soft limits; `axisCenteredZero` was doubling the
+> axis against 2–7 °F deltas).
+>
+> **⚠️ Two analysis traps worth reusing.** One −127 °C disconnect sentinel, logged as a probe was
+> pulled while still enumerated, moved a 196-sample mean by 1.17 °F. And a log can span a setpoint
+> change — the 100 °F soak kept recording while the circulator was raised, so a naive
+> last-N-seconds window put +1.6 °F of drift into its mean.
+>
+> **The chiller's daily "spikes" are its own cycle, and the pump is the trigger.** At a constant
+> 26 Hz the pump halved its own flow, 41.3 → 21.8 L/min, widening the evaporator ΔT 5.5 → 8.5 °F
+> toward the 9 °F design value. Less heat leaves the loop, inlet climbs, the controller chases it
+> with the compressor to 50 Hz, and the pair overshoot into the low cut-out. **Flow halved with a
+> clean strainer — direct evidence that flow is a controlled output, not a measurement.** The same
+> restart gave a textbook pump-only window at **51.3–51.7 L/min against the 52.9 clean baseline**, so
+> the strainer is clear, and idle read exactly 6.9 L/min, confirming the ÷10 scaling. Restart
+> hysteresis confirmed twice at 54.0 and 54.2 °F against a 50 °F target. **No compressor runtime
+> maximum** — runs went 10, 12, 20, 12, 10, 12, 22, 36, then 232 minutes, lengthening with load.
+>
+> **Open and unanswerable today: the maximum outdoor temperature this chiller can hold.** At 81 °F
+> outdoor it held all three zones exactly on setpoint at a median 26 Hz of an 80 Hz range, so the
+> headroom is real — but indoor sat 5 °F below outdoor, so the load was mostly solar, internal and
+> latent, and no load-versus-outdoor line can be fitted from it. Needs days spanning 85–95 °F.
+
+*Updated 2026-08-29 (session 48 — three-point calibration deployed, a probe retired, and the
+chiller's cycling traced to a pump-trim/compressor interaction)*
+
+> ### The flow decline may be the controller, not the plumbing (2026-08-28)
 >
 > **Nothing is pending on the machine.** `pivac-chiltrix` replaced `chiltrix-logger` and is writing
 > **all 45 Chiltrix registers** to Signal K and InfluxDB under `hvac.chiller.chiltrix.*` every 30 s.
