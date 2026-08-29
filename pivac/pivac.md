@@ -45,6 +45,14 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > there is no compressor runtime maximum** — runs lengthen with load and one reached 232 minutes, so
 > the 90-minute rule may want raising on a hot day.
 >
+> **⚠️ Answering proves nothing — every address 0–359 responds**, no gaps, and 359 is only where the
+> scan stopped. "All 45 registers answered" was never a finding about the chiller; 45 was what the
+> module asked for. `registerCount` is a link-health signal, not a property of the device. The
+> module now polls **181 addresses on a 60 s cycle**, adding the whole **0–139 settings block** —
+> the CX65 IOM's P table runs to `P119`. **Cross-checks: four agree** (`53`,`59`,`64`,`109`)
+> **and two disagree** — `65`=14 against a documented 20, `52`=0 against a note calling that "not
+> stop" while the pump plainly stops. The `P114`–`P119` DHC tail is inert (`P119`=0).
+>
 > **Register watch:** `248` moved 100 → 10 between running and deep idle, the largest candidate
 > movement yet; `260` sat at 33 with flow 6.9 having been 34–39 at 21.8, so it does not track flow
 > linearly and neither pump-speed candidate is clean enough to call. `registerCount` dropped 45 → 44.
