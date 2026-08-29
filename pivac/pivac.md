@@ -10,7 +10,56 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — the fouling signal is not flow; the logger is fixed and collecting (2026-08-27)
+> ### ▶ ACTIVE HANDOFF — the flow decline may be the controller, not the plumbing (2026-08-28)
+>
+> **Nothing is pending on the machine.** `pivac-chiltrix` replaced `chiltrix-logger` and is writing
+> **all 45 Chiltrix registers** to Signal K and InfluxDB under `hvac.chiller.chiltrix.*` every 30 s.
+> The next physical work is David's strainer cleanout, and the record now spans it at full width.
+>
+> **⚠️ I read a 60% flow decline at matched compressor speed as a re-fouling strainer. David's
+> counter — the controller adaptively re-trimming its pump — is currently better supported, and the
+> question is open.** Three things favour it. The evaporator ΔT moved from 5–6 °F, *below* the
+> Chiltrix 9 °F design value, to 9.5 °F, which is a controller converging on design. **The chiller
+> modulates both pump and compressor off inlet water temperature**, so flow is a controlled output
+> rather than an independent measurement. And the arithmetic runs backwards: **commissioning was
+> 2026-08-04** and the first blockage 2026-08-22, **18 days**, against a claimed **6** for the
+> second — on a loop that had just had its worst debris removed, where a fresh loop should foul
+> fastest.
+>
+> **Both discriminating tests failed on instrument resolution; do not repeat them.** Register 256
+> quantizes to 0.1 A (24 W) against a 22–200 W pump draw. Emporia's 60 s poll cannot isolate a
+> ~70 s pump-only window inside a longer compressor-off period — several windows showing 45 L/min
+> returned 9–10 W, the controls-only standby figure, impossible with the pump running. **Registers
+> 248 and 260 are the candidate pump speeds**, and the cleanout is the physical test.
+>
+> **Two more fouling signals died this session.** `281` vs `142` meaned over hours does not
+> separate (6 h mean 48.6–49.9 °F across both periods). Nor does end-of-cycle inlet — through a
+> 354-minute run the unit still reached its normal 44.6 °F stop point. **Run duration separates
+> where inlet temperature does not.** The one comparable flow measurement is the **startup
+> plateau**: a flat 52.9 L/min from ~70 s before the compressor engages to ~140 s into the run,
+> which David identified from the power profile. Published as `.startupFlow`.
+>
+> **⚠️ Two analysis traps.** Parsing a Modbus `TMO` as `0` made `hz or 0` read as compressor-off,
+> splitting one 354-minute run into three fake "degraded cycles" — drop `TMO` rows before any
+> state-machine analysis. And "pump-only flow reads hydraulic resistance" was an assumption, never
+> a measurement.
+>
+> **The RPI-BC I/O board design is merged (#123) and parts-complete with no Digi-Key or Mouser
+> order.** Three design assumptions died against the real panel: the 24 V is **AC**, the field wire
+> count is **unchanged** (resistor and LED are board-mounted), and the commons converge **on the
+> board**. Build values: 12 V wall wart measuring **14.7 V**, **4.7 kΩ** chosen to span the 25.9 VAC
+> upgrade, supply on **J4 position 1** so the housing never opens, and **no components at all on the
+> Pi side**. §2's wetting-current argument was wrong — seven channels have run at 66 µA for a year
+> — and what survives is galvanic isolation.
+>
+> **The `chiltrix.yaml` alert rules are in the repo but deliberately NOT deployed.** They reference
+> `pumpOnlyFlow`, which the module does not publish, and their thresholds come from a five-day-old
+> screen. Rewrite against `startupFlow` after the cleanout.
+
+*Updated 2026-08-28 (session 47 — the flow signal may be measuring the control loop; all 45
+registers now recorded; the I/O board design finished against the real panel)*
+
+> ### The fouling signal is not flow; the logger is fixed and collecting (2026-08-27)
 >
 > **Nothing is pending on the machine.** `chiltrix-logger.service` is running on the Pi and now
 > actually writing. Read it with `python3 ~/chiltrix/tally_log.py [since_YYYY-MM-DD_HH:MM]`. The next
