@@ -10,7 +10,34 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — the loop supply probes were swapped, and loop delta-T is now gated (2026-08-29)
+> ### ▶ ACTIVE HANDOFF — the Chiltrix alarm set is one signal, the register map is verified, and a tuning plan is written (2026-08-30)
+>
+> **The 90-minute run-duration alert is retired** (PR #140, merged + deployed, `alert_rule`
+> verified: 22 rules, 0 paused). It false-fired on a normal 232-minute hot-day run — runs
+> lengthen with load and have no maximum. The Chiltrix set is now **`startupFlow < 40 L/min`**
+> (clean 50.5–54; the controlled-test-validated fouling signal) plus Modbus staleness, which
+> backstops the flow rule's `noDataState: OK`.
+>
+> **The register = parameter mapping is verified** against the full `P00`–`P119` table in
+> `cx65-1-iom.pdf`: **85 of 105 exact-default matches**, and the 15 unlisted addresses are
+> exactly the P-numbers the manual skips. The 20 mismatches are in-range CX75 factory tuning.
+> Caveats: enum encodings differ from the panel docs (P02 reads 1 vs 5/6; P104 reads 0/°C),
+> and **`65` reads 14 vs the documented 20 — confirm P65 on the panel.** The P52 contradiction
+> was a conflation: P52 governs the *pump* (never stops; idle trickle), the *compressor* stops
+> on the P12 band (register 12 = 2 °C, matching the 54.0/54.2 °F restarts).
+>
+> **`docs/chiltrix-cycling-tuning-plan.md` (PR #142, merged) holds the tuning plan**, one
+> change at a time: **P95 5 → 3** first (setpoint-independent); then **12 °C target + P12 = 3
+> as a pair** — the E14 arithmetic sequences them, since stop-moment leaving water is ~39.6 °F
+> against the 37.4 °F P59 trip; **P51 pin at 8–9** only as fallback (auto commands 80–100 % at
+> full load, so 70 % spends COP and antifreeze margin on peak days). Verification metrics are
+> in the doc, all from existing paths.
+>
+> **Next:** panel changes per the plan with register readback; hot-day zone-droop check at any
+> raised target; P65 panel read; the carried-over probe swing/strain-relief checks; the PR pile
+> (seven open, #141 rpi-io build doc newest).
+
+> ### the loop supply probes were swapped, and loop delta-T is now gated (2026-08-29)
 >
 > **Nothing pending on the machine.** `pivac-loop-delta` is live, reading 0 on all three loops,
 > waiting on the first call past its 60 s settle window. Panel 21 is already repointed.
