@@ -10,59 +10,43 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — the strainer was the restriction; alerting is live and one rule was wrong (2026-08-29)
+> ### ▶ ACTIVE HANDOFF — the loop supply probes were swapped, and loop delta-T is now gated (2026-08-29)
 >
-> **Nothing is pending on the machine.** `pivac-chiltrix` records all 45 registers; three alert
-> rules are deployed and unpaused.
+> **Nothing pending on the machine.** `pivac-loop-delta` is live, reading 0 on all three loops,
+> waiting on the first call past its 60 s settle window. Panel 21 is already repointed.
 >
-> **The cleanout settled it: it was fouling.** `startupFlow` recovered **22.9 → 54.0 L/min**
-> immediately, flow at matched 24–28 Hz went **18.4 → 39.6**, and evaporator ΔT **9.5 → 5.6 °F**.
-> The decisive reading was taken with the **compressor off** — inlet and outlet within 0.2 °F, so
-> no evaporator ΔT existed for the controller to hold — and flow more than doubled anyway. That
-> removes the adaptive-trim confound by construction rather than by argument.
+> **The two loop supply probes were on each other's loops.** Correlation over 14 h named the real
+> pairs — **+0.99 and +0.95 against +0.73 and +0.62 for the labelled ones** — and the sign agreed:
+> loop A read `RET − SUP` of **−10.6 °F**, loop B **+16.4 °F**. After relabelling, +4.1 and +0.5.
+> Confirmed a third way against zone calls. Offsets stay with their ROM, so each loop now spans two
+> bench pairs and the pair corrections grew to −0.87 / +0.97 °F. **`LOOPA_SUP` and `LOOPB_SUP`
+> history before this date is interchanged.**
 >
-> **The two explanations fit together rather than competing.** The controller does trim pump speed
-> to hold a ΔT, but the 28 Aug behaviour was the restriction *defeating* that control: 18.4 L/min at
-> 9.5 °F is the pump as fast as the restriction allowed with the ΔT still not narrowing. **Wide ΔT
-> was the symptom of capped flow, not an operating point the controller chose.**
+> **⚠️ An idle loop's ΔT is fiction, and the inside tees are the dangerous ones.** Loop A holds
+> **+3.6 °F with its pump off** against a genuine +5.0 — 72 % of the real value, with nothing
+> marking it false. Loop A's supply probe tracks `IN` **to within 0.2 °F in every state including
+> idle**, so no test on that probe can tell whether its own pump runs; loop B's outboard tees
+> stagnate together and fall to +1.1 °F honestly. **Gate on a switch, never on a probe.**
 >
-> **⚠️ This loop can lose half its flow in about a week.** The 18-day commissioning-to-first-blockage
-> interval is not the prior. Re-check `startupFlow` weekly, and the **hydronic dirt separator** moves
-> from "eventually" to before the next hot stretch. **The visual understates it badly** — a screen
-> judged 30–50% blocked was costing 60% of the flow, because the screen carries several times the
-> pipe's open area.
+> **`pivac.LoopDelta`** publishes live ΔT while pumping and **0 when not** — 0 meaning "no
+> measurement", so a *gap* still means a stale source or a dead module. Gated on `CHIL` narrowed by
+> each secondary's zone calls. `CHIL` is the Taco, energized by the HZ432's equipment Y on a call
+> from any chiller zone; it agrees with the union of the three zones **95.6 %**, the disagreement
+> all on the edges, because **the RedLink zone state lags the relay by a median 48 s**.
 >
-> **⚠️ A rule was deployed and retired the same day.** `chiltrix-flow-approaching-trip` fired below
-> 24 L/min while running, on the premise that low running flow means approaching the `P65` trip. The
-> M2 measured the pump halving its own flow at a constant 26 Hz **on a clean strainer**, and 31% of
-> running 5-minute buckets after the cleanout sat under 24 with a **30-minute consecutive stretch
-> against a 15-minute trigger** — it would have emailed on a healthy plant. **Flow while running is a
-> controlled output, so no fixed threshold on it is sound.** Removed via `deleteRules:`; verified
-> live at 23 rules, 0 paused.
+> **The RPI-BC board document is now buildable-from**, 355 → 702 lines across four PRs. §1 was wrong
+> at 12 monitored channels: J4 position 1 is the `+14V` feed, so it is **11 monitored / 7 in service
+> / 4 spare**, while twelve optocoupler channels are still built. The Phoenix drawing gave
+> **2.54 mm matrix on ⌀1.0 mm holes** and **isolated pads with no bus strips**, so the rails must be
+> built. **All three go on the solder side**, and only `+V` can run straight — a DIP's top edge runs
+> `C E C E` and a connector's pins 1–3 are channels, so the other two need offset rows with stubs.
 >
-> **Live rules:** `startupFlow` < 40 L/min for 30m (clean 52.9–54.0, fouled 20.6–23.0; would have
-> fired a day early on the 28 Aug trace), run duration > 90 min, and 30m Modbus freshness. **Note
-> there is no compressor runtime maximum** — runs lengthen with load and one reached 232 minutes, so
-> the 90-minute rule may want raising on a hot day.
+> **Next:** confirm the gate on a real call; wire the two pump sense taps to **J3, BCM 23 and 24**
+> (not J4 — its position 1 is the supply and it must stay clear to serve as the disconnect), then
+> drop `zones`; ring out the fan-out pad↔GPIO map with the eight-ground-pin check before placing
+> anything; dry-fit with the cover on, since the restricted bands share a face with all the wiring.
 >
-> **⚠️ Answering proves nothing — every address 0–359 responds**, no gaps, and 359 is only where the
-> scan stopped. "All 45 registers answered" was never a finding about the chiller; 45 was what the
-> module asked for. `registerCount` is a link-health signal, not a property of the device. The
-> module now polls **181 addresses on a 60 s cycle**, adding the whole **0–139 settings block** —
-> the CX65 IOM's P table runs to `P119`. **Cross-checks: four agree** (`53`,`59`,`64`,`109`)
-> **and two disagree** — `65`=14 against a documented 20, `52`=0 against a note calling that "not
-> stop" while the pump plainly stops. The `P114`–`P119` DHC tail is inert (`P119`=0).
->
-> **Register watch:** `248` moved 100 → 10 between running and deep idle, the largest candidate
-> movement yet; `260` sat at 33 with flow 6.9 having been 34–39 at 21.8, so it does not track flow
-> linearly and neither pump-speed candidate is clean enough to call. `registerCount` dropped 45 → 44.
-> `65` still reads **14** against the documented 20 L/min `P65` trip — confirm on the panel.
->
-> **The RPI-BC I/O board design is merged (#123) and parts-complete with no Digi-Key or Mouser
-> order**; #130 adds the assembly sequence.
-
-*Updated 2026-08-29 (session 49 — the strainer cleanout settled the fouling question, chiller
-alerting went live, and one rule was retired hours after shipping)*
+> **Printable board doc:** https://claude.ai/code/artifact/f82bbf1e-b05b-4439-a1e2-0b88453f54c3
 
 > ### eight probes calibrated at three bath points, one retired (2026-08-29)
 >
