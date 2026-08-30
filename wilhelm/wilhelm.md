@@ -4,6 +4,41 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-08-30) — Greg's "no tracks" report: AI diagnosis refuted, one real fix (PR #154)
+
+Greg Young reported that WilhelmSK stopped drawing his track after a round of server plugin updates,
+and forwarded an AI diagnosis to check. All three of its claims are false, verified from source: the
+app requests `/signalk/v1/api/vessels/self/track?timespan=1h&resolution=1m` (singular, with a
+`/signalk/v1/api/tracks` fallback) rather than the plural path it named; `@signalk/tracks-plugin`
+2.1.0 registers exactly the routes 2.0.2 did, adding only a startup backfill from the history API;
+and `settings.json` has no route-translation facility, so its recommended edit does nothing. The
+`/signalk/v1/api/self/track` it called a new layout has coexisted with `/vessels/self/track` in
+`signalk-to-influxdb` v1 since at least 1.9.2.
+
+**The architecture the report turns on.** WilhelmSK draws a track from two unrelated sources. Map and
+chart gauges read the track API, served by `signalk-to-influxdb` v1 (InfluxDB 1.x) or by
+`@signalk/tracks-plugin`, gated app-side on Settings → Appearance → Show Track. The Anchor Watch
+gauge instead polls `plugins/anchoralarm/getTrack`, the anchor alarm plugin's own in-memory buffer —
+the same source as that plugin's web app, which is what Greg was comparing against. So the web app
+showing a track proves only that the anchor plugin is recording positions.
+
+Two candidate causes, split by screen. `signalk-to-influxdb2` serves no track route at all (it only
+registers a history provider), so an InfluxDB 1.x → 2.x migration removes the endpoint the map gauges
+read; the fix is `@signalk/tracks-plugin`, whose 2.1.0 backfill picks the data back up from
+influxdb2. For the Anchor Watch gauge, everything under `/plugins` is admin-authenticated in every
+2.x server release, and the anchor plugin's own web app carries the comment that getTrack 401s
+without an authenticated session — so a readonly or readwrite login in WilhelmSK loses the track
+silently while `/signalk/v1/api` reads keep working. WSK's anchor Drop/Set/Raise and its plugin
+detection share that gate, which makes them a no-command-line test of the login. Awaiting Greg on
+which screen and which of those checks.
+
+**PR #154.** `drawTrack:` treated any non-error reply as "Influx gave me the self track" and then
+skipped self in the `/signalk/v1/api/tracks` pass. `signalk-to-influxdb` answers 200 with an empty
+`MultiLineString` whenever InfluxDB holds nothing in the window, so with both plugins installed an
+empty success discarded a working tracks-plugin track: boat, anchor and circles with no track. The
+flag now only latches when coordinates actually arrived. Build-verified. Left for Scott in the PR
+body: track failures are silent, and `hasTracksPlugin` latches off after one error.
+
 ## Current State (2026-08-18) — Discord support run: three PRs, two issues, one correction
 
 A user-support session across three reporters. No local work is blocked; everything now sits with
