@@ -10,6 +10,27 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+> ### ▶ ACTIVE HANDOFF — the 3am alarm burst was the monthly backup stranding four services; fixed, and both upgrades applied (2026-09-01)
+>
+> **Nothing new pending on the machine.** The 2026-09-01 03:00 alarm burst was the monthly
+> `nas-image-backup` run: **every pivac unit has `Requires=signalk.service`, so the script's
+> `systemctl stop signalk` stopped all 12**, and its `START_SVCS` list predated the four
+> newest services — `pivac-loop-delta`, `pivac-sprinkler`, `pivac-domestic-water` and
+> `pivac-chiltrix` stayed dead ~4.5 h, which is why the deltaTs stopped publishing. Recovered
+> by hand at 07:40; **PR #150 (merged, pulled on the Pi) puts all 13 services in both lists**,
+> so the October 1 run self-recovers. A `systemctl restart signalk` propagates as restart and
+> the services survive; `stop` is the dangerous verb.
+>
+> **Both upgrades ran.** All 65 apt packages: Grafana 13.1.1 → 13.2.0 (all 22 alert rules
+> intact, 0 paused), kernel 6.18.34 → 6.18.39 (takes effect at the Sunday 00:00 reboot,
+> automatic). Signal K 2.30.0 → 2.31.1 via the manual npm procedure. Every module's SK path
+> verified fresh afterward; RedLink's ~350 warnings/h journal noise matched the previous day
+> exactly (baseline, not regression), and the kernel `loop0 WRITE_ZEROES` errors during the
+> backup window are benign NFS fallback noise.
+>
+> **Next:** unchanged from 2026-08-30 — build the two boards, confirm the LoopDelta gate on a
+> real call, review #126 #125 #124, then #120 #117 #94.
+
 > ### ▶ ACTIVE HANDOFF — both DIN-board docs are build procedures with hole-by-hole maps; the boards are ready to build (2026-08-30)
 >
 > **Nothing pending on the machine.** `docs/rpi-io-board-design.md` and
