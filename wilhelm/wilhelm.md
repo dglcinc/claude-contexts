@@ -4,6 +4,34 @@
 
 Marine-instrument display app (the **WilhelmSK** product) for iOS/iPadOS/watchOS/tvOS that renders live boat data from a [SignalK](https://signalk.org) server as customizable gauges. Objective-C + Swift, Xcode workspace + CocoaPods. **Third-party repo** `sbender9/Wilhelm` (maintainer: Scott Bender) — David is a contributor working via clone + feature-branch PRs, not the owner. Local clone: `~/github/wilhelm` (renamed from `wilhelmsk` 2026-05-24 to match the repo and avoid confusion with the separate `dglcinc/wilhelm-sk` repo).
 
+## Current State (2026-09-05) — Track loss root-caused to the tracks plugin (PR #154, 2 commits); Grafana web gauge reload (PR #155)
+
+Two sessions. **2026-09-01:** Greg answered the track questions and the picture closed. With
+`@signalk/tracks-plugin` installed, `/signalk/v1/api/vessels/self/track` always answers 404
+`{"message":"No track available for vessels.self"}` because the plugin (2.0.1 and the current npm
+2.1.0) looks up the context `vessels.self` literally; upstream has it as SignalK/tracks#18, fixed in
+August but unpublished. signalk-server mounts `@signalk/*` routers first and the handler ends the
+response, so the InfluxDB v1 route for the same URL never runs, enabled or not — which is Greg's
+"disable it and both URLs go dead". The app turns every non-200 into an error and lives off the
+`/tracks` pass, and that pass latched off for the life of the map page after one failed request:
+any server restart while the page is open (every plugin install or update), or a launch before the
+plugin existed, left the map blank until the app was force-quit. **PR #154's second commit**
+replaces the latch with a 60 s back-off, draws every LineString, and keeps a `TrackInfo` per
+polyline so other vessels' tracks stop accumulating; the PR is retitled "Keep the map track when
+the tracks plugin is the only source". Verified on the local server with the plugin installed
+(`~/.signalk`, left in place). Discord reply drafted: force-quit + relaunch as test and workaround;
+uninstall (not disable) the tracks plugin to get the 24 h Influx track back; resolution must be
+`30s`, since the Influx plugin reads the last character as the unit. Waiting on Greg.
+
+**2026-09-05 (separate session, no context saved):** **PR #155** from
+`fix/webgauge-reload-after-background`. A Grafana dashboard in a WebGauge comes back from hours in
+the background as empty panel frames; the server log showed the web view sent nothing until the
+next restart, so iOS had killed the WKWebView content process and WebKit dropped the canvas backing
+stores. `WebGaugeView` now reloads on becoming active after five or more minutes away and in
+`webViewWebContentProcessDidTerminate:`, matching what `RTSPView`, `IPCameraView` and `RayMFDView`
+already do. Syntax-checked only; the PR's background/foreground test plan is unticked, and it was
+opened against `master` (68 commits behind `development`), which needs confirming before review.
+
 ## Current State (2026-08-30) — Greg's "no tracks" report: AI diagnosis refuted, one real fix (PR #154)
 
 Greg Young reported that WilhelmSK stopped drawing his track after a round of server plugin updates,
