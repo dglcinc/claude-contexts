@@ -113,3 +113,7 @@ location /skServer/ {
 Seen on `pivac` (`/etc/nginx/sites-available/pivac`, server `68lookout.dglc.com`) 2026-06-07 — the
 `/skServer/` block had never been present, so admin only ever worked by hitting
 `http://<host>:3000` directly, bypassing the proxy.
+
+## Reverse proxies must forward `/plugins/` too (2026-09-06)
+
+Plugin HTTP routes mount under `/plugins/<id>/`. WilhelmSK pairs for push notifications by posting to `/plugins/push-notifications/registerDevice`; without an nginx `location /plugins/` block mirroring `/skServer/` the request 404s at the proxy and the app never registers. Seen on `pivac` while installing `signalk-push-notifications` 2.6.0.
