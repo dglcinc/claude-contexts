@@ -2,6 +2,38 @@
 
 Session handoffs moved out of the Current State section of `pivac.md`, newest first, from 2026-09-06 back to 2026-06-01. `/set-context` reads only the `*.md` files in `pivac/`, so this file stays out of context; open it when a question turns on how something reached its current state. Each entry stated the position at the end of its session, so a later entry supersedes an earlier one on any fact they share.
 
+> ### ▶ ACTIVE HANDOFF — the context-load trim is merged everywhere but M2; push notifications and the MOB fix are done (2026-09-06 12:10, parallel session)
+>
+> **claude-contexts #16 is merged**: this file holds one handoff, the older 57 sections live in
+> `archive/handoffs.md`, and `save-context` archives the previous handoff before pasting the next.
+> **claude-contexts #17 (merged, `d522c08`)** trims the rest of the per-session load: `global.md` 15.5 → 13.4 KB
+> with every rule kept, `memory/memory.md` 4.3 → 2.3 KB, the PreToolUse hook injects only the
+> global index, and `save-context` step 8.5 queries the graph outgoing-only and hangs sessions off
+> a `<project>-sessions` hub (the `pivac` entity had 60 incoming session links and hit the
+> 100-fact cap). **pivac #156 (merged, `53b18e3`)** moves five evidence blocks from CLAUDE.md into `docs/`
+> (66.7 → 60.3 KB). `.claude/settings.local.json` on the M4 disables the beads and frontend-design
+> plugins and hides the design and dataviz skills for pivac.
+>
+> **Earlier today (archived 11:15 handoff):** `signalk-push-notifications` installed, nginx
+> forwards `/plugins/`, the phone is paired and a lowered `redlink-stale` sentinel fired and
+> resolved end to end; the MOB tap crash is an `NSNull` position in `SignalKSource.m:1028`, fixed
+> in Wilhelm **#156**, and the house position is seeded in `~/.signalk/baseDeltas.json`.
+>
+> **Pending pulls:** M2 only, both repos; the Mac and the Pi are current. GitHub SSH on port 22 from the M4 failed three times in twenty minutes;
+> `ssh.github.com:443` is the workaround.
+>
+> **Next:** confirm the two 10:56 pushes reached the phone;
+> device-test Wilhelm #155 and ship #155 and #156; review #125 #124, then #117 #94, Arduino #10 (the M2 session merged its
+> own #155 and #157 at midday). **Carried from the
+> chiller-lockout handoff:** tuning change 2 (12 °C target + `P12` = 3 as a pair, register 142
+> read back); confirm `r284` = 32 at the next lockout using Error Reset, never Clear; confirm
+> `P65` on the panel; hot-day zone-droop check; probe swing and strain-relief checks; board builds;
+> LoopDelta gate on a real call.
+
+This section holds one handoff. When `/save-context` adds the next, move this one to the top of `archive/handoffs.md`, newest first. `/set-context` reads only the `*.md` files in this folder, so the archive stays out of context.
+
+---
+
 ---
 
 > ### ▶ ACTIVE HANDOFF — a chiller lockout nothing alerted on, and the alarm that now catches it (2026-09-06)

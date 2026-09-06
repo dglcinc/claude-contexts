@@ -10,37 +10,61 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — the context-load trim is merged everywhere but M2; push notifications and the MOB fix are done (2026-09-06 12:10, parallel session)
+> ### ▶ ACTIVE HANDOFF — the Sentry LED coordinates drifted with the camera, and nothing was watching them (2026-09-06 19:00, M2)
 >
-> **claude-contexts #16 is merged**: this file holds one handoff, the older 57 sections live in
-> `archive/handoffs.md`, and `save-context` archives the previous handoff before pasting the next.
-> **claude-contexts #17 (merged, `d522c08`)** trims the rest of the per-session load: `global.md` 15.5 → 13.4 KB
-> with every rule kept, `memory/memory.md` 4.3 → 2.3 KB, the PreToolUse hook injects only the
-> global index, and `save-context` step 8.5 queries the graph outgoing-only and hangs sessions off
-> a `<project>-sessions` hub (the `pivac` entity had 60 incoming session links and hit the
-> 100-fact cap). **pivac #156 (merged, `53b18e3`)** moves five evidence blocks from CLAUDE.md into `docs/`
-> (66.7 → 60.3 KB). `.claude/settings.local.json` on the M4 disables the beads and frontend-design
-> plugins and hides the design and dataviz skills for pivac.
+> **Nothing is pending on the machine, and both repos are current on the M2** (that pull is no longer
+> outstanding). Five pivac PRs merged and deployed this session: **#155** Sentry LED re-aim, **#157**
+> I/O board pinout sheets, **#125** Chiltrix Modbus bring-up runbook, **#124** Sentry warp-search
+> tool, **#94** storm-drain float spec. `pivac-sentry` restarted clean, all services active, journal
+> silent. **One pivac PR left: #117**, rebased onto master and `MERGEABLE/CLEAN`.
 >
-> **Earlier today (archived 11:15 handoff):** `signalk-push-notifications` installed, nginx
-> forwards `/plugins/`, the phone is paired and a lowered `redlink-stale` sentinel fired and
-> resolved end to end; the MOB tap crash is an `NSNull` position in `SignalKSource.m:1028`, fixed
-> in Wilhelm **#156**, and the house position is seeded in `~/.signalk/baseDeltas.json`.
+> **David reported random on/off cycling on the LED-driven Sentry paths. The cause was geometry, not
+> thresholds.** `leds:` and `indicators:` are **absolute frame coordinates that drift with the camera
+> exactly as `display_warp` does**, but the recalibration recipe only ever re-aimed the quad. Left
+> behind through the 07-28 and 08-23 recalibrations, all eight had absorbed the cumulative shift: the
+> quad's TL had moved `(1156,655) → (1150,649)`, six left and six up, and the measured LED offsets
+> were +4..+7 right and +6..+9 down — the same displacement. Every spot had slid off its lens onto
+> the bright bezel below and right of it.
 >
-> **Pending pulls:** M2 only, both repos; the Mac and the Pi are current. GitHub SSH on port 22 from the M4 failed three times in twenty minutes;
-> `ssh.github.com:443` is the workaround.
+> **⚠️ The decisive test is the SWING, not the level, and idle data cannot produce it.** Across a real
+> DHW call the lens-centred `burner` spot went **0.794 → 1.215 (+0.421)**, lit 10/10; the drifted spot
+> went **1.039 → 1.052 (+0.012)**. A spot that does not move when the LED lights is reading the bezel,
+> which the LED does not illuminate, so its output was **noise straddling the threshold rather than a
+> measurement** — every `burnerOn` transition after the drift was manufactured, and the drifted
+> `circ_aux` read the running DHW pump as **off for all ten samples**. The cycling indicators show the
+> same thing without waiting for the boiler, since both their states appear in one capture
+> (`water_temp` separation 0.090 → 0.394).
 >
-> **Next:** confirm the two 10:56 pushes reached the phone;
-> device-test Wilhelm #155 and ship #155 and #156; review #125 #124, then #117 #94, Arduino #10 (the M2 session merged its
-> own #155 and #157 at midday). **Carried from the
-> chiller-lockout handoff:** tuning change 2 (12 °C target + `P12` = 3 as a pair, register 142
-> read back); confirm `r284` = 32 at the next lockout using Error Reset, never Clear; confirm
-> `P65` on the panel; hot-day zone-droop check; probe swing and strain-relief checks; board builds;
-> LoopDelta gate on a real call.
-
-This section holds one handoff. When `/save-context` adds the next, move this one to the top of `archive/handoffs.md`, newest first. `/set-context` reads only the `*.md` files in this folder, so the archive stays out of context.
-
----
+> **July's own fix set this up.** Dropping `led_ratio` 1.15 → 1.05 on 2026-07-20 correctly solved the
+> IR/green-LED problem, but it also spent the margin that would have absorbed later drift; once the
+> camera moved, 1.05 sat *inside* the compressed band rather than below it. **Lowering a threshold to
+> fix a miss buys sensitivity by spending headroom.** `_low_margin` now warns when a spot's decision
+> rested on noise — parking within 0.03 of the threshold, or switching on a separation under 0.15,
+> which the majority test cannot catch because a cycling indicator is dark most of the cycle. Grep
+> `lit-threshold` alongside `nothing decoded`.
+>
+> **⚠️ Do the frame captures from a Mac, not the Pi — I rebooted the Pi doing this.** Stacking 200
+> full-res float64 frames is ~5.9 GB on a 3.8 GB machine. The camera is an ordinary LAN RTSP source
+> and capturing from the M2 works *alongside* a running `pivac-sentry`. Crop at capture time, keep
+> frames `uint8`. Everything recovered; it was avoidable.
+>
+> **#156 merged 68 s before #155**, both touching `CLAUDE.md` and `docs/sentry-cv-notes.md`. GitHub
+> merged cleanly, but a clean *textual* merge proves nothing about coherence when two changes
+> restructure the same section — checked by hand: rules appear once each, no duplicate headings, both
+> suites pass. Worth repeating that check rather than assuming it.
+>
+> **Next:** decide **#117** — now purely two new docs, but written 2026-08-18 and overtaken in three
+> places by the Modbus work (§4.2 treats the community register maps as an unresolved contradiction,
+> §9 still asks whether the CX75 exposes Modbus RTU, §4 frames the feed as future work; the doc never
+> mentions `ChiltrixModbus`, `startupFlow` or `docs/chiltrix-modbus.md`). A bounded ~60-line pass was
+> offered against merging it as an August snapshot. Then **extend `sentry-warp-search.py` to the
+> LED/indicator coords** — it searches the quad only, so recalibration is half automated and the
+> manual half is the half that just failed; the methods that worked are dark-blob centroid for the LED
+> lenses and temporal variance for the cycling indicators. **Carried:** confirm the 10:56 pushes
+> reached the phone; device-test Wilhelm #155 and ship Wilhelm #155/#156; Arduino #10; Chiltrix tuning
+> change 2 (12 °C target + `P12` = 3 as a pair, register 142 read back); confirm `r284` = 32 at the
+> next lockout using **Error Reset, never Clear**; confirm `P65` on the panel; hot-day zone-droop
+> check; loop-probe swing and strain-relief checks; board builds; LoopDelta gate on a real call.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
