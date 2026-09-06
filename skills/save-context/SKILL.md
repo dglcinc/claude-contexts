@@ -110,7 +110,7 @@ If the bar is met: drop the **Last worked on** + **Notes** content from step 3 i
 
 Skip silently if step 2E reported `NO_MIRROR`. Most projects do not have a mirror — only those created via `/new-context` after the convention was introduced (currently `arch-as-code`, `archive`, `nas-cleanup`).
 
-If the mirror exists (`~/github/claude-contexts/<project>/<project>.md`): paste the same step-3 summary into its `## Current State` section. Use Edit.
+If the mirror exists (`~/github/claude-contexts/<project>/<project>.md`): paste the same step-3 summary into its `## Current State` section. Use Edit. If an `archive/handoffs.md` sits beside the mirror, that section holds one handoff: move the previous handoff to the top of the archive, newest first, before pasting the new one. `/set-context` reads only the `*.md` files in the project folder, so the archive stays out of context.
 
 ### 7. Update OneDrive cross-machine context (only if cross-machine state changed)
 
