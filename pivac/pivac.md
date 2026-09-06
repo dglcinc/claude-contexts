@@ -10,6 +10,37 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+> ### ▶ ACTIVE HANDOFF — false strainer alarm fixed, Grafana alerts mirrored into Signal K, WSK blank-panel cause found and patched (2026-09-05)
+>
+> **Nothing pending on the Pi.** Four pivac PRs merged and deployed this session. **#151**: the
+> `chiltrix-pump-only-flow-low` alarm fired on a strainer that read 52.9 L/min before and after
+> cleaning, because the sample at a compressor stop caught the pump spinning down (0 Hz, 36.8) and
+> stood as `startupFlow` through a 36-minute idle; `_derive` now ignores idle-side samples for
+> `stop_settle_s` (180 s) after a stop edge, replay-tested. **#152**: `pivac.GrafanaAlerts` polls
+> Grafana's rules and Alertmanager APIs and publishes all 22 rules as `notifications.pivac.<uid>`
+> every 30 s (silences honoured; Viewer SA `pivac-alerts`, token in config.yml; InfluxDB plugin
+> ignores `^notifications\.`). Signal K keys notification ids by path+source and never drops the
+> key, so a WilhelmSK silence sticks across republishes. **#120 + #126** merged; #126's conflict
+> against the #141 build-procedure rewrite was resolved on master's structure, folding in the
+> corrected cause of the 08-22 collapse (RC against the pull-up, bus already a chain), both rise
+> budgets, the 45.5 ft inventory, the planned end state and the bus-health check as §7.1–7.3.
+>
+> **Grafana API access is solved for good**: David's token is at `~/.config/grafana-claude-agent.key`
+> on Mac and Pi, recorded in CLAUDE.md Key File Locations. **Never ask for the admin password.**
+>
+> **Two WilhelmSK findings.** All devices log into Grafana as `admin`, so one tap on Grafana 13's
+> theme toggle turned every dashboard white (set back to dark in the `preferences` table). And
+> blank panels after hours in the background are the web view's JavaScript not running (no
+> requests at all from 22:59 to the 10:23 restart on a 30 s-refresh dashboard) — not token
+> rotation, which the log shows working on every resume. Fixed in `WebGaugeView.m`
+> (sbender9/Wilhelm#155, open): reload on `webViewWebContentProcessDidTerminate:` and after ≥5 min
+> inactive.
+>
+> **Next:** test Wilhelm #155 on a device and ship; watch the first firing rule reach WSK's alarm
+> list; optional Grafana `login_maximum_lifetime_duration` raise + nginx `/grafana/` WebSocket
+> headers; carried board builds and the LoopDelta gate check; review #125 #124, then #117 #94,
+> Arduino #10. P95 5→3 (08-30 09:27) still awaits a hot day.
+
 > ### ▶ ACTIVE HANDOFF — the 3am alarm burst was the monthly backup stranding four services; fixed, and both upgrades applied (2026-09-01)
 >
 > **Nothing new pending on the machine.** The 2026-09-01 03:00 alarm burst was the monthly

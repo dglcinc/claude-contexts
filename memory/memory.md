@@ -4,7 +4,7 @@ Read this file at session start. Load specific topic files only when relevant.
 
 | File | Description | Last updated |
 |------|-------------|--------------|
-| `general.md` | Cross-project conventions and preferences | 2026-05-14 |
+| `general.md` | Cross-project conventions and preferences (incl. where agent credentials live) | 2026-09-02 |
 | `user.md` | David — user profile, setup, working style, machines (M2 = fixed `10.0.0.83` wired; Wi-Fi reserved `.95`, is what mDNS resolves to), home address, Obsidian vault layout | 2026-07-06 |
 | `reference/mountain-lakes-code.md` | Mountain Lakes NJ municipal code as a grep-indexed local KB (`~/OneDrive - DGLC/Claude/mountain-lakes-code/`) — water rates/watering rules + zoning/building; how to query | 2026-07-06 |
 | `reference/signalk-server-architecture.md` | Architectural review of upstream SignalK/signalk-server (2026-06-06, v2.28.0-beta.2) — report at `~/github/signalk-server-architecture-review.md` (uncommitted loose file); `app` god-object + whole-`app` plugin-API leak are the standing liabilities; core churns hard so treat line refs as stale; AI-PR governance recs (CODEOWNERS + arch-alignment criteria) | 2026-08-18 |
@@ -15,7 +15,7 @@ Read this file at session start. Load specific topic files only when relevant.
 | `tools/arduino-cli.md` | arduino-cli 1.5.1 on the Pi at `~/bin` + renesas_uno core — local UNO R4 compile/flash; DomesticWater arduino_secrets.h on the Pi holds PLACEHOLDER creds (replace before flashing) | 2026-07-03 |
 | `tools/ralph.md` | Ralph loop — PLAN.md checklist + ralph.sh driver (~/github/claude-contexts/ralph.sh); each iteration spawns fresh sclaude for one task | 2026-05-22 |
 | `tools/mempalace.md` | MemPalace auto-populates via plugin-shipped Stop/PreCompact hooks (NOT settings.json); palace = mined own content, not seed data; drawers vs KG-triple layers | 2026-05-25 |
-| `tools/gh-stacked-prs.md` | Squash-merging parent w/ --delete-branch auto-closes child PRs; reopen blocked. Cherry-pick to recover. | 2026-05-08 |
+| `tools/gh-stacked-prs.md` | Squash-merging parent w/ --delete-branch auto-closes child PRs; reopen blocked. Cherry-pick to recover. Child shows CONFLICTING after parent squash → rebase --onto main. | 2026-09-01 |
 | `tools/nfs.md` | D-state stuck procs survive SIGKILL; lazy-unmount + reboot to recover. fstab pattern for non-blocking boot. | 2026-05-08 |
 | `tools/rsync.md` | rsync over NFSv4 starves on large sparse files (use cat\|ssh\|dd or cp instead); rsync 3.4 → older server needs `--old-args`. | 2026-05-08 |
 | `tools/synology.md` | DSM rsync-over-SSH gate: code 43 even with toggle on; nasadmin+`--rsync-path='sudo rsync'` is the workaround. NFS+ACL recipe included. | 2026-05-08 |
