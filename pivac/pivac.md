@@ -10,69 +10,34 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — a chiller lockout nothing alerted on, and the alarm that now catches it (2026-09-06)
+> ### ▶ ACTIVE HANDOFF — the context load is trimmed to the PR stage; push notifications and the MOB fix are done (2026-09-06 12:00, parallel session)
 >
-> **Nothing is pending on the machine.** `chiltrix-zero-flow` is merged (PR #154) and deployed:
-> 23 rules and 0 paused in the `alert_rule` table, 23 Signal K notification paths, every service
-> active, no warnings. Eight days of Chiltrix data were reviewed end to end — 10,396 minute-buckets,
-> 212 compressor cycles, all 181 registers.
+> **claude-contexts #16 is merged**: this file holds one handoff, the older 57 sections live in
+> `archive/handoffs.md`, and `save-context` archives the previous handoff before pasting the next.
+> **claude-contexts #17 (open)** trims the rest of the per-session load: `global.md` 15.5 → 13.4 KB
+> with every rule kept, `memory/memory.md` 4.3 → 2.3 KB, the PreToolUse hook injects only the
+> global index, and `save-context` step 8.5 queries the graph outgoing-only and hangs sessions off
+> a `<project>-sessions` hub (the `pivac` entity had 60 incoming session links and hit the
+> 100-fact cap). **pivac #156 (open)** moves five evidence blocks from CLAUDE.md into `docs/`
+> (66.7 → 60.3 KB). `.claude/settings.local.json` on the M4 disables the beads and frontend-design
+> plugins and hides the design and dataviz skills for pivac.
 >
-> **A closed isolation valve during Thursday's glycol top-up locked the chiller out for sixteen
-> minutes (2026-09-03, 16:19–16:36 EDT) and no alert fired.** Inlet reached the 54.7 °F restart
-> band, the controller commanded the pump to 100 %, flow read 54.0 for one cycle and **0.0** the
-> next, register `284` went to **32**, the controller stopped the pump, and the loop coasted to
-> **62.2 °F** before the unit released itself and restarted to 60 Hz. Zones held setpoint
-> throughout, so there was no comfort consequence.
+> **Earlier today (archived 11:15 handoff):** `signalk-push-notifications` installed, nginx
+> forwards `/plugins/`, the phone is paired and a lowered `redlink-stale` sentinel fired and
+> resolved end to end; the MOB tap crash is an `NSNull` position in `SignalKSource.m:1028`, fixed
+> in Wilhelm **#156**, and the house position is seeded in `~/.signalk/baseDeltas.json`.
 >
-> **⚠️ The fouling alarm is structurally blind to a total loss of flow.** Through the whole
-> lockout `startupFlow` published **54.0 L/min — the highest value of that week** — because the
-> module captured the one 54.0 sample from the aborted start's plateau and then discarded every
-> subsequent 0.0 as sub-floor idle trickle. **The 15 L/min floor that keeps the deep-idle trickle
-> out of the plateau also throws away a genuine zero**, so a zero-flow fault reads as the healthiest
-> possible state. Fouling is gradual and `startupFlow` catches it; a closed valve is instantaneous
-> and only the new rule catches it.
+> **Pending pulls:** claude-contexts on the Pi and M2 (now, for #16) and again after #17; pivac
+> on the Pi after #156. GitHub SSH on port 22 from the M4 failed three times in twenty minutes;
+> `ssh.github.com:443` is the workaround.
 >
-> **⚠️ Guard on `max`, never `last`, when the guard is the device's own on/off state.** The
-> controller switched *itself* off (register 140 → 0) for the last 4 minutes of its own lockout, so
-> a `last` reducer would have disarmed the rule partway through the event it exists to catch.
->
-> **`POST /grafana/api/v1/eval` with a back-dated `now` evaluates a whole expression chain without
-> saving a rule.** That proved the rule before shipping — fires 16:28–16:37 on the real event,
-> clears on recovery. Replayed over 12,370 minutes it fires eleven times, and **the ten before the
-> 08-29 cleanout are the fouled regime rather than false positives**: with the strainer clogged the
-> idle trickle fell under the meter's detection floor and read a clean 0.0 between cycles, through
-> the very period the alarm set was silent. Reuse this endpoint for any rule with a math node.
->
-> **Register `284` is the fault/lockout word** — 32 through the lockout, 0 for every other sample of
-> the surrounding eight days. **The `P5` code was never confirmed and now cannot be**: the panel
-> error log read empty on 09-06, already cleared. It rests on the mechanism plus CX65 IOM p70, which
-> names insufficient flow **and air in the lines** as the two `P5` triggers — and a fill introduces
-> air, so an open valve does not rule out an air lock. **No register latches a code and the panel log
-> is erasable, so the InfluxDB record is the only durable evidence a chiller fault happened.**
->
-> **⚠️ The antifreeze margin at the 10 °C target is zero, not 2.2 °F.** Forty running minutes came in
-> at or below 38.5 °F leaving water, the minimum reaching **exactly the 37.40 °F `P59` trip** on
-> 09-02. All are end-of-run at full flow, so they are the normal stop transient. **Widening `P12`
-> before raising the target would push them under**, which makes the target raise a prerequisite.
-> Adding glycol does not help: `P59` trips on a fixed temperature and knows nothing about concentration.
->
-> **The glycol top-up moved the fouling baseline** 52.9 → 51.7 L/min, one quantization step. Four
-> other measurements stepped with it at the same hour — idle trickle 6.9 → 5.7, flow lower at matched
-> compressor speed in three of five Hz bands, evaporator ΔT one step wider. No single move means
-> anything; five together in the direction viscosity predicts is the signal. **Read 51.7 as clean, and
-> record the date of any top-up.**
->
-> **`P95` 5 → 3 (made 08-30) has not moved starts/day**, matched on ambient (33.7 → 35.7, 41.6 → 38.1,
-> 23.6 → 32.3). The pre-change window is only 25 h, so this is weak evidence rather than a refutation.
-> The cycling reduction now rests on change 2.
->
-> **Modbus link health is excellent** — 6 cycles below 181 registers out of ~8,400 in seven days.
-> Cadence is `daemon_sleep: 60` giving ~70 s, not the ~6.8 s at 30 the docs had claimed.
->
-> **Next:** tuning change 2 (12 °C target + `P12` = 3, as a pair, register 142 read back); confirm
-> `r284` = 32 at the next lockout using **Error Reset**, never **Clear**; confirm `P65` on the panel
-> (register 65 reads 14 against a documented 20); hot-day zone-droop check at the raised target; the
-> carried-over probe swing/strain-relief checks; four open PRs (#94, #117, #124, #125).
+> **Next:** merge #17 and pivac #156; confirm the two 10:56 pushes reached the phone;
+> device-test Wilhelm #155 and ship #155 and #156; review the M2 session's pivac #155 (Sentry
+> coords) and #157 (io-board pin sheets), then #125 #124, #117 #94, Arduino #10. **Carried from the
+> chiller-lockout handoff:** tuning change 2 (12 °C target + `P12` = 3 as a pair, register 142
+> read back); confirm `r284` = 32 at the next lockout using Error Reset, never Clear; confirm
+> `P65` on the panel; hot-day zone-droop check; probe swing and strain-relief checks; board builds;
+> LoopDelta gate on a real call.
 
 This section holds one handoff. When `/save-context` adds the next, move this one to the top of `archive/handoffs.md`, newest first. `/set-context` reads only the `*.md` files in this folder, so the archive stays out of context.
 
