@@ -31,8 +31,8 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > `ssh.github.com:443` is the workaround.
 >
 > **Next:** confirm the two 10:56 pushes reached the phone;
-> device-test Wilhelm #155 and ship #155 and #156; review the M2 session's pivac #155 (Sentry
-> coords) and #157 (io-board pin sheets), then #125 #124, #117 #94, Arduino #10. **Carried from the
+> device-test Wilhelm #155 and ship #155 and #156; review #125 #124, then #117 #94, Arduino #10 (the M2 session merged its
+> own #155 and #157 at midday). **Carried from the
 > chiller-lockout handoff:** tuning change 2 (12 °C target + `P12` = 3 as a pair, register 142
 > read back); confirm `r284` = 32 at the next lockout using Error Reset, never Clear; confirm
 > `P65` on the panel; hot-day zone-droop check; probe swing and strain-relief checks; board builds;
