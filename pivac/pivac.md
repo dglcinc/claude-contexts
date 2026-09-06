@@ -10,6 +10,31 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+> ### ▶ ACTIVE HANDOFF — CLAUDE.md trimmed from 160 KB to 63.5 KB; evidence moved to docs/, rules stay (2026-09-06)
+>
+> Claude Code warned the auto-loaded CLAUDE.md files exceeded 150 KB. **#153** (merged, docs
+> only, nothing to deploy): Known Operational Behaviours went from 86 KB of measurements and
+> incident timelines to 14 KB of rules grouped by subsystem, each group naming the doc that
+> carries its evidence. The moved text landed verbatim in six new docs —
+> `docs/chiltrix-modbus.md`, `onewire-notes.md`, `emporia-notes.md`, `sentry-cv-notes.md`,
+> `grafana-alerting-notes.md`, `operational-notes.md` — indexed by a new **Reference docs**
+> section. Sentry blockquotes, per-file alert descriptions, the ΔT panel rationale, the Pi
+> network paragraph and the backup failure narrative were shortened in place. A line-by-line
+> check against HEAD confirmed every removed line survives in a doc. The rule is now written
+> into Keeping This File Current: rules in CLAUDE.md, evidence in `docs/`.
+>
+> `~/.claude/CLAUDE.md` is a symlink to this repo's `global.md`; its duplicated topic-file list
+> is now a pointer to `~/.claude/memory/memory.md` (17.4 → 15.3 KB), committed here.
+>
+> **Pending pulls:** `git pull` in `~/github/pivac` and `~/github/claude-contexts` on the Pi and
+> M2. **Next trim:** this file — 123 KB, with ~1,380 lines of stacked handoffs under Current
+> State; `/set-context` loads all of it. Keep the latest handoff, archive the rest.
+>
+> **Carried from 09-05:** test Wilhelm #155 on a device and ship; watch the first firing rule
+> reach WSK's alarm list; optional Grafana `login_maximum_lifetime_duration` raise + nginx
+> `/grafana/` WebSocket headers; board builds and the LoopDelta gate check; review #125 #124,
+> then #117 #94, Arduino #10. P95 5→3 (08-30) still awaits a hot day.
+
 > ### ▶ ACTIVE HANDOFF — false strainer alarm fixed, Grafana alerts mirrored into Signal K, WSK blank-panel cause found and patched (2026-09-05)
 >
 > **Nothing pending on the Pi.** Four pivac PRs merged and deployed this session. **#151**: the
