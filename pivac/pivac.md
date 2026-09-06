@@ -10,6 +10,70 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+> ### ▶ ACTIVE HANDOFF — a chiller lockout nothing alerted on, and the alarm that now catches it (2026-09-06)
+>
+> **Nothing is pending on the machine.** `chiltrix-zero-flow` is merged (PR #154) and deployed:
+> 23 rules and 0 paused in the `alert_rule` table, 23 Signal K notification paths, every service
+> active, no warnings. Eight days of Chiltrix data were reviewed end to end — 10,396 minute-buckets,
+> 212 compressor cycles, all 181 registers.
+>
+> **A closed isolation valve during Thursday's glycol top-up locked the chiller out for sixteen
+> minutes (2026-09-03, 16:19–16:36 EDT) and no alert fired.** Inlet reached the 54.7 °F restart
+> band, the controller commanded the pump to 100 %, flow read 54.0 for one cycle and **0.0** the
+> next, register `284` went to **32**, the controller stopped the pump, and the loop coasted to
+> **62.2 °F** before the unit released itself and restarted to 60 Hz. Zones held setpoint
+> throughout, so there was no comfort consequence.
+>
+> **⚠️ The fouling alarm is structurally blind to a total loss of flow.** Through the whole
+> lockout `startupFlow` published **54.0 L/min — the highest value of that week** — because the
+> module captured the one 54.0 sample from the aborted start's plateau and then discarded every
+> subsequent 0.0 as sub-floor idle trickle. **The 15 L/min floor that keeps the deep-idle trickle
+> out of the plateau also throws away a genuine zero**, so a zero-flow fault reads as the healthiest
+> possible state. Fouling is gradual and `startupFlow` catches it; a closed valve is instantaneous
+> and only the new rule catches it.
+>
+> **⚠️ Guard on `max`, never `last`, when the guard is the device's own on/off state.** The
+> controller switched *itself* off (register 140 → 0) for the last 4 minutes of its own lockout, so
+> a `last` reducer would have disarmed the rule partway through the event it exists to catch.
+>
+> **`POST /grafana/api/v1/eval` with a back-dated `now` evaluates a whole expression chain without
+> saving a rule.** That proved the rule before shipping — fires 16:28–16:37 on the real event,
+> clears on recovery. Replayed over 12,370 minutes it fires eleven times, and **the ten before the
+> 08-29 cleanout are the fouled regime rather than false positives**: with the strainer clogged the
+> idle trickle fell under the meter's detection floor and read a clean 0.0 between cycles, through
+> the very period the alarm set was silent. Reuse this endpoint for any rule with a math node.
+>
+> **Register `284` is the fault/lockout word** — 32 through the lockout, 0 for every other sample of
+> the surrounding eight days. **The `P5` code was never confirmed and now cannot be**: the panel
+> error log read empty on 09-06, already cleared. It rests on the mechanism plus CX65 IOM p70, which
+> names insufficient flow **and air in the lines** as the two `P5` triggers — and a fill introduces
+> air, so an open valve does not rule out an air lock. **No register latches a code and the panel log
+> is erasable, so the InfluxDB record is the only durable evidence a chiller fault happened.**
+>
+> **⚠️ The antifreeze margin at the 10 °C target is zero, not 2.2 °F.** Forty running minutes came in
+> at or below 38.5 °F leaving water, the minimum reaching **exactly the 37.40 °F `P59` trip** on
+> 09-02. All are end-of-run at full flow, so they are the normal stop transient. **Widening `P12`
+> before raising the target would push them under**, which makes the target raise a prerequisite.
+> Adding glycol does not help: `P59` trips on a fixed temperature and knows nothing about concentration.
+>
+> **The glycol top-up moved the fouling baseline** 52.9 → 51.7 L/min, one quantization step. Four
+> other measurements stepped with it at the same hour — idle trickle 6.9 → 5.7, flow lower at matched
+> compressor speed in three of five Hz bands, evaporator ΔT one step wider. No single move means
+> anything; five together in the direction viscosity predicts is the signal. **Read 51.7 as clean, and
+> record the date of any top-up.**
+>
+> **`P95` 5 → 3 (made 08-30) has not moved starts/day**, matched on ambient (33.7 → 35.7, 41.6 → 38.1,
+> 23.6 → 32.3). The pre-change window is only 25 h, so this is weak evidence rather than a refutation.
+> The cycling reduction now rests on change 2.
+>
+> **Modbus link health is excellent** — 6 cycles below 181 registers out of ~8,400 in seven days.
+> Cadence is `daemon_sleep: 60` giving ~70 s, not the ~6.8 s at 30 the docs had claimed.
+>
+> **Next:** tuning change 2 (12 °C target + `P12` = 3, as a pair, register 142 read back); confirm
+> `r284` = 32 at the next lockout using **Error Reset**, never **Clear**; confirm `P65` on the panel
+> (register 65 reads 14 against a documented 20); hot-day zone-droop check at the raised target; the
+> carried-over probe swing/strain-relief checks; four open PRs (#94, #117, #124, #125).
+
 > ### ▶ ACTIVE HANDOFF — CLAUDE.md trimmed from 160 KB to 63.5 KB; evidence moved to docs/, rules stay (2026-09-06)
 >
 > Claude Code warned the auto-loaded CLAUDE.md files exceeded 150 KB. **#153** (merged, docs
