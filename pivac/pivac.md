@@ -10,15 +10,15 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — the context load is trimmed to the PR stage; push notifications and the MOB fix are done (2026-09-06 12:00, parallel session)
+> ### ▶ ACTIVE HANDOFF — the context-load trim is merged everywhere but M2; push notifications and the MOB fix are done (2026-09-06 12:10, parallel session)
 >
 > **claude-contexts #16 is merged**: this file holds one handoff, the older 57 sections live in
 > `archive/handoffs.md`, and `save-context` archives the previous handoff before pasting the next.
-> **claude-contexts #17 (open)** trims the rest of the per-session load: `global.md` 15.5 → 13.4 KB
+> **claude-contexts #17 (merged, `d522c08`)** trims the rest of the per-session load: `global.md` 15.5 → 13.4 KB
 > with every rule kept, `memory/memory.md` 4.3 → 2.3 KB, the PreToolUse hook injects only the
 > global index, and `save-context` step 8.5 queries the graph outgoing-only and hangs sessions off
 > a `<project>-sessions` hub (the `pivac` entity had 60 incoming session links and hit the
-> 100-fact cap). **pivac #156 (open)** moves five evidence blocks from CLAUDE.md into `docs/`
+> 100-fact cap). **pivac #156 (merged, `53b18e3`)** moves five evidence blocks from CLAUDE.md into `docs/`
 > (66.7 → 60.3 KB). `.claude/settings.local.json` on the M4 disables the beads and frontend-design
 > plugins and hides the design and dataviz skills for pivac.
 >
@@ -27,11 +27,10 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > resolved end to end; the MOB tap crash is an `NSNull` position in `SignalKSource.m:1028`, fixed
 > in Wilhelm **#156**, and the house position is seeded in `~/.signalk/baseDeltas.json`.
 >
-> **Pending pulls:** claude-contexts on the Pi and M2 (now, for #16) and again after #17; pivac
-> on the Pi after #156. GitHub SSH on port 22 from the M4 failed three times in twenty minutes;
+> **Pending pulls:** M2 only, both repos; the Mac and the Pi are current. GitHub SSH on port 22 from the M4 failed three times in twenty minutes;
 > `ssh.github.com:443` is the workaround.
 >
-> **Next:** merge #17 and pivac #156; confirm the two 10:56 pushes reached the phone;
+> **Next:** confirm the two 10:56 pushes reached the phone;
 > device-test Wilhelm #155 and ship #155 and #156; review the M2 session's pivac #155 (Sentry
 > coords) and #157 (io-board pin sheets), then #125 #124, #117 #94, Arduino #10. **Carried from the
 > chiller-lockout handoff:** tuning change 2 (12 °C target + `P12` = 3 as a pair, register 142
