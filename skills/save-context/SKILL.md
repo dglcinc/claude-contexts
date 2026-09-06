@@ -132,7 +132,7 @@ The KG lives in the shared MemPalace palace on the Mac Mini, reached over the SS
 
 Pick a session entity name once: `Session-<project>-<YYYY-MM-DD-HHMM>` (use today's date + the time of this save). Write three triples, all with `valid_from` = today:
 
-1. `<session>` → `on_project` → `<project>`
+1. `<session>` → `on_project` → `<project>-sessions` (a hub entity such as `pivac-sessions`, so the project entity's own fact list stays short; sessions before 2026-09-06 hang off `<project>` directly)
 2. `<session>` → `worked_on_branch` → `<branch from step 2B>`
 3. `<session>` → `produced` → `<one sentence — the first sentence of the step-3 "Last worked on" block>`
 
@@ -141,14 +141,14 @@ If any PR numbers were created, merged, or referenced this session, add one trip
 
 Keep `produced` to one sentence — these accumulate, so they should read as a chronological highlight reel, not a full session log. The session-state memory file (step 4) is the long form. Don't `kg_query` first for this layer; session entities are unique by name and don't collide.
 
-This layer is what makes "what was I working on last Tuesday?" or "which sessions touched PR #99?" answerable via a single `mempalace_kg_query`. Skipping it leaves those questions answerable only by re-aggregating drawers.
+This layer is what makes "what was I working on last Tuesday?" (query `<project>-sessions`) or "which sessions touched PR #99?" answerable via a single `mempalace_kg_query`. Skipping it leaves those questions answerable only by re-aggregating drawers.
 
 #### (B) Structural / entity-centric triples — only if meaningful
 
 Same bar as step 5: skip unless this session changed a durable, entity-centric fact — machines, deployments, integrations, people, cross-project status. Routine in-project work does not qualify; the mining hooks already capture that in drawers (`mempalace mine --mode convos`). This layer is for facts you'd query *by entity*.
 
 For each such fact:
-1. **Query first** — `mempalace_kg_query` the entity (or `mempalace_check_duplicate`) so new triples reuse existing entity names and predicates instead of creating drift or duplicates.
+1. **Query first** — `mempalace_kg_query` the entity with `direction: outgoing` (or `mempalace_check_duplicate`) so new triples reuse existing entity names and predicates instead of creating drift or duplicates. Outgoing only: the incoming side is the session list, and the query caps at 100 facts, so `both` can truncate the facts you came for.
 2. **Invalidate on supersession** — if this session changed the state of an existing fact (e.g. a tunnel going `dormant` → `active`), call `mempalace_kg_invalidate` on the old triple, then `mempalace_kg_add` the new one. Don't stack contradictory facts.
 3. **Add new facts** — `mempalace_kg_add` with subject/predicate/object; set `valid_from` (today) for anything with a start date and `source_file` for provenance. Hang properties off the canonical entity node (e.g. `MemPalace`), not ad-hoc sub-entities, so a single entity query returns the whole picture.
 
