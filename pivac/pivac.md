@@ -10,61 +10,29 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — the Sentry LED coordinates drifted with the camera, and nothing was watching them (2026-09-06 19:00, M2)
+> ### ▶ ACTIVE HANDOFF — the new I/O board passed all eleven channels on a bench Pi (2026-09-06 evening, M2)
 >
-> **Nothing is pending on the machine, and both repos are current on the M2** (that pull is no longer
-> outstanding). Five pivac PRs merged and deployed this session: **#155** Sentry LED re-aim, **#157**
-> I/O board pinout sheets, **#125** Chiltrix Modbus bring-up runbook, **#124** Sentry warp-search
-> tool, **#94** storm-drain float spec. `pivac-sentry` restarted clean, all services active, journal
-> silent. **One pivac PR left: #117**, rebased onto master and `MERGEABLE/CLEAN`.
+> **`new-pivac` is a Pi 4 Model B Rev 1.5** (`eth0` `2c:cf:67:80:55:00`, DHCP `10.0.0.40` wired,
+> `10.0.0.44` WiFi) on a fresh Trixie Lite (2026-06-18) 64 GB card: user `pi`, password same as
+> hostname, David's ssh keys, I2C on. `scripts/io-board-test.py` (**PR #159**, open) proves each
+> channel from the Pi side; a transition watcher over ssh saw all 11 plug positions pull only their
+> own pin low and release cleanly. No LED-row bridges, all three chips seated right. Build-doc Step 8
+> now names the script; the rework plan records the new MAC.
 >
-> **David reported random on/off cycling on the LED-driven Sentry paths. The cause was geometry, not
-> thresholds.** `leds:` and `indicators:` are **absolute frame coordinates that drift with the camera
-> exactly as `display_warp` does**, but the recalibration recipe only ever re-aimed the quad. Left
-> behind through the 07-28 and 08-23 recalibrations, all eight had absorbed the cumulative shift: the
-> quad's TL had moved `(1156,655) → (1150,649)`, six left and six up, and the measured LED offsets
-> were +4..+7 right and +6..+9 down — the same displacement. Every spot had slid off its lens onto
-> the bright bezel below and right of it.
+> **Flashing lesson:** from this Mac's Terminal, `authopen -w` buffers all of stdin in RAM (killed at
+> 3 GB) and root `dd`/Imager CLI under `osascript` hit TCC "Operation not permitted". The Imager GUI
+> writes fine, but its customisation left only the stock commented cloud-init templates, so the real
+> config went onto `bootfs` by hand (`user-data`, `meta-data` with `dsmode: local`, `network-config`).
+> Trixie Lite has `pinctrl`, no `raspi-gpio`; `i2cdetect` is in `/usr/sbin`; BCM 9–27 default to
+> pull-down, so set `ip pu` before reading the board.
 >
-> **⚠️ The decisive test is the SWING, not the level, and idle data cannot produce it.** Across a real
-> DHW call the lens-centred `burner` spot went **0.794 → 1.215 (+0.421)**, lit 10/10; the drifted spot
-> went **1.039 → 1.052 (+0.012)**. A spot that does not move when the LED lights is reading the bezel,
-> which the LED does not illuminate, so its output was **noise straddling the threshold rather than a
-> measurement** — every `burnerOn` transition after the drift was manufactured, and the drifted
-> `circ_aux` read the running DHW pump as **off for all ten samples**. The cycling indicators show the
-> same thing without waiting for the boiler, since both their states appear in one capture
-> (`water_temp` separation 0.090 → 0.394).
->
-> **July's own fix set this up.** Dropping `led_ratio` 1.15 → 1.05 on 2026-07-20 correctly solved the
-> IR/green-LED problem, but it also spent the margin that would have absorbed later drift; once the
-> camera moved, 1.05 sat *inside* the compressed band rather than below it. **Lowering a threshold to
-> fix a miss buys sensitivity by spending headroom.** `_low_margin` now warns when a spot's decision
-> rested on noise — parking within 0.03 of the threshold, or switching on a separation under 0.15,
-> which the majority test cannot catch because a cycling indicator is dark most of the cycle. Grep
-> `lit-threshold` alongside `nothing decoded`.
->
-> **⚠️ Do the frame captures from a Mac, not the Pi — I rebooted the Pi doing this.** Stacking 200
-> full-res float64 frames is ~5.9 GB on a 3.8 GB machine. The camera is an ordinary LAN RTSP source
-> and capturing from the M2 works *alongside* a running `pivac-sentry`. Crop at capture time, keep
-> frames `uint8`. Everything recovered; it was avoidable.
->
-> **#156 merged 68 s before #155**, both touching `CLAUDE.md` and `docs/sentry-cv-notes.md`. GitHub
-> merged cleanly, but a clean *textual* merge proves nothing about coherence when two changes
-> restructure the same section — checked by hand: rules appear once each, no duplicate headings, both
-> suites pass. Worth repeating that check rather than assuming it.
->
-> **Next:** decide **#117** — now purely two new docs, but written 2026-08-18 and overtaken in three
-> places by the Modbus work (§4.2 treats the community register maps as an unresolved contradiction,
-> §9 still asks whether the CX75 exposes Modbus RTU, §4 frames the feed as future work; the doc never
-> mentions `ChiltrixModbus`, `startupFlow` or `docs/chiltrix-modbus.md`). A bounded ~60-line pass was
-> offered against merging it as an August snapshot. Then **extend `sentry-warp-search.py` to the
-> LED/indicator coords** — it searches the quad only, so recalibration is half automated and the
-> manual half is the half that just failed; the methods that worked are dark-blob centroid for the LED
-> lenses and temporal variance for the cycling indicators. **Carried:** confirm the 10:56 pushes
-> reached the phone; device-test Wilhelm #155 and ship Wilhelm #155/#156; Arduino #10; Chiltrix tuning
-> change 2 (12 °C target + `P12` = 3 as a pair, register 142 read back); confirm `r284` = 32 at the
-> next lockout using **Error Reset, never Clear**; confirm `P65` on the panel; hot-day zone-droop
-> check; loop-probe swing and strain-relief checks; board builds; LoopDelta gate on a real call.
+> **Next:** merge #159. Bench round 2 when the DS2482 board is built (`i2cdetect -y 1` → `0x18`).
+> Step 9 sweep + field wiring. Cutover per rework plan §6: clone-based build, move the `10.0.0.82`
+> reservation to the new MAC, and **quarantine the clone's first LAN boot** (mask
+> `nas-image-backup.timer`, `sd-clone.timer`, `pivac-redlink`, `pivac-emporia`,
+> `grafana-graph-bridge`; the clone's `wlan0` fixed `10.0.0.130` collides). **Carried:** decide #117;
+> extend `sentry-warp-search.py` to the LED/indicator coords; Chiltrix tuning change 2; `r284`/`P65`
+> confirmations; loop-probe swing and strain-relief checks; Wilhelm #155/#156 device test.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
