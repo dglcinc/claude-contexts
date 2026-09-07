@@ -1,5 +1,30 @@
 # pivac — handoff archive
 
+> ### ▶ ACTIVE HANDOFF — the new I/O board passed all eleven channels on a bench Pi (2026-09-06 evening, M2)
+>
+> **`new-pivac` is a Pi 4 Model B Rev 1.5** (`eth0` `2c:cf:67:80:55:00`, DHCP `10.0.0.40` wired,
+> `10.0.0.44` WiFi) on a fresh Trixie Lite (2026-06-18) 64 GB card: user `pi`, password same as
+> hostname, David's ssh keys, I2C on. `scripts/io-board-test.py` (**PR #159**, open) proves each
+> channel from the Pi side; a transition watcher over ssh saw all 11 plug positions pull only their
+> own pin low and release cleanly. No LED-row bridges, all three chips seated right. Build-doc Step 8
+> now names the script; the rework plan records the new MAC.
+>
+> **Flashing lesson:** from this Mac's Terminal, `authopen -w` buffers all of stdin in RAM (killed at
+> 3 GB) and root `dd`/Imager CLI under `osascript` hit TCC "Operation not permitted". The Imager GUI
+> writes fine, but its customisation left only the stock commented cloud-init templates, so the real
+> config went onto `bootfs` by hand (`user-data`, `meta-data` with `dsmode: local`, `network-config`).
+> Trixie Lite has `pinctrl`, no `raspi-gpio`; `i2cdetect` is in `/usr/sbin`; BCM 9–27 default to
+> pull-down, so set `ip pu` before reading the board.
+>
+> **Next:** merge #159. Bench round 2 when the DS2482 board is built (`i2cdetect -y 1` → `0x18`).
+> Step 9 sweep + field wiring. Cutover per rework plan §6: clone-based build, move the `10.0.0.82`
+> reservation to the new MAC, and **quarantine the clone's first LAN boot** (mask
+> `nas-image-backup.timer`, `sd-clone.timer`, `pivac-redlink`, `pivac-emporia`,
+> `grafana-graph-bridge`; the clone's `wlan0` fixed `10.0.0.130` collides). **Carried:** decide #117;
+> extend `sentry-warp-search.py` to the LED/indicator coords; Chiltrix tuning change 2; `r284`/`P65`
+> confirmations; loop-probe swing and strain-relief checks; Wilhelm #155/#156 device test.
+
+
 > ### ▶ ACTIVE HANDOFF — the Sentry LED coordinates drifted with the camera, and nothing was watching them (2026-09-06 19:00, M2)
 >
 > **Nothing is pending on the machine, and both repos are current on the M2** (that pull is no longer
