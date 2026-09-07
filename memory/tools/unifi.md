@@ -50,3 +50,15 @@ if the client already exists — fetch its `_id` and PUT instead.)
   done this way for the "Arduinos" Shelly plug at `10.0.0.61`, MAC `ac:eb:e6:f4:b9:30`.)
 - The `/shelly` ARP-probe trick (find Shelly devices without creds) is separate; for the
   controller-side view (names, fixed IPs, uplink port) use this API key.
+
+## Moving a fixed IP from one client to another (2026-09-07)
+
+Two extra calls beyond the recipe above, or the pin fails with
+`api.err.FixedIpAlreadyUsedByClient`:
+1. Release with **both** fields: `{"use_fixedip":false,"fixed_ip":""}` — `use_fixedip:false`
+   alone leaves `fixed_ip` populated and the controller still counts it as in use.
+2. The old MAC stays an **active station** on its last lease after the device is powered off.
+   Drop it: `POST $B/cmd/stamgr -d '{"cmd":"kick-sta","mac":"<old mac>"}'`
+   (`api.err.UnknownStation` means it had already aged out — fine).
+Then PUT the reservation onto the new client's `_id` as usual. Confirm with
+`GET $B/stat/user/<new mac>` → `use_fixedip true, fixed_ip <ip>`.

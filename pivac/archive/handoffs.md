@@ -1,5 +1,28 @@
 # pivac — handoff archive
 
+> ### ▶ ACTIVE HANDOFF — both new boards are bench-proven; cutover procedure written (2026-09-07 late, M2)
+>
+> The DS2482 EXT board joined the I/O board as proven on `new-pivac` (Pi 4 Rev 1.5, `eth0`
+> `2c:cf:67:80:55:00`, DHCP `10.0.0.40`): driver binds at the default 100 kHz, an empty bus
+> searches clean, spare probe `28-0516a36816ff` on H1 reads with a stable count. The evening's
+> fault was the GND rail never bridged to link position 5; a DS2482 with VCC or ground open
+> answers `i2cdetect` on pull-up leakage, passes at 10 kHz and fails at 50 kHz. The `w1-gpio`
+> overlay kept returning because cloud-init's `runcmd` re-ran each boot and `raspi-config`
+> re-enabled the commented line; delete the line and disable cloud-init. PRs #159, #160, #161
+> merged: bench-test script, EXT solder-side sheet, `ds2482-init.service`, the 1-wire doc as
+> built, **`docs/new-pi-cutover.md`** and the label regenerated for the plug layout.
+>
+> **Next: cutover day, `docs/new-pi-cutover.md` top to bottom.** Beforehand: `git pull` on the
+> old Pi, print the label from Word, take the spare probe off H1. The 18 AWG trunk will not enter
+> a PTSM 0,5 clamp: 22 AWG pigtail or the CAT5e re-pull first. The procedure re-clones the old Pi
+> with writers stopped (the Sunday clone predates a config edit), preps the spare card from the
+> old Pi (I²C on, overlay deleted, `ds2482-init` enabled), moves the `.82` reservation with two
+> UCG API calls (client `_id`s in the doc), lands the header wiring on J1–J4 with commons on 24V
+> COM, proves channels with `io-board-test.py --monitor` and the bus with the 40-sweep CRC test.
+> **Carried:** decide #117; `sentry-warp-search.py` LED/indicator coords; Chiltrix tuning change
+> 2; `r284`/`P65` confirmations; loop-probe swing and strain-relief checks; Wilhelm #155/#156
+> device test; label the override relay.
+
 > ### ▶ ACTIVE HANDOFF — the new I/O board passed all eleven channels on a bench Pi (2026-09-06 evening, M2)
 >
 > **`new-pivac` is a Pi 4 Model B Rev 1.5** (`eth0` `2c:cf:67:80:55:00`, DHCP `10.0.0.40` wired,
