@@ -1,5 +1,24 @@
 # pivac — handoff archive
 
+> ### ▶ ACTIVE HANDOFF — cutover done; the new Pi is in the panel and everything publishes (2026-09-07, M2)
+>
+> The Pi 4 Rev 1.5 with the I/O board and DS2482 EXT board replaced the old Pi at `10.0.0.82`
+> (eth0 `2c:cf:67:80:55:00`, wlan0 `2c:cf:67:80:55:01` reserved `.130`), booting the clone card.
+> All 12 pivac units, 8 DS18B20s (40 sweeps clean), 181 Chiltrix registers, 8 relay inputs and
+> every network module publish; external URLs answer. Three faults fixed on the day: every weekly
+> rpi-clone card was unbootable (rpi-clone never edits `/boot/firmware/cmdline.txt`; fixed on the
+> card, now in `sd-clone.sh`), the UCG refused the reservation move until `fixed_ip` was cleared
+> and the stale station kicked, and the 1-wire trunk had a reversed H1 plug then a flaky 22 AWG
+> pigtail. `SCALA` (leak pan) is back on BCM 23 through an AquaGuard AG-1250E that also drives a
+> DLI IoT relay to cut the pump; tested. PRs #162, #163, #164 merged and pulled on the Pi. NAS
+> image MBR id set to `0x059be283`.
+>
+> **Next:** USB SD reader plus a card onto the new Pi before Sunday 02:00 (`sd-clone.timer`);
+> DEHUM channel proof; CAT6 re-pull of the 1-wire trunk; old Pi on the shelf two weeks; Grafana
+> Relays panel lacks `SCALA`. **Carried:** decide #117; `sentry-warp-search.py` LED coords;
+> Chiltrix tuning change 2; `r284`/`P65` confirmations; loop-probe swing and strain-relief;
+> Wilhelm #155/#156 device test; label the override relay.
+
 > ### ▶ ACTIVE HANDOFF — both new boards are bench-proven; cutover procedure written (2026-09-07 late, M2)
 >
 > The DS2482 EXT board joined the I/O board as proven on `new-pivac` (Pi 4 Rev 1.5, `eth0`

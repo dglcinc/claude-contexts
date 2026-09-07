@@ -10,24 +10,22 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — cutover done; the new Pi is in the panel and everything publishes (2026-09-07, M2)
+> ### ▶ ACTIVE HANDOFF — first clone on the new Pi verified; Chiltrix clean (2026-09-07 evening, M2)
 >
-> The Pi 4 Rev 1.5 with the I/O board and DS2482 EXT board replaced the old Pi at `10.0.0.82`
-> (eth0 `2c:cf:67:80:55:00`, wlan0 `2c:cf:67:80:55:01` reserved `.130`), booting the clone card.
-> All 12 pivac units, 8 DS18B20s (40 sweeps clean), 181 Chiltrix registers, 8 relay inputs and
-> every network module publish; external URLs answer. Three faults fixed on the day: every weekly
-> rpi-clone card was unbootable (rpi-clone never edits `/boot/firmware/cmdline.txt`; fixed on the
-> card, now in `sd-clone.sh`), the UCG refused the reservation move until `fixed_ip` was cleared
-> and the stale station kicked, and the 1-wire trunk had a reversed H1 plug then a flaky 22 AWG
-> pigtail. `SCALA` (leak pan) is back on BCM 23 through an AquaGuard AG-1250E that also drives a
-> DLI IoT relay to cut the pump; tested. PRs #162, #163, #164 merged and pulled on the Pi. NAS
-> image MBR id set to `0x059be283`.
+> The Anker reader and a fresh 128 GB card went onto the new Pi (the Chiltrix Arduino moved USB
+> slots to make room; it re-enumerated as `ttyACM1` and the module reopened it by its by-id path
+> with no loss). The first manual `sd-clone.sh` run took 29 min, exit 0, and left the card with
+> its own ids everywhere: disk `f8c4a716`, `cmdline.txt` `root=PARTUUID=f8c4a716-02`, fstab
+> `-01`/`-02`. The Pi went from 56 to 65 °C during it, never throttled. Sunday's timer
+> (2026-09-13 02:11) does 3-minute incrementals from here. Chiltrix check from InfluxDB: the
+> startup plateau has held at 51.7–52.9 L/min on every run since the 08-29 cleaning, ΔT 4.5–6 °F
+> while running, idle inlet at the 50 °F target, `r284` zero since the 09-03 16:19–16:34 lockout.
+> Lowest leaving water 38.8 °F on 09-04, 1.4 °F above the trip; still 35–43 runs/day.
 >
-> **Next:** USB SD reader plus a card onto the new Pi before Sunday 02:00 (`sd-clone.timer`);
-> DEHUM channel proof; CAT6 re-pull of the 1-wire trunk; old Pi on the shelf two weeks; Grafana
-> Relays panel lacks `SCALA`. **Carried:** decide #117; `sentry-warp-search.py` LED coords;
-> Chiltrix tuning change 2; `r284`/`P65` confirmations; loop-probe swing and strain-relief;
-> Wilhelm #155/#156 device test; label the override relay.
+> **Next:** DEHUM channel proof; CAT6 re-pull of the 1-wire trunk; old Pi on the shelf two weeks;
+> Grafana Relays panel lacks `SCALA`. **Carried:** decide #117; `sentry-warp-search.py` LED
+> coords; Chiltrix tuning change 2; `r284`/`P65` confirmations; loop-probe swing and
+> strain-relief; Wilhelm #155/#156 device test; label the override relay.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
