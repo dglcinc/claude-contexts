@@ -21,6 +21,9 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > startup plateau has held at 51.7–52.9 L/min on every run since the 08-29 cleaning, ΔT 4.5–6 °F
 > while running, idle inlet at the 50 °F target, `r284` zero since the 09-03 16:19–16:34 lockout.
 > Lowest leaving water 38.8 °F on 09-04, 1.4 °F above the trip; still 35–43 runs/day.
+> 1-wire on the DS2482 since 12:50: eight probes, all `crc=YES`, identical hourly sample counts
+> on every sensor (489–492/h) where the old w1-gpio bus dropped 1–5 reads per sensor per hour;
+> cadence ~5 % slower. The H1 pigtail has not dropped a read yet.
 >
 > **Next:** DEHUM channel proof; CAT6 re-pull of the 1-wire trunk; old Pi on the shelf two weeks;
 > Grafana Relays panel lacks `SCALA`. **Carried:** decide #117; `sentry-warp-search.py` LED
