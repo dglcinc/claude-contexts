@@ -10,25 +10,31 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — first clone on the new Pi verified; Chiltrix clean (2026-09-07 evening, M2)
+> ### ▶ ACTIVE HANDOFF — heating changeover built; assessment merged; CAT6 trunk (2026-09-08 evening, M2)
 >
-> The Anker reader and a fresh 128 GB card went onto the new Pi (the Chiltrix Arduino moved USB
-> slots to make room; it re-enumerated as `ttyACM1` and the module reopened it by its by-id path
-> with no loss). The first manual `sd-clone.sh` run took 29 min, exit 0, and left the card with
-> its own ids everywhere: disk `f8c4a716`, `cmdline.txt` `root=PARTUUID=f8c4a716-02`, fstab
-> `-01`/`-02`. The Pi went from 56 to 65 °C during it, never throttled. Sunday's timer
-> (2026-09-13 02:11) does 3-minute incrementals from here. Chiltrix check from InfluxDB: the
-> startup plateau has held at 51.7–52.9 L/min on every run since the 08-29 cleaning, ΔT 4.5–6 °F
-> while running, idle inlet at the 50 °F target, `r284` zero since the 09-03 16:19–16:34 lockout.
-> Lowest leaving water 38.8 °F on 09-04, 1.4 °F above the trip; still 35–43 runs/day.
-> 1-wire on the DS2482 since 12:50: eight probes, all `crc=YES`, identical hourly sample counts
-> on every sensor (489–492/h) where the old w1-gpio bus dropped 1–5 reads per sensor per hour;
-> cadence ~5 % slower. The H1 pigtail has not dropped a read yet.
+> The Unico assessment was refreshed against the Modbus feed, the loop probes and the clean-flow
+> week and merged (#117): chiller band 54.3 → 44.8 °F at the inlet, evaporator ΔT 6.3 °F median
+> with zero antifreeze margin at the end of a run, loop supplies on `IN` within 0.1 °F, distribution
+> flow 8.8–13.1 GPM from the tank energy balance. The shoulder-season heating plan is merged
+> (`docs/chiltrix-shoulder-season-heating-plan.md`): HZ-432 dual fuel with an outdoor balance
+> temperature, the Chiltrix C-H-COM contacts, and one relay named HPHEAT on the panel's `B`
+> terminal steering the `CHIL` contact between the cooling and heating pairs. David configured the
+> panel (heat pump, dual fuel, conventional thermostats), wired and test-mode-proved the relay, and
+> its spare pole is live on J3.3 / BCM 24 as `HPHEAT`; label regenerated, Relays panel updated
+> (#170). The 1-wire trunk is CAT6 (a swapped conductor found and fixed; 8/8 probes, clean CRCs).
+> A Pi restart on 09-07 19:40 was a power-on reset from bumping the power during the rewire.
 >
-> **Next:** DEHUM channel proof; CAT6 re-pull of the 1-wire trunk; old Pi on the shelf two weeks;
-> Grafana Relays panel lacks `SCALA`. **Carried:** decide #117; `sentry-warp-search.py` LED
-> coords; Chiltrix tuning change 2; `r284`/`P65` confirmations; loop-probe swing and
-> strain-relief; Wilhelm #155/#156 device test; label the override relay.
+> **Next:** print the label; heating commissioning per the plan's §5 (factory C7089U sensor 09-09,
+> override relay open or on the HPHEAT relay common, target 50 °C confirmed, live-call proof, OT
+> balance 40 °F to start; Loop B HIGH and 140 °F probe offsets before heating season); bus
+> topology §7.2 as-built; re-measure glycol. **Carried:** Chiltrix target direction (assessment vs
+> cycling plan, DHC reconciles) next cooling season; old Pi shelved to ~09-21;
+> `sentry-warp-search.py` coords; `r284`/`P65`; Wilhelm #155/#156; label the override relay.
+>
+> **Notes:** register 111 does not track `P111` (panel is the reference; enabled). HZ-432 has
+> separate `O` and `B` equipment terminals (`O` in cooling, `B` in HP heating). The override relay
+> is holding the `C` call today (16 % of starts with `CHIL` open). EXT board hangs solder side out:
+> H plugs read GND · DATA · VCC from the front. InfluxDB analysis: one measurement per query.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 

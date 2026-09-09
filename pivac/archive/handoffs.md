@@ -1,3 +1,23 @@
+> ### ▶ ACTIVE HANDOFF — first clone on the new Pi verified; Chiltrix clean (2026-09-07 evening, M2)
+>
+> The Anker reader and a fresh 128 GB card went onto the new Pi (the Chiltrix Arduino moved USB
+> slots to make room; it re-enumerated as `ttyACM1` and the module reopened it by its by-id path
+> with no loss). The first manual `sd-clone.sh` run took 29 min, exit 0, and left the card with
+> its own ids everywhere: disk `f8c4a716`, `cmdline.txt` `root=PARTUUID=f8c4a716-02`, fstab
+> `-01`/`-02`. The Pi went from 56 to 65 °C during it, never throttled. Sunday's timer
+> (2026-09-13 02:11) does 3-minute incrementals from here. Chiltrix check from InfluxDB: the
+> startup plateau has held at 51.7–52.9 L/min on every run since the 08-29 cleaning, ΔT 4.5–6 °F
+> while running, idle inlet at the 50 °F target, `r284` zero since the 09-03 16:19–16:34 lockout.
+> Lowest leaving water 38.8 °F on 09-04, 1.4 °F above the trip; still 35–43 runs/day.
+> 1-wire on the DS2482 since 12:50: eight probes, all `crc=YES`, identical hourly sample counts
+> on every sensor (489–492/h) where the old w1-gpio bus dropped 1–5 reads per sensor per hour;
+> cadence ~5 % slower. The H1 pigtail has not dropped a read yet.
+>
+> **Next:** DEHUM channel proof; CAT6 re-pull of the 1-wire trunk; old Pi on the shelf two weeks;
+> Grafana Relays panel lacks `SCALA`. **Carried:** decide #117; `sentry-warp-search.py` LED
+> coords; Chiltrix tuning change 2; `r284`/`P65` confirmations; loop-probe swing and
+> strain-relief; Wilhelm #155/#156 device test; label the override relay.
+
 # pivac — handoff archive
 
 > ### ▶ ACTIVE HANDOFF — cutover done; the new Pi is in the panel and everything publishes (2026-09-07, M2)
