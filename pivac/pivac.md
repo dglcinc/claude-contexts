@@ -10,39 +10,32 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — heating changeover built; assessment merged; CAT6 trunk (2026-09-08 evening, M2)
+> ### ▶ ACTIVE HANDOFF — heating economics in the plan; relay tile ordered by metadata (2026-09-09 evening, Mac Mini)
 >
-> The Unico assessment was refreshed against the Modbus feed, the loop probes and the clean-flow
-> week and merged (#117): chiller band 54.3 → 44.8 °F at the inlet, evaporator ΔT 6.3 °F median
-> with zero antifreeze margin at the end of a run, loop supplies on `IN` within 0.1 °F, distribution
-> flow 8.8–13.1 GPM from the tank energy balance. The shoulder-season heating plan is merged
-> (`docs/chiltrix-shoulder-season-heating-plan.md`): HZ-432 dual fuel with an outdoor balance
-> temperature, the Chiltrix C-H-COM contacts, and one relay named HPHEAT on the panel's `B`
-> terminal steering the `CHIL` contact between the cooling and heating pairs. David configured the
-> panel (heat pump, dual fuel, conventional thermostats), wired and test-mode-proved the relay, and
-> its spare pole is live on J3.3 / BCM 24 as `HPHEAT`; label regenerated, Relays panel updated
-> (#170). The 1-wire trunk is CAT6 (a swapped conductor found and fixed; 8/8 probes, clean CRCs).
-> A Pi restart on 09-07 19:40 was a power-on reset from bumping the power during the rewire.
-> The Tapo camera was knocked in the same pull; the Sentry reader was recalibrated from 600
-> frames captured on the M2 (display 58 px left / 87 px up, quad 99.3 % clean, air 68 vs RedLink
-> 68.0, all eight LED/indicator spots re-aimed) and #166 records it. #167 left one full-width
-> gal/min flow-rate panel on PivacR.
+> The heating plan gained §7 and §8 (#171). §7 prices a heat↔cool changeover: 74 °F tank swing,
+> 26–30 kBTU, 25–45 min of compressor, 2.3 kWh to heat and 1.6 kWh to cool at 18 ¢/kWh, and the
+> tank's three-day time constant means standby drift does not shorten it. §8 compares the chiller
+> with the Ti-200 from the Sentry record of 1 April to 20 May 2026 integrated through the manual's
+> Ti200 display-to-input chart: boiler space-heating input is `1884 − 28.9 × T(°F)` kBTU/day, zero
+> at 65 °F, the burner at minimum fire with 20–57 starts a day. At $1.93/therm the chiller saves
+> about $2/day through 40–55 °F and breaks even near 35 °F, so the balance temperature is a
+> capacity setting; `scripts/boiler-heat-by-outdoor.py` reproduces it. The WilhelmSK relay tile
+> now shows ZV, BLR, DHW, HPHEAT, CHIL, BOS1, BOS2, DEHUM, SCALA: `SwitchBank.m` sorts on meta
+> `order`, else `<switch>.order`, else the key as an integer (0 for every name), so `order` 1–9 is
+> seeded in `~/.signalk/baseDeltas.json` on the Pi (#173 corrects #172's config-order claim);
+> confirmed on both devices after a cold start. The live `inputs:` block matches for readability.
 >
-> **Next:** print the label; heating commissioning per the plan's §5 (factory C7089U sensor 09-09,
-> override relay open or on the HPHEAT relay common, target 50 °C confirmed, live-call proof, OT
-> balance 40 °F to start; Loop B HIGH and 140 °F probe offsets before heating season); bus
-> topology §7.2 as-built; re-measure glycol. **Carried:** Chiltrix target direction (assessment vs
-> cycling plan, DHC reconciles) next cooling season; old Pi shelved to ~09-21;
-> Sentry LED swing on the next DHW call; `r284`/`P65`; Wilhelm #155/#156; label the override relay.
+> **Next:** M2 pulls both repos; heating commissioning per §5 (factory C7089U sensor, override
+> relay, register 143 read back, live-call proof, OT balance 40 °F; watch `r284` on the first
+> heat-to-cool changeover); the first heating week's energy balance replaces the estimated COP.
+> **Carried:** print the label; Loop B HIGH and 140 °F offsets before heating season; bus
+> topology §7.2 as-built; re-measure glycol; Y-strainer mesh check; Sentry LED swing on the next
+> DHW call; Wilhelm #155/#156; label the override relay.
 >
-> **Notes:** register 111 does not track `P111` (panel is the reference; enabled). HZ-432 has
-> separate `O` and `B` equipment terminals (`O` in cooling, `B` in HP heating). The override relay
-> is holding the `C` call today (16 % of starts with `CHIL` open). EXT board hangs solder side out:
-> H plugs read GND · DATA · VCC from the front. InfluxDB analysis: one measurement per query.
-> The ACOL DN32 Y-strainer screen reads ~60–70 mesh from a full-res photo, so it likely meets
-> Chiltrix's ≥60 mesh (0.25 mm) already; confirm with a ruler (24 wires/cm) and record the
-> basket OD and length at the next cleaning. Rule and the exchanger's ~1.2 mm blocking limit are
-> in CLAUDE.md.
+> **Notes:** a new relay needs a `meta` entry in `baseDeltas.json` plus `restart signalk`, and
+> the app needs a cold start to refetch metadata. Wilhelm source is at `~/github/wilhelm`. The
+> Sentry status word `Run` is the robust firing signal; `gasInputValue` under-reads when decodes
+> fail. NTI manual under `~/Library/CloudStorage/OneDrive-DGLC/HVAC Documentation/`.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 

@@ -1,3 +1,37 @@
+> ### ▶ ACTIVE HANDOFF — heating changeover built; assessment merged; CAT6 trunk (2026-09-08 evening, M2)
+>
+> The Unico assessment was refreshed against the Modbus feed, the loop probes and the clean-flow
+> week and merged (#117): chiller band 54.3 → 44.8 °F at the inlet, evaporator ΔT 6.3 °F median
+> with zero antifreeze margin at the end of a run, loop supplies on `IN` within 0.1 °F, distribution
+> flow 8.8–13.1 GPM from the tank energy balance. The shoulder-season heating plan is merged
+> (`docs/chiltrix-shoulder-season-heating-plan.md`): HZ-432 dual fuel with an outdoor balance
+> temperature, the Chiltrix C-H-COM contacts, and one relay named HPHEAT on the panel's `B`
+> terminal steering the `CHIL` contact between the cooling and heating pairs. David configured the
+> panel (heat pump, dual fuel, conventional thermostats), wired and test-mode-proved the relay, and
+> its spare pole is live on J3.3 / BCM 24 as `HPHEAT`; label regenerated, Relays panel updated
+> (#170). The 1-wire trunk is CAT6 (a swapped conductor found and fixed; 8/8 probes, clean CRCs).
+> A Pi restart on 09-07 19:40 was a power-on reset from bumping the power during the rewire.
+> The Tapo camera was knocked in the same pull; the Sentry reader was recalibrated from 600
+> frames captured on the M2 (display 58 px left / 87 px up, quad 99.3 % clean, air 68 vs RedLink
+> 68.0, all eight LED/indicator spots re-aimed) and #166 records it. #167 left one full-width
+> gal/min flow-rate panel on PivacR.
+>
+> **Next:** print the label; heating commissioning per the plan's §5 (factory C7089U sensor 09-09,
+> override relay open or on the HPHEAT relay common, target 50 °C confirmed, live-call proof, OT
+> balance 40 °F to start; Loop B HIGH and 140 °F probe offsets before heating season); bus
+> topology §7.2 as-built; re-measure glycol. **Carried:** Chiltrix target direction (assessment vs
+> cycling plan, DHC reconciles) next cooling season; old Pi shelved to ~09-21;
+> Sentry LED swing on the next DHW call; `r284`/`P65`; Wilhelm #155/#156; label the override relay.
+>
+> **Notes:** register 111 does not track `P111` (panel is the reference; enabled). HZ-432 has
+> separate `O` and `B` equipment terminals (`O` in cooling, `B` in HP heating). The override relay
+> is holding the `C` call today (16 % of starts with `CHIL` open). EXT board hangs solder side out:
+> H plugs read GND · DATA · VCC from the front. InfluxDB analysis: one measurement per query.
+> The ACOL DN32 Y-strainer screen reads ~60–70 mesh from a full-res photo, so it likely meets
+> Chiltrix's ≥60 mesh (0.25 mm) already; confirm with a ruler (24 wires/cm) and record the
+> basket OD and length at the next cleaning. Rule and the exchanger's ~1.2 mm blocking limit are
+> in CLAUDE.md.
+
 > ### ▶ ACTIVE HANDOFF — first clone on the new Pi verified; Chiltrix clean (2026-09-07 evening, M2)
 >
 > The Anker reader and a fresh 128 GB card went onto the new Pi (the Chiltrix Arduino moved USB
