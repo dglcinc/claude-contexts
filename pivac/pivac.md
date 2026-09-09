@@ -35,6 +35,10 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > separate `O` and `B` equipment terminals (`O` in cooling, `B` in HP heating). The override relay
 > is holding the `C` call today (16 % of starts with `CHIL` open). EXT board hangs solder side out:
 > H plugs read GND · DATA · VCC from the front. InfluxDB analysis: one measurement per query.
+> The ACOL DN32 Y-strainer screen reads ~60–70 mesh from a full-res photo, so it likely meets
+> Chiltrix's ≥60 mesh (0.25 mm) already; confirm with a ruler (24 wires/cm) and record the
+> basket OD and length at the next cleaning. Rule and the exchanger's ~1.2 mm blocking limit are
+> in CLAUDE.md.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
