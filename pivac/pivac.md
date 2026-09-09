@@ -23,13 +23,17 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > its spare pole is live on J3.3 / BCM 24 as `HPHEAT`; label regenerated, Relays panel updated
 > (#170). The 1-wire trunk is CAT6 (a swapped conductor found and fixed; 8/8 probes, clean CRCs).
 > A Pi restart on 09-07 19:40 was a power-on reset from bumping the power during the rewire.
+> The Tapo camera was knocked in the same pull; the Sentry reader was recalibrated from 600
+> frames captured on the M2 (display 58 px left / 87 px up, quad 99.3 % clean, air 68 vs RedLink
+> 68.0, all eight LED/indicator spots re-aimed) and #166 records it. #167 left one full-width
+> gal/min flow-rate panel on PivacR.
 >
 > **Next:** print the label; heating commissioning per the plan's §5 (factory C7089U sensor 09-09,
 > override relay open or on the HPHEAT relay common, target 50 °C confirmed, live-call proof, OT
 > balance 40 °F to start; Loop B HIGH and 140 °F probe offsets before heating season); bus
 > topology §7.2 as-built; re-measure glycol. **Carried:** Chiltrix target direction (assessment vs
 > cycling plan, DHC reconciles) next cooling season; old Pi shelved to ~09-21;
-> `sentry-warp-search.py` coords; `r284`/`P65`; Wilhelm #155/#156; label the override relay.
+> Sentry LED swing on the next DHW call; `r284`/`P65`; Wilhelm #155/#156; label the override relay.
 >
 > **Notes:** register 111 does not track `P111` (panel is the reference; enabled). HZ-432 has
 > separate `O` and `B` equipment terminals (`O` in cooling, `B` in HP heating). The override relay
