@@ -1,3 +1,30 @@
+> ### ▶ ACTIVE HANDOFF — heating economics in the plan; relay tile ordered by metadata (2026-09-09 evening, Mac Mini)
+>
+> The heating plan gained §7 and §8 (#171). §7 prices a heat↔cool changeover: 74 °F tank swing,
+> 26–30 kBTU, 25–45 min of compressor, 2.3 kWh to heat and 1.6 kWh to cool at 18 ¢/kWh, and the
+> tank's three-day time constant means standby drift does not shorten it. §8 compares the chiller
+> with the Ti-200 from the Sentry record of 1 April to 20 May 2026 integrated through the manual's
+> Ti200 display-to-input chart: boiler space-heating input is `1884 − 28.9 × T(°F)` kBTU/day, zero
+> at 65 °F, the burner at minimum fire with 20–57 starts a day. At $1.93/therm the chiller saves
+> about $2/day through 40–55 °F and breaks even near 35 °F, so the balance temperature is a
+> capacity setting; `scripts/boiler-heat-by-outdoor.py` reproduces it. The WilhelmSK relay tile
+> now shows ZV, BLR, DHW, HPHEAT, CHIL, BOS1, BOS2, DEHUM, SCALA: `SwitchBank.m` sorts on meta
+> `order`, else `<switch>.order`, else the key as an integer (0 for every name), so `order` 1–9 is
+> seeded in `~/.signalk/baseDeltas.json` on the Pi (#173 corrects #172's config-order claim);
+> confirmed on both devices after a cold start. The live `inputs:` block matches for readability.
+>
+> **Next:** M2 pulls both repos; heating commissioning per §5 (factory C7089U sensor, override
+> relay, register 143 read back, live-call proof, OT balance 40 °F; watch `r284` on the first
+> heat-to-cool changeover); the first heating week's energy balance replaces the estimated COP.
+> **Carried:** print the label; Loop B HIGH and 140 °F offsets before heating season; bus
+> topology §7.2 as-built; re-measure glycol; Y-strainer mesh check; Sentry LED swing on the next
+> DHW call; Wilhelm #155/#156; label the override relay.
+>
+> **Notes:** a new relay needs a `meta` entry in `baseDeltas.json` plus `restart signalk`, and
+> the app needs a cold start to refetch metadata. Wilhelm source is at `~/github/wilhelm`. The
+> Sentry status word `Run` is the robust firing signal; `gasInputValue` under-reads when decodes
+> fail. NTI manual under `~/Library/CloudStorage/OneDrive-DGLC/HVAC Documentation/`.
+
 > ### ▶ ACTIVE HANDOFF — heating changeover built; assessment merged; CAT6 trunk (2026-09-08 evening, M2)
 >
 > The Unico assessment was refreshed against the Modbus feed, the loop probes and the clean-flow
