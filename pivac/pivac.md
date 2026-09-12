@@ -10,33 +10,37 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Sentry quad creep fixed; PR #174 open (2026-09-09 night, Mac Mini)
+> ### ▶ ACTIVE HANDOFF — the two Phoenix I/O boards as KiCad designs; PR #175 draft (2026-09-10/11, Mac Mini)
 >
-> `hvac.boiler.sentry.outdoorTemp` published 0 and 8 three times and went absent for hours, each
-> episode after a DHW call. RedLink, the display itself and the day/night lock were sound; the
-> module decoded `air` on 2 of 153 frames because the camera's view creeps 2–3 px with boiler heat
-> (digit top edge 559 → 561 px while cooling) and the 09-07 quad's three modes overlapped on a
-> one-pixel plateau. Live on the Pi since 23:26 EDT: the 09-07 quad scaled 0.99 wide and 1.14
-> tall, moved 1 px left and 2 px down, corners `TL(1102,566) TR(1263,558) BR(1253,632)
-> BL(1095,643)`, 100 % and 97 % clean on two captures in different thermal states with five rows
-> of vertical margin; zero warnings after, `outdoorTemp` 73 against RedLink 71.9. PR #174 carries
-> the CLAUDE.md corners and the two-capture rule, the incident in `docs/sentry-cv-notes.md`, and
-> an eyecheck crop fix in `scripts/sentry-warp-search.py`.
+> Sentry after the 09-09 quad change: 229 warnings in 22 h against 964 the day before,
+> `outdoorTemp` on 97 % of cycles, no gap over 15 min; #174 is ready to merge. Then the
+> fabricated-PCB project: `docs/rpi-io-boards-pcb-plan.md` (OSH Park bare boards, hand assembly),
+> the Phoenix STEP models parsed by `hardware/step-geometry.py` (the housing's restricted areas
+> are modelled as a 0.02 mm solid on the solder face), and `hardware/gen-boards.py`, which places
+> and nets both boards with pcbnew: 24 VAC sense supply on J4.1/J4.2 (PTC, four 1N4007, 220 µF,
+> 12 kΩ 1/4 W for 2.8 mA at ~35 V), PTSM 0,5/5 link headers at both ends, a shadow column breaking
+> out the free header pins, an unfitted 4-way power link; the EXT board keeps the built socket and
+> link positions and adds an unfitted second DS2482 (0x19) and the rollback jumper.
+> `hardware/route.py` routes with Freerouting 1.9.0 (2.4.1 writes an empty session file); both
+> boards route completely with no electrical DRC errors. `hardware/gen-schematics.py` writes
+> schematics from the shared `gen_tables.py`, ERC clean, netlists matching the boards pin for pin;
+> `hardware/bom.py` exports the BOMs; `hardware/build.sh` chains it all. KiCad 10 lives in
+> `~/Applications` on the Mini (copied from the DMG; the cask wants sudo), OpenJDK via Homebrew,
+> Freerouting in `~/Applications/freerouting`.
 >
-> **Next:** check the first full day's `Sentry:` warning count through the DHW calls; merge #174,
-> pull on the Pi and M2. If `air` warnings return, recalibrate on two captures (soon after and
-> well after a DHW call) from the Mini's `~/pivac-venv`, which now has numpy and OpenCV.
-> **Carried:** heating commissioning per plan §5 (factory C7089U sensor, override relay, register
-> 143 read back, live-call proof, OT balance 40 °F; watch `r284` on the first heat-to-cool
-> changeover); first heating week's energy balance replaces the estimated COP; print the label;
-> Loop B HIGH and 140 °F offsets; bus topology §7.2 as-built; re-measure glycol; Y-strainer mesh;
-> Sentry LED swing on the next DHW call; Wilhelm #155/#156; label the override relay.
+> **Next:** David reviews renders and schematics and checks a spare PTSM plug at the INT board's
+> bottom edge and the 12.5 mm capacitor against the cover; then Gerbers, 3D fit, the OSH Park
+> order, and #175 out of draft. Merge #174 and pull on the Pi and M2. **Carried:** heating
+> commissioning per plan §5; first heating week's energy balance; print the label; Loop B HIGH and
+> 140 °F offsets; bus topology §7.2; re-measure glycol; Y-strainer mesh; Sentry LED swing; Wilhelm
+> #155/#156; label the override relay; a plausibility floor for Sentry `air` (two 0 reads).
 >
-> **Notes:** config backup `/etc/pivac/config.yml.bak-20260909-232645`. Plateau width also
-> depends on digit content: water in the 110s (a left-vertical `1` in the tens cell) narrows it,
-> and water sits there only while cooling after DHW. Widening the segment rectangles made things
-> worse; scale alone did nothing below `sy` 1.06. Sentry status word `Run` is the robust firing
-> signal. NTI manual under `~/Library/CloudStorage/OneDrive-DGLC/HVAC Documentation/`.
+> **Notes:** decisions 2026-09-11 — the Pi stays on its USB-C adapter (no isolated 24 VAC-to-5 V
+> part exists; plan §4.3 records the DDR-15L-5 two-part route), header pin 1 verified top-right
+> component side up, transformers 75 VA, clearance assumed pending David's check. Header pins 9,
+> 25, 39 (GND) are left open, the outer-column grounds ride a pre-routed edge bus. The DEV-KIT
+> housing STEP is parts side by side, not an assembly. Plan §7 holds two model-vs-doc
+> discrepancies (EXT 33 rows; INT column 3 holes).
 
 ## Backup Runbook (drivable from a Mac Claude session)
 

@@ -1,3 +1,31 @@
+> ### ▶ ACTIVE HANDOFF — Sentry quad creep fixed; PR #174 open (2026-09-09 night, Mac Mini)
+>
+> `hvac.boiler.sentry.outdoorTemp` published 0 and 8 three times and went absent for hours, each
+> episode after a DHW call. RedLink, the display itself and the day/night lock were sound; the
+> module decoded `air` on 2 of 153 frames because the camera's view creeps 2–3 px with boiler heat
+> (digit top edge 559 → 561 px while cooling) and the 09-07 quad's three modes overlapped on a
+> one-pixel plateau. Live on the Pi since 23:26 EDT: the 09-07 quad scaled 0.99 wide and 1.14
+> tall, moved 1 px left and 2 px down, corners `TL(1102,566) TR(1263,558) BR(1253,632)
+> BL(1095,643)`, 100 % and 97 % clean on two captures in different thermal states with five rows
+> of vertical margin; zero warnings after, `outdoorTemp` 73 against RedLink 71.9. PR #174 carries
+> the CLAUDE.md corners and the two-capture rule, the incident in `docs/sentry-cv-notes.md`, and
+> an eyecheck crop fix in `scripts/sentry-warp-search.py`.
+>
+> **Next:** check the first full day's `Sentry:` warning count through the DHW calls; merge #174,
+> pull on the Pi and M2. If `air` warnings return, recalibrate on two captures (soon after and
+> well after a DHW call) from the Mini's `~/pivac-venv`, which now has numpy and OpenCV.
+> **Carried:** heating commissioning per plan §5 (factory C7089U sensor, override relay, register
+> 143 read back, live-call proof, OT balance 40 °F; watch `r284` on the first heat-to-cool
+> changeover); first heating week's energy balance replaces the estimated COP; print the label;
+> Loop B HIGH and 140 °F offsets; bus topology §7.2 as-built; re-measure glycol; Y-strainer mesh;
+> Sentry LED swing on the next DHW call; Wilhelm #155/#156; label the override relay.
+>
+> **Notes:** config backup `/etc/pivac/config.yml.bak-20260909-232645`. Plateau width also
+> depends on digit content: water in the 110s (a left-vertical `1` in the tens cell) narrows it,
+> and water sits there only while cooling after DHW. Widening the segment rectangles made things
+> worse; scale alone did nothing below `sy` 1.06. Sentry status word `Run` is the robust firing
+> signal. NTI manual under `~/Library/CloudStorage/OneDrive-DGLC/HVAC Documentation/`.
+
 > ### ▶ ACTIVE HANDOFF — heating economics in the plan; relay tile ordered by metadata (2026-09-09 evening, Mac Mini)
 >
 > The heating plan gained §7 and §8 (#171). §7 prices a heat↔cool changeover: 74 °F tank swing,
