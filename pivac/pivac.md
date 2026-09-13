@@ -10,38 +10,29 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Sentry decode margin (PR #176) and the I/O boards ready to order (PR #175); 2026-09-12, Mac Mini
+> ### ▶ ACTIVE HANDOFF — Y-strainer measured at 60 mesh; board parts ordered (#177, #178 merged); 2026-09-12 evening, Mac Mini
 >
-> **Sentry:** the 09-09 quad read every `6` as an `8` (its tens `b` rectangle sat in the top
-> bar's IR bloom); a quad that fixed the cold display failed the hot one, and the lit bounding
-> box was identical in both, so the digit content was the difference. `_SEGMENT_RECTS` now
-> sample the middle of each segment, the quad is `TL(1102,564) TR(1263,559) BR(1253,628)
-> BL(1095,636)`, 100 % clean with margin 64–70 at water 87, 149 and 116 °F. The reader publishes
-> `decodeMargin`/`decodeMisses`, `sentry-decode-margin` alerts on an hour's mean under 20, and
-> the bridge mails a capture + eyecheck on any firing `source: sentry` rule. The Pi runs the PR
-> #176 branch. **Boards:** relaid to David's housing measurements — INT link headers in the
-> right-hand slot (y 26–59), nothing over the Pi's USB stacks (plan A.3 maps the Pi 4B drawing
-> at the 16 mm stack), every part ≤ 8 mm (axial capacitor flat between J4 and J6, PTC flat, MOV
-> and proto field gone), silkscreen tidied, locked pre-routes; EXT J1 against the riser field
-> so the housing opening stays clear. Both DRC clean; Gerbers, copper plots,
-> `docs/rpi-io-boards-review.md` (designator tables, checks done) and
-> `docs/rpi-io-boards-parts.md` (Phoenix 1778641/1778654/1778638/1778861/2202992, LTV-847,
-> DS2482S-100+, MAL202138101E3, 60R010XU).
+> David inspected the Y-strainer at 21:00, 21 days after the 08-22 cleaning: about 5 % covered.
+> From his macro photos against a mm tape the screen measures 60 mesh (pitch 0.38–0.44 mm,
+> opening ~0.24 mm), so the stock ACOL screen meets the CX IOM and needs no replacement; basket
+> 43.44 OD × 39 ID × 72.14 mm. `startupFlow` held a 52 L/min daily mean 08-31 → 09-12. The
+> CLAUDE.md rule now states the measurement and a new `docs/chiltrix-modbus.md` section holds the
+> method (#177). The board parts went to Mouser: Adam Tech ICS-316-T sockets, white PTSM headers
+> and plugs, everything at three-board quantity except five 4-way headers, 3-way parts on hand;
+> the 100 µF axial cap was missing from the cart and added. Recorded in
+> `docs/rpi-io-boards-parts.md` (#178). Boards are on order at OSH Park since 09-12.
 >
-> **Next:** David orders from OSH Park with the Gerber zips in OneDrive `Claude/` (not the
-> `.kicad_pcb`: OSH Park runs KiCad 9) and the parts list; then #175 out of draft and merged.
-> Merge #176; on the Pi `git checkout master && git pull`, restart `pivac-sentry` and
-> `grafana-graph-bridge`; `git pull` on the M2. After the boards: populate, test per
-> `rpi-io-board-design.md` 7–8 and `ds18b20-bus-topology.md` §8, swap in, retire the build docs.
-> **Carried:** heating commissioning per plan §5; first heating week's energy balance; print the
-> label; Loop B HIGH and 140 °F offsets; bus topology §7.2; re-measure glycol; Y-strainer mesh;
-> Wilhelm #155/#156; label the override relay; a plausibility floor for Sentry `air`.
+> **Next:** `git pull` on the M2. Watch `decodeMargin` through DHW calls. When boards and parts
+> arrive: populate one of each, test per `rpi-io-board-design.md` 7–8 and
+> `ds18b20-bus-topology.md` §8 on the spare Pi, swap in, retire the build docs. Re-inspect the
+> strainer around 2026-10-12. **Carried:** heating commissioning per plan §5; first heating
+> week's energy balance; print the label; Loop B HIGH and 140 °F offsets; bus topology §7.2;
+> re-measure glycol; Wilhelm #155/#156; label the override relay; a plausibility floor for
+> Sentry `air`.
 >
-> **Notes:** choose a Sentry quad on margin across ±1 px neighbours on captures from both
-> thermal states; widening the rectangles makes both worse. Freerouting is stochastic (loop
-> until DRC 0/0/0) and trims unlocked pre-routes; `build.sh` failures are silent when output is
-> filtered; `gen-schematics` churns both boards' UUIDs. Pages: review
-> https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 , Sentry eyecheck
+> **Notes:** Mouser, Digi-Key, Octopart and Jameco block WebFetch and curl; te.com and
+> phoenixcontact.com answer, and WebSearch snippets sometimes carry Mouser stock counts. Pages:
+> review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 , Sentry eyecheck
 > https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
 
 ## Backup Runbook (drivable from a Mac Claude session)
