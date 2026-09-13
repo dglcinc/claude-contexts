@@ -10,29 +10,33 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Y-strainer measured at 60 mesh; board parts ordered (#177, #178 merged); 2026-09-12 evening, Mac Mini
+> ### ▶ ACTIVE HANDOFF — Sentry recalibrated and the automatic creep tracker shipped (#180 merged); 2026-09-13, Mac Mini
 >
-> David inspected the Y-strainer at 21:00, 21 days after the 08-22 cleaning: about 5 % covered.
-> From his macro photos against a mm tape the screen measures 60 mesh (pitch 0.38–0.44 mm,
-> opening ~0.24 mm), so the stock ACOL screen meets the CX IOM and needs no replacement; basket
-> 43.44 OD × 39 ID × 72.14 mm. `startupFlow` held a 52 L/min daily mean 08-31 → 09-12. The
-> CLAUDE.md rule now states the measurement and a new `docs/chiltrix-modbus.md` section holds the
-> method (#177). The board parts went to Mouser: Adam Tech ICS-316-T sockets, white PTSM headers
-> and plugs, everything at three-board quantity except five 4-way headers, 3-way parts on hand;
-> the 100 µF axial cap was missing from the cart and added. Recorded in
-> `docs/rpi-io-boards-parts.md` (#178). Boards are on order at OSH Park since 09-12.
+> The camera crept again overnight after the 09-12 strainer visit (`decodeMargin` 77 → 28, `air`
+> read 89 against 66 at the thermostat, all four LED spots on the bezel and publishing on).
+> Recalibrated from a 300-frame Mac capture: quad +3/−4 px at margin 68, LED spots re-aimed 7 px
+> and indicators 3–4 px; verified margin 76, air 69, LEDs dark. Then, on David's ask, the reader
+> now tracks creep itself (#180, live on the Pi from master): per cycle it matches the panel's
+> fixed structure (min image, digits masked) against a reference saved at the first sound cycle
+> and moves the quad and lens spots by the median shift; state in
+> `/var/lib/pivac/sentry-registration.npz`, paths `registrationX/Y/Score`, translation only up to
+> 15 px at score ≥ 0.6, reference resets on any calibration edit. #179 closed as superseded.
+> Loop fluid: 8-Way is a caustic nitrite treatment (NaOH 3.2 %, nitrite 6.8 %); David added 1 qt
+> to ~86 gal ten days ago; strips read pH 7.5–8 (old CoolTrak) and ~9 (Fernox), inside NTI's
+> 7.5–9.5 and at Alfa Laval's 9.0 ceiling, so no drain; no more 8-Way; retest in a month.
 >
-> **Next:** `git pull` on the M2. Watch `decodeMargin` through DHW calls. When boards and parts
-> arrive: populate one of each, test per `rpi-io-board-design.md` 7–8 and
-> `ds18b20-bus-topology.md` §8 on the spare Pi, swap in, retire the build docs. Re-inspect the
-> strainer around 2026-10-12. **Carried:** heating commissioning per plan §5; first heating
-> week's energy balance; print the label; Loop B HIGH and 140 °F offsets; bus topology §7.2;
-> re-measure glycol; Wilhelm #155/#156; label the override relay; a plausibility floor for
-> Sentry `air`.
+> **Next:** watch `registrationX/Y/Score` for a week and add a Grafana panel for them; a rigid
+> camera mount is still the physical fix; Y-strainer re-inspection around 2026-10-12; boards and
+> parts arriving (populate, test on the spare Pi, swap in). **Carried:** heating commissioning per
+> plan §5; first heating week's energy balance; print the label; Loop B HIGH and 140 °F offsets;
+> bus topology §7.2; re-measure glycol; Wilhelm #155/#156; label the override relay; a
+> plausibility floor for Sentry `air`.
 >
-> **Notes:** Mouser, Digi-Key, Octopart and Jameco block WebFetch and curl; te.com and
-> phoenixcontact.com answer, and WebSearch snippets sometimes carry Mouser stock counts. Pages:
-> review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 , Sentry eyecheck
+> **Notes:** a by-eye corner set is a fine seed now that the margin validates it in one cycle.
+> The tracker does not follow scale; a knock still needs `sentry-warp-search.py`, which
+> evaluates the creep-corrected quad. Mouser, Digi-Key, Octopart and Jameco block WebFetch and
+> curl; te.com, phoenixcontact.com, ntiboilers.com and alfalaval.com answer. Pages: review
+> https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 , Sentry eyecheck
 > https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
 
 ## Backup Runbook (drivable from a Mac Claude session)
