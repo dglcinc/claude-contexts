@@ -23,11 +23,15 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > `docs/hydronic-drain-and-refill.md` (#182): the Pacific Hydrostar 65836 (120 ft head) fills to
 > the attic coil (53 ft needed) with the 30 psi boiler relief as the thing to guard; zone valves
 > open, high vents before low drains, air blow-down by zone, pre-mix 30 % PG in a drum, closed purge
-> cart, `startupFlow` 51.7 L/min as the proof. Pi on master; docs only, no restart.
+> cart, `startupFlow` 51.7 L/min as the proof. Later: `CHIL` corrected in CLAUDE.md (it is the
+> Taco primary call; the chiller is always enabled, `HPHEAT` only selects mode); winter shutdown
+> section §9 in the shoulder-season plan (#184); manual update backlogged as issue #183; **David
+> raised the cooling target to 54 °F at 17:00 EDT, stored 12 °C, register 142 read back** (#185
+> open). Pi on master; docs only, no restart.
 >
-> **Next:** Chiltrix plan change 2 (target 12 °C in whole °C, read 142 back, then P12 3); if the
-> loop is drained, follow the doc and record the new glycol reading; reconcile the `CHIL` contact
-> with 17 % of starts occurring with it open; watch Sentry `registrationX/Y/Score` and add a panel;
+> **Next:** merge #185; after two days at 12 °C confirm the band (~48 stop / ~58 restart, outlet
+> min ~41 °F) then P12 2 → 3 and expect starts/day ~15–18; if the loop is drained, follow the doc
+> and record the glycol reading; watch Sentry `registrationX/Y/Score` and add a panel;
 > boards and parts arriving (populate, test on the spare Pi, swap in); Y-strainer around 10-12.
 > **Carried:** heating commissioning per plan §5; first heating week's energy balance; print the
 > label; Loop B HIGH and 140 °F offsets; bus topology §7.2; Wilhelm #155/#156; label the override
