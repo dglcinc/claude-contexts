@@ -10,34 +10,34 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Sentry recalibrated and the automatic creep tracker shipped (#180 merged); 2026-09-13, Mac Mini
+> ### ▶ ACTIVE HANDOFF — Chiltrix September findings and the loop drain-and-refill procedure (#181, #182 merged); 2026-09-14, Mac Mini
 >
-> The camera crept again overnight after the 09-12 strainer visit (`decodeMargin` 77 → 28, `air`
-> read 89 against 66 at the thermostat, all four LED spots on the bezel and publishing on).
-> Recalibrated from a 300-frame Mac capture: quad +3/−4 px at margin 68, LED spots re-aimed 7 px
-> and indicators 3–4 px; verified margin 76, air 69, LEDs dark. Then, on David's ask, the reader
-> now tracks creep itself (#180, live on the Pi from master): per cycle it matches the panel's
-> fixed structure (min image, digits masked) against a reference saved at the first sound cycle
-> and moves the quad and lens spots by the median shift; state in
-> `/var/lib/pivac/sentry-registration.npz`, paths `registrationX/Y/Score`, translation only up to
-> 15 px at score ≥ 0.6, reference resets on any calibration edit. #179 closed as superseded.
-> Loop fluid: 8-Way is a caustic nitrite treatment (NaOH 3.2 %, nitrite 6.8 %); David added 1 qt
-> to ~86 gal ten days ago; strips read pH 7.5–8 (old CoolTrak) and ~9 (Fernox), inside NTI's
-> 7.5–9.5 and at Alfa Laval's 9.0 ceiling, so no drain; no more 8-Way; retest in a month.
+> Two weeks of Chiltrix data (08-29 → 09-13, 390 runs) reviewed and folded into the docs (#181):
+> P95 5→3 raised the ≤26 Hz leaving-water floor 36.7→39.9 °F with no cycling effect; every near
+> miss since is a surge-terminated run (25→47–60 Hz in the last 1–3 min, 5 % of runs, min 37.22 °F
+> on 09-08 with r284 = 0) while steady running keeps 3 °F of margin; the start ramp is fixed at
+> 50–52 Hz by minute 3, so night runs are 11 min with 36 min gaps; target still 10 °C and P12 still
+> 2; cooling COP 4.9 all-in, 5.5–7.4 running, 0.82 kWh/°F of OAT above 48 °F; first heating run
+> 09-08 (85 kBTU/h from 3.2 kW, cool-back 36 min / 1.13 kWh). Three sub-minute heating blips on
+> 09-13 were mains outages (Pi reboots ~13:05 and ~20:48), now a rule. Then
+> `docs/hydronic-drain-and-refill.md` (#182): the Pacific Hydrostar 65836 (120 ft head) fills to
+> the attic coil (53 ft needed) with the 30 psi boiler relief as the thing to guard; zone valves
+> open, high vents before low drains, air blow-down by zone, pre-mix 30 % PG in a drum, closed purge
+> cart, `startupFlow` 51.7 L/min as the proof. Pi on master; docs only, no restart.
 >
-> **Next:** watch `registrationX/Y/Score` for a week and add a Grafana panel for them; a rigid
-> camera mount is still the physical fix; Y-strainer re-inspection around 2026-10-12; boards and
-> parts arriving (populate, test on the spare Pi, swap in). **Carried:** heating commissioning per
-> plan §5; first heating week's energy balance; print the label; Loop B HIGH and 140 °F offsets;
-> bus topology §7.2; re-measure glycol; Wilhelm #155/#156; label the override relay; a
-> plausibility floor for Sentry `air`.
+> **Next:** Chiltrix plan change 2 (target 12 °C in whole °C, read 142 back, then P12 3); if the
+> loop is drained, follow the doc and record the new glycol reading; reconcile the `CHIL` contact
+> with 17 % of starts occurring with it open; watch Sentry `registrationX/Y/Score` and add a panel;
+> boards and parts arriving (populate, test on the spare Pi, swap in); Y-strainer around 10-12.
+> **Carried:** heating commissioning per plan §5; first heating week's energy balance; print the
+> label; Loop B HIGH and 140 °F offsets; bus topology §7.2; Wilhelm #155/#156; label the override
+> relay; a plausibility floor for Sentry `air`.
 >
-> **Notes:** a by-eye corner set is a fine seed now that the margin validates it in one cycle.
-> The tracker does not follow scale; a knock still needs `sentry-warp-search.py`, which
-> evaluates the creep-corrected quad. Mouser, Digi-Key, Octopart and Jameco block WebFetch and
-> curl; te.com, phoenixcontact.com, ntiboilers.com and alfalaval.com answer. Pages: review
-> https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 , Sentry eyecheck
-> https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
+> **Notes:** InfluxDB analysis is one measurement per query at 1 m over ssh, pandas on the Mac
+> (`~/pivac-venv` on the Mini now has it). Water-side Q from the chiller's own sensors, ±10 %.
+> Drain-and-refill facts to confirm on site: relief valve setting, CX75 drain plugs, zone-valve
+> manual lever. Pages: review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ,
+> Sentry eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
