@@ -10,7 +10,7 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — First heat run analysed, HPCALL rename, DHWX bridge wired, chiller on all winter (#190, #191 merged); 2026-09-15, Mac Mini
+> ### ▶ ACTIVE HANDOFF — First heat run analysed, HPCALL rename, DHWX bridge wired, chiller on all winter (#190–#194 merged); 2026-09-15, Mac Mini
 >
 > Session 64 (2026-09-15 evening, Mac Mini): first overnight heat run under option 2 analysed. Heat
 > mode 04:37–09:04: the master's heat call flipped `HPHEAT` 1 / `HPCOOL` 0 / register 141 to 1 in the
@@ -33,11 +33,17 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > HMI off kept as the out-of-service procedure. The two `DHWX` presses at 22:43 reached the Pi (4 s,
 > 2.5 s) but overlapped a kids-room cool call, so the pump start is unattributed on the record.
 >
+> Late: §9 corrected on defrost (#192), crankcase heater confirmed by Chiltrix support (#193), winter
+> standby projection table from the measured UA with `P52` = 2 as the open question (#194); note to
+> Chiltrix support drafted with three questions (`P52` = 2 and slush in the still coil, 16–24 short
+> reheat runs a day and a lower standby target via register 143, the defrost `C` register).
+>
 > **Next:**
 > 1. First real bridged call (below the balance point, heat + DHW call together): `DHWX` 1 and `ZV` 1
 >    with `BLR` 1 and `DHW` 1, `HPCALL` 0, `IN` toward the tank temperature within a minute, chiller
 >    restart on its band; `ZV` staying 0 means the old lockout is still in the path. Optional proof:
 >    hold `DHWX` 90 s with no zone calling.
+> 1a. Fold Chiltrix support's answers into plan §9; if `P52` = 2 is adopted, record the date.
 > 2. Bedrooms fight in the shoulder season: both on Heat at night or raise the kids room cool
 >    setpoint; one mode per day.
 > 3. `P12` 2 → 3 after two days at 12 °C (from 09-14 17:00 EDT); read register 12 back.
