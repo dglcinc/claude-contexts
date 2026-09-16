@@ -1,3 +1,57 @@
+> ### ▶ ACTIVE HANDOFF — First heat run analysed, HPCALL rename, DHWX bridge wired, chiller on all winter (#190–#194 merged); 2026-09-15, Mac Mini
+>
+> Session 64 (2026-09-15 evening, Mac Mini): first overnight heat run under option 2 analysed. Heat
+> mode 04:37–09:04: the master's heat call flipped `HPHEAT` 1 / `HPCOOL` 0 / register 141 to 1 in the
+> same minute; the panel held heat mode through calls and a 57-min idle (tank 130 → 125 °F, no run);
+> the kids room (73–74 °F, on Auto) forced two changeovers by calling cool (05:12, 1.3 kWh wasted;
+> 09:04, eight minutes of 100–118 °F water through its coil). Seven heat runs, 101 min, 6.4 kWh in,
+> 29.9 kWh water-side, COP 4.7 at 54 °F (6.1 cold tank, 3.6–4.2 warm), 22–25 kW; heating band
+> restart 116–119 °F return, stop 127–128 °F; tank tops 130–131 °F; changeovers 34 min / 2.0 kWh up,
+> 33 min / 1.4 kWh down. Great room heat calls close `HPCALL` and run loop B: all five zones heat
+> hydronically, kitchen and great room cool on Bosch. LoopDelta gained `heat_zones` and a fan-state
+> fix (#190). Cooling band at 12 °C confirmed: stop 48.2–49.3 °F, restart 57.2–58.5, outlet min
+> 40.6, ~18 starts/day. `CHIL` renamed `HPCALL` live and in the docs (#191; InfluxDB history under
+> `CHIL`; `hardware/` keeps `CHIL`). DHW bridge designed and wired by David: `W1` through a `DHW`
+> NC pole to the boiler, NO contact to a new `DHWX` relay closing the same Taco 503 input as
+> `HPCALL` (`HPCALL` stays 0 on a bridged call); `DHWX` on J4.3 `SP-D` BCM 19, SwitchBank order 11,
+> Relays series (J, +.15, green), LoopDelta primary `relay: [HPCALL, DHWX]`. `BLR` is `W1` upstream
+> of the boiler (38 refused calls of 8–39 min last spring, circ LED dark). Heat-mode standby measured
+> ~1,700 BTU/h at 60 °F (pump idling 8 L/min through the outdoor exchanger): ~$100 and ~1,400 idle
+> starts plus defrost for a winter on. David decided the chiller stays on all winter; §9 rewritten,
+> HMI off kept as the out-of-service procedure. The two `DHWX` presses at 22:43 reached the Pi (4 s,
+> 2.5 s) but overlapped a kids-room cool call, so the pump start is unattributed on the record.
+>
+> Late: §9 corrected on defrost (#192), crankcase heater confirmed by Chiltrix support (#193), winter
+> standby projection table from the measured UA with `P52` = 2 as the open question (#194); note to
+> Chiltrix support drafted with three questions (`P52` = 2 and slush in the still coil, 16–24 short
+> reheat runs a day and a lower standby target via register 143, the defrost `C` register).
+>
+> **Next:**
+> 1. First real bridged call (below the balance point, heat + DHW call together): `DHWX` 1 and `ZV` 1
+>    with `BLR` 1 and `DHW` 1, `HPCALL` 0, `IN` toward the tank temperature within a minute, chiller
+>    restart on its band; `ZV` staying 0 means the old lockout is still in the path. Optional proof:
+>    hold `DHWX` 90 s with no zone calling.
+> 1a. Fold Chiltrix support's answers into plan §9; if `P52` = 2 is adopted, record the date.
+> 2. Bedrooms fight in the shoulder season: both on Heat at night or raise the kids room cool
+>    setpoint; one mode per day.
+> 3. `P12` 2 → 3 after two days at 12 °C (from 09-14 17:00 EDT); read register 12 back.
+> 4. Board swap: `DHWX` holds J4.3, so `HPCOOL` needs `SP-C`/`SP-E` from the J8 pads on rev A.
+> 5. First cold week: standby kWh (Emporia, days without `Y1`), starts, defrosts; replaces the §9
+>    estimate and the estimated heating COP.
+> 6. Plan §11: rooms' drop during refused calls (RedLink record). ΔT panel soft limits vs −24 °F in
+>    heating. Sentry registration panel and mount; Y-strainer ~10-12; manual v1.9 (#183); Chiltrix
+>    tech email; carried items.
+> 7. Unexplained: master bedroom 71 → 75 °F 09:00–10:00 on 09-15 with no call.
+>
+> **Notes:**
+> - Analysis: one measurement per `influx query --raw` over ssh (1 m, or 10 s/raw for toggles), CSV to
+>   the scratchpad, pandas on the Mini; Emporia lags Modbus 1–2 min.
+> - PivacR uid `bdxar09dh34sgc`; Relays panel offsets series +.03 … +.15 with `byName` overrides on
+>   `<measurement>.mean`; Grafana provisions ~45 s after a pull on the Pi's clone.
+> - Relay rename recipe: config `outname`, `baseDeltas.json` order, LoopDelta `relay`, dashboard,
+>   docs; `restart pivac-gpio pivac-loop-delta` then `signalk`; WilhelmSK cold start for a new tile.
+> - RedLink `fan` statenum is 0.5. 782 sockets: A2 bus bar may be fitted, A1 bar must not.
+
 > ### ▶ ACTIVE HANDOFF — Chiltrix option 2 relay control with HPCOOL, winter is HMI off, cooling-cold alarm (#186–#189 merged); 2026-09-14, Mac Mini
 >
 > Session 63 (2026-09-14 evening, Mac Mini): winter shutdown changed to controller off on the HMI with the
