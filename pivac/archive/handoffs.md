@@ -1,3 +1,47 @@
+> ### ▶ ACTIVE HANDOFF — Chiltrix support answers, P52 = 2, Emporia backfill, kids room CPH and return transfer, changeover alert and ZV interlock (#195–#200 merged); 2026-09-16, Mac Mini
+>
+> Session 65 (2026-09-16 evening, Mac Mini). Chiltrix support's answers into plan §9 (#195): `P52` = 2
+> set on the panel 18:10 EDT (`raw.r52` reads 2), no slush at 30 %, `C17` runs the pump at full speed,
+> cycle count no concern, `C16` reports defrost, register 143 read/write (pivac stays function 03),
+> heating target stays 50 °C. Module polls 215–217 as `C16`/`C17` candidates (200 + n; first readings
+> 164 / 0 / 1). Emporia cloud outage 13:11–15:52 EDT (400 on `/customers`, Emporia-side, self-healed)
+> backfilled from the cloud with `scripts/emporia-backfill.py` (#196). Kids room cycling = ISU 3140 = 3,
+> set to 2 on kids and master; coil sound (3.7 °F loop A ΔT alone, zero droop); staging 3010 Advanced,
+> 3020 No, 3030 Comfort (#197). `docs/kids-room-return-transfer-plan.md` (#198). `P12` held at 2
+> (23 starts/day, outlet min 40.8 °F). `hz432-mode-changeover` alert counts heat/cool changeovers, live
+> on the Pi (#199). Plan §7.1: L6006C1018 aquastat interlock on the `ZV` relay coil, ten-wire
+> point-to-point, four paths (cooling `R`-`B` via `HPCOOL` pole 3, heat-pump `R`-`W` via `HPHEAT` pole 3,
+> bridge `R`-`W` via `DHWX` pole 3, boiler unconditional via a `BLR` spare pole); loop pumps start from
+> the valve end switches (#200). Pi on 642f916.
+>
+> **Next:**
+> 1. Tonight: does `waterFlow` read 0 at idle under `P52` = 2 (first samples still 6.9)? If so
+>    `chiltrix-zero-flow` fires ~10 min into each idle gap: widen its window to ~45 min or change the
+>    signal; compare `.startupFlow` across the change.
+> 2. After 09-18: kids room calls ~15 on / 15 off from `KIDS_ROOM.statenum`.
+> 3. Count changeover firings for weeks; common → build the §7.1 interlock; rare → bedrooms on one
+>    mode per day. Confirm on site: valve wiring at the panel, where `ZV` picks up, old CDP lockout path.
+> 4. `P12` stays 2; revisit in spring. 5. First real bridged call: `DHWX` 1, `ZV` 1, `BLR` 1, `DHW` 1,
+>    `HPCALL` 0, `IN` toward the tank. 6. Board swap: `HPCOOL` needs `SP-C`/`SP-E` from J8 on rev A.
+> 7. First cold week: standby kWh, starts, defrosts (`r216` candidate; `r217` = 1 unexplained).
+> 8. Plan §11: rooms' drop during refused calls; ISU 9000/9070; ΔT panel limits; Sentry mount;
+>    Y-strainer ~10-12; manual v1.9; carried items. 9. Master bedroom 71 → 75 °F on 09-15 with no call.
+> 10. Observations: no Grafana rule on `electrical.emporia.*`; the module re-logs in every cycle during
+>     a cloud outage.
+>
+> **Notes:**
+> - Emporia backfill: `scripts/emporia-backfill.py --start/--end` (UTC, bounded by the last and first
+>   live points), dry run then `--write`; a point at HH:MM:55 carries minute HH:MM−1.
+> - Analysis: one measurement per `influx query --raw` over ssh (1 m, or 10 s/raw for toggles), CSV to
+>   the scratchpad, pandas on the Mini; Emporia lags Modbus 1–2 min. GPIO measurements are
+>   `electrical.ac.switch.utility.<name>.statenum`.
+> - Alert YAML test before merge: checkout the branch on the Pi, cp/chown/chmod into
+>   `/etc/grafana/provisioning/alerting`, restart grafana-server, verify in `alert_rule`.
+> - 782 sockets: 9–12 commons, 5–8 NO, 1–4 NC, 13/14 coil; poles 3 and 4 spare on HPHEAT, HPCOOL,
+>   DHWX; pole 1's spare NO shares the Chiltrix common, never use it; A2 bus bar may be fitted, A1 not.
+> - Prestige IAQ 2: Menu → Installer Options → date code → Installer Setup; 3140 needs 3010 Advanced.
+> - RedLink `fan` statenum is 0.5.
+
 > ### ▶ ACTIVE HANDOFF — First heat run analysed, HPCALL rename, DHWX bridge wired, chiller on all winter (#190–#194 merged); 2026-09-15, Mac Mini
 >
 > Session 64 (2026-09-15 evening, Mac Mini): first overnight heat run under option 2 analysed. Heat
