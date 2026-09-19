@@ -10,49 +10,66 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — High fan was ISU 3030 Comfort, now 1 °F on all five; kids room humidity step was a shower (#202–#204 merged); 2026-09-17, Mac Mini
+> ### ▶ ACTIVE HANDOFF — Load moved from the kids room to the family room; Caleffi demineralisation filter installed, boiler-room circuit dark 08:15–12:45; 2026-09-19, Mac Mini
 >
-> Session 67 (2026-09-17 afternoon, Mac Mini). The master bedroom and family room air handlers ran
-> the high fan through hours-long calls with the display reading the setpoint: under ISU 3030 Comfort a
-> continuous call holds stage 2 for its whole length. 3030 offers only Comfort or whole degrees from
-> setpoint (the doc's "Economy" was wrong). David set every thermostat to a 1 °F stage 2 differential
-> and 2 cycles per hour on both stages, heat and cool; by evening the calls ran on the low fan (#203,
-> #204). The kids room's 52 → 59 % humidity step at 16:55 EDT was a shower: domestic flow 11–14.5
-> gal/min 16:40–16:51 with `DHW` closed 16:40–17:15 and the other four zones flat; the room held
-> 51–54 % on 47–54 °F loop A supply all day, so the 12 °C target stays. Its dehumidify call (55 %, 3 °F
-> overcool, low fan) started after a ten-minute "waiting for equipment" hold and reads as ordinary
-> cooling in RedLink. Shower rule in CLAUDE.md (RedLink). #202 merged. Pi and Mini on master 32e57d7.
+> Session 68 (2026-09-18 evening and 09-19, Mac Mini). Analysed 09-18, the first full day under the 1 °F
+> stage 2 differential, 2 cycles per hour, the family room lowered from 76 °F and the kids room at 74 °F.
+> The midday load moved from the kids room to the family room and the house used the same chiller energy
+> per cooling degree-hour: kids duty 0.67 → 0.41 on a day 6 °F warmer (longest call 161 → 24 min, cycles
+> of 11 min on and 14.5 off), family room 0.02 → 0.55, master bedroom unchanged at 0.46 and now the
+> full-demand zone (4 h 12 min call, 77 °F at 82 °F outdoor), chiller 0.147 → 0.108 → 0.101 kWh per
+> degree-hour (base 65). The family room reads 75 since 09-17 20:35; the 74 °F setting lasted nine hours.
+> On 09-19 David installed a Caleffi demineralisation filter; the boiler-room circuit was dark 08:15–12:45
+> (Arduinos plug, water meter, Sentry camera and HZ-432 all off; Pi, chiller and 1-wire up). Hydronic
+> pressure fell 23.3 → 21.0 psi at the same 50 °F tank, startupFlow unchanged at 52.9 L/min, the chiller
+> held no mode with the panel dark and the tank drifted 47.6 → 55 °F, the master bedroom reached 79 °F,
+> and `hz432-mode-changeover` fired on power return.
 >
 > **Next:**
-> 1. Hot afternoon check: the high fan returns only at 1 °F above setpoint and drops back at setpoint.
-> 2. Kids room duty comparison now starts 2026-09-17 (family room 74 °F, dehumidify call and 1 °F
->    differential all landed that day); the family room's own duty should rise from 0.15.
-> 3. Kids room: does the dehumidify call reach 55 % or its 71 °F floor first? RedLink cannot tell
->    the two calls apart, so read it from humidity against `statenum`.
-> 4. Not checked: `hvac.chiller.chiltrix.waterFlow` at idle under `P52` = 2 (6.9 L/min trickle
->    seen); decide `chiltrix-zero-flow`'s window and compare `.startupFlow` across the change.
-> 5. Return transfer plan (#198) re-read against the mixing finding once the setpoint gap has data.
-> 6. Count `hz432-mode-changeover` firings; common → §7.1 interlock. Confirm on site: valve wiring,
->    where `ZV` picks up, old CDP lockout.
-> 7. `P12` stays 2. First real bridged call: `DHWX` 1, `ZV` 1, `BLR` 1, `DHW` 1, `HPCALL` 0.
->    Board swap: `HPCOOL` needs `SP-C`/`SP-E` from J8 on rev A. First cold week: standby kWh,
->    starts, defrosts (`r216`; `r217` = 1 unexplained). Plan §11 carried items.
-> 8. `Y2` logging (§4.6) is the only way to see the stage; BCM 16 is the free input with a wire run.
-> 9. The 5.5 gal/min steady domestic draw under the 16:40 shower is unexplained (irrigation not checked).
+> 1. Hydronic pressure sits at 20.2–21.8 psi since the filter install, the floor of the 21–23 rule: top up
+>    with premixed 30 % glycol, never through the demineralised fill, and record the date (moves the
+>    `startupFlow` baseline).
+> 2. Sentry after the boiler-room visit: margin 64–84, misses 0, tracker moved the quad ~1 px with 16
+>    score dips under 0.60 on 09-19 afternoon; check `decodeMargin` and `registrationScore` on 09-20.
+> 3. Exclude the 09-19 12:45 `hz432-mode-changeover` firing (panel power return) from the changeover
+>    count; common → §7.1 interlock. Confirm on site: valve wiring, where `ZV` picks up, old CDP lockout.
+> 4. Kids room duty comparison baseline is 09-18 (kids 74, family 75, gap 1 °F): 0.41 at 73.5 °F mean
+>    outdoor. 09-19 is unusable (four hours calling into dead equipment).
+> 5. Master bedroom is the next setpoint-gap question: continuous 4 h calls at 80 °F+ outdoor with the
+>    room 1–2 °F over; it already sits 1 °F above the kids room.
+> 6. Fan-stage check (high fan only 1 °F over, drops at setpoint) is inconclusive from loop A ΔT: ratio
+>    0.205 with the master at 76–77 vs 0.171 at 75, but ΔT stayed 5–6 °F after the display returned to
+>    75 (whole-degree display, kids share loop A). `Y2` logging on BCM 16 is the only way to see it.
+> 7. Kids room dehumidify: RH 53–56 % all of 09-18, 142 min at or above 55 %, room never below 74.0, so
+>    the overcool never engaged or never bit.
+> 8. `chiltrix-zero-flow` went Pending for a minute at 12:52 on 09-19 on the `P52` = 2 pump stop: decide
+>    its window and compare `.startupFlow` across the change.
+> 9. Return transfer plan (#198) re-read once the setpoint gap has data. `P12` stays 2. First real
+>    bridged call: `DHWX` 1, `ZV` 1, `BLR` 1, `DHW` 1, `HPCALL` 0. Board swap: `HPCOOL` needs
+>    `SP-C`/`SP-E` from J8 on rev A. First cold week: standby kWh, starts, defrosts (`r216`; `r217` = 1
+>    unexplained). Plan §11 carried items. The 5.5 gal/min steady domestic draw under the 09-17 16:40
+>    shower is unexplained.
 >
 > **Notes:**
-> - Relays are stored as `electrical.ac.switch.utility.<NAME>.statenum` (and `.state`); the bare
->   path returns nothing. InfluxDB times are UTC; the Pi's `date` gives EDT.
-> - Leaving the Prestige installer menu restarts the staging and the equipment timers, so a stage
->   drop right after a settings change proves nothing.
-> - Zone analysis method: hourly `aggregateWindow` of `environment.inside.thermostat.<ZONE>.{statenum,coolset,temperature,humidity}`;
->   duty = clip(−statenum, 0, 1); `coolset`/`heatset` in °F, `temperature` in K. pandas in `~/pivac-venv` on the Mini.
+> - Analysis data pulls: `influx query --raw` one measurement per call with `aggregateWindow` on the Pi,
+>   tar to the Mac, pandas in `~/pivac-venv` on the Mini; parse timestamps with `format='ISO8601'`. A
+>   5-min `mean` of `statenum` is duty; 1-min `min` gives call edges. Loop A ΔT ratio =
+>   ΔT ÷ (room − LOOPA_SUP) in °F.
+> - A boiler-room circuit outage looks like: both Arduinos, their Shelly, the water meter, Sentry
+>   `waterTemp` and `HPCOOL` all gone at once, chiller `switchOn` 1 with `compressorHz` 0 and `waterFlow`
+>   6.9, `IN` warming toward room temperature, five staleness alerts at +30 min, the watchdog logging a
+>   failed cycle every 5 min, and the changeover rule firing when `HPCOOL` returns.
+> - With the HZ-432 unpowered both Chiltrix mode contacts are closed, so the chiller holds no mode and
+>   does no tank maintenance (1.8 °F/h drift).
+> - Relays are stored as `electrical.ac.switch.utility.<NAME>.statenum` (and `.state`); the bare path
+>   returns nothing. InfluxDB times are UTC; the Pi's `date` gives EDT.
+> - Leaving the Prestige installer menu restarts the staging and the equipment timers.
 > - Grafana: no max/min across queries, pairwise `abs()` ORs; `notification_settings.repeat_interval`
 >   works; prove a rule fires by lowering the threshold in the Pi's /etc copy, restart, read
->   `/api/prometheus/grafana/api/v1/rules`, restore from the repo copy.
-> - Session 65 notes still apply: Emporia backfill script; one measurement per `influx query --raw`;
->   782 sockets; Prestige installer path (Resideo 69-2490); RedLink `fan` statenum 0.5; PivacR uid
->   `bdxar09dh34sgc`; relay rename recipe.
+>   `/api/prometheus/grafana/api/v1/rules`, restore from the repo copy. Alert state history:
+>   `/grafana/api/annotations?type=alert`.
+> - Session 65 notes still apply: Emporia backfill script; 782 sockets; Prestige installer path (Resideo
+>   69-2490); RedLink `fan` statenum 0.5; PivacR uid `bdxar09dh34sgc`; relay rename recipe.
 > - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
 >   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a ; an abandoned
 >   Claude Doc "Kids Room Return Transfer Plan" can be deleted.
