@@ -36,6 +36,39 @@
 > - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
 >   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
 
+> ### ▶ ACTIVE HANDOFF — #209 merged, Pi at 1a16f3d; rev B power plan assessed, not yet in the docs; 2026-09-26, M2
+>
+> Session 74 (2026-09-26, M2). Merged #209 and pulled the Pi to 1a16f3d. Assessed the rev B power
+> plan: 24 VAC entry and bridge on EXT, an isolated DC-DC on EXT, `J7` carrying VS/COM into INT and
+> +5V/GND to the Pi header (INT copper already does this), so J4.1/J4.2 become channels: twelve
+> channels and four COMs on the four plugs. It works with conditions, recorded in the session-state
+> memory: isolated module (Traco THN 15-4811WI, 1 × 1 × 0.4 in); 470–1000 µF and a 1 A PTC; the EXT
+> short end is full so the AC socket replaces H3; no 25 × 25 mm clear area in the mid field and the
+> module's 10.2 mm exceeds the ~8 mm cover clearance, so measure before committing; the Pi adds
+> 15–20 VA, transformer stays on the PivacPower outlet. The two decisions are separable: moving the
+> bridge alone frees the plug positions. The new Pi has not arrived. No open PRs.
+>
+> **Next:**
+> 1. Record the rev B power plan in `docs/rpi-io-boards-pcb-plan.md` once David decides.
+> 2. CHIL and SP-C: the meter off the Pi (power J4, short J2.1 or J8.1 to COM, header pin 22 or 33
+>    conducts to TP3 in diode mode while shorted), or the new Pi with `io-board-test.py --only 4`
+>    and `--only 11`.
+> 3. New Pi: boot the bench card, read all twelve pins high bare, run the full guided walk once.
+> 4. J8 pigtail with strain relief (SP-C = `HPCOOL`, SP-E, COM) and the 5-way link cable.
+> 5. Housing swap per `rpi-io-boards-pcb-plan.md` §6 steps 6–8: freeze and clone first; J4.1 24 VAC
+>    hot, J4.2 return (unlabelled), HPCOOL to J8 SP-C, J4.4 stays J4's COM; prove `HPCALL` on the
+>    first call, the 1-wire bus, Sentry `decodeMargin`/`registrationScore`.
+> 6. Carried: glycol top-up (premixed, record the date); `P52` = 2 pump check; pump-step sentinel;
+>    exclude the 09-19 changeover firing; kids room duty and master setpoint gap; return transfer
+>    plan (#198); first cold week record.
+>
+> **Notes:**
+> - Session 72 and 73 notes still apply (in `archive/handoffs.md`): `pkill -f` from ssh, `~/j8watch.sh`,
+>   read a low pin bare before blaming the board, J4.2 unlabelled and never COM, socket pin order,
+>   11 relays on 10 plug positions, card writing on the M2 via `/dev/rdisk15`.
+> - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
+>   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
+
 > ### ▶ ACTIVE HANDOFF — Rev A boards bench-checked; new Pi arrives 09-26 for the swap; 2026-09-25, M2
 >
 > Session 72 (2026-09-25, M2). Bench-checked the first rev A INT and EXT boards on a fresh bench card
