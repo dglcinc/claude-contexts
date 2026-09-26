@@ -1,3 +1,43 @@
+> ### ▶ ACTIVE HANDOFF — Rev A boards bench-checked; new Pi arrives 09-26 for the swap; 2026-09-25, M2
+>
+> Session 72 (2026-09-25, M2). Bench-checked the first rev A INT and EXT boards on a fresh bench card
+> (Trixie Lite, cloud-init `pibench`, user `pi`, password `pivac-bench`, M2 keys, SSH and I2C on,
+> `io-board-test.py` in the home directory). INT: 37.1 V DC on TP1–TP2; nine channels proven end to
+> end (ZV, DHW, BLR, BOS1, BOS2, DEHUM, SCALA, HPHEAT, SP-D). CHIL, SP-C and SP-E are unproven: the
+> bench Pi (`dc:a6:32:19:12:ee`, the DS18B20 calibration Pi) has BCM 13, 16 and 25 dead on the bare
+> header. EXT: DS2482 at 0x18, probe `0516a36816ff` on H1, H2 and H3, so JP2 is right. Merged #205,
+> #207 (tone map `docs/rpi-io-boards-reva-tone-map.svg`, rev A map default in the test script, bench
+> record, the off-Pi rule) and #208 (rev A is one plug position short; rev B keeps one COM per board).
+> The Pi is at b6cce8d. Bench Pi shut down.
+>
+> **Next:**
+> 1. New Pi 09-26: boot the bench card, read all twelve channel pins high bare, then prove CHIL, SP-C,
+>    SP-E with the INT board (`--only 4`, `11`, `12`).
+> 2. J8 pigtail (SP-C = `HPCOOL`, SP-E, COM) with strain relief, and the 5-way link cable. For a
+>    pluggable pigtail try a 3-way PTSM header in the EXT proto field first (1.0 mm holes vs 1.1).
+> 3. Housing swap per `rpi-io-boards-pcb-plan.md` §6 steps 6–8: J4.1 24 VAC hot, J4.2 return
+>    (unlabelled), HPCOOL from J4.2 to J8 SP-C, J4.4 stays J4's COM. Freeze and clone first; prove
+>    `HPCALL` on the first call and the 1-wire bus; check Sentry `decodeMargin`/`registrationScore`.
+> 4. Carried: glycol top-up (premixed, record the date); `P52` = 2 pump check; pump-step sentinel;
+>    exclude the 09-19 changeover firing; kids room duty and master setpoint gap; return transfer
+>    plan (#198); first cold week record.
+>
+> **Notes:**
+> - Every continuity check on an I/O board is made OFF the Pi: the SoC's protection diodes tone every
+>   GPIO to ground on the header. Read a low pin on the bare Pi before blaming the board.
+> - J4.2 has no silkscreen label. Transformer to J4.1/J4.2; neither is COM. A return on COM shorts the
+>   transformer through a diode and the PTC (it survived several minutes of that).
+> - Socket pins: bottom row 1–8 from the left, top row 9–16 from the RIGHT. C pins: U1 10 CHIL, 12
+>   BLR, 14 DHW, 16 ZV; U2 10 SCALA, 12 DEHUM, 14 BOS2, 16 BOS1; U3 10 SP-E, 12 SP-C, 14 SP-D, 16 HPHEAT.
+> - 11 relays vs 10 plug channel positions on rev A; J7 (VS, COM, +5V, GND) cannot carry channels;
+>   J9 pads have no opto behind them. PTSM 0,5 takes 26–20 AWG.
+> - Card writing on the M2: built-in reader `/dev/disk15`; `! sudo sh -c 'xz -dc … > /dev/rdisk15'`
+>   from the prompt; `user-data`, `meta-data` (`instance-id`), `network-config` and the script onto
+>   `/Volumes/bootfs`. Bench Pi `~/edges.py` logs pin edges (`setsid nohup … & disown`; never
+>   `pkill -f edges.py` from an ssh command line that contains the name).
+> - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
+>   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
+
 > ### ▶ ACTIVE HANDOFF — Rev A boards arrived; assembly bench sheet merged (PR #206); Pi still needs a pull; 2026-09-25, Mac Mini
 >
 > Session 71 (2026-09-25, Mac Mini). The rev A boards arrived from OSH Park. Wrote
