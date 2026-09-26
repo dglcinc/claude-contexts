@@ -5,7 +5,7 @@ Read this file at session start. Load a topic file only when relevant.
 | File | Description | Last updated |
 |------|-------------|--------------|
 | `general.md` | Cross-project conventions; where agent credentials live | 2026-09-02 |
-| `user.md` | David: profile, working style, machines (M2 fixed `10.0.0.83`), home address, Obsidian vault | 2026-07-06 |
+| `user.md` | David: profile, working style, machines (M2 fixed `10.0.0.83`), bench Pi with dead GPIO pads, home address, Obsidian vault | 2026-09-25 |
 | `reference/mountain-lakes-code.md` | Mountain Lakes NJ municipal code as a grep-indexed local KB; how to query | 2026-07-06 |
 | `reference/signalk-server-architecture.md` | Architecture review of signalk-server v2.28: report path, standing liabilities, AI-PR governance | 2026-08-18 |
 | `tools/claude-hud.md` | claude-hud statusLine quirks | 2026-04-28 |

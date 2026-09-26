@@ -1,3 +1,61 @@
+> ### ▶ ACTIVE HANDOFF — Rev A boards arrived; assembly bench sheet merged (PR #206); Pi still needs a pull; 2026-09-25, Mac Mini
+>
+> Session 71 (2026-09-25, Mac Mini). The rev A boards arrived from OSH Park. Wrote
+> `docs/rpi-io-boards-assembly.md`, the bench sheet for populating them: order of work (flattest to
+> tallest, EXT first, Pi socket last on the spare Pi as a jig), a three-column table per board of
+> reference, invoiced part and location with the handling notes as a numbered list under it, the checks
+> with rev A's values (12 kΩ per channel, about 35 V on VS), the link cable and the housing swap.
+> `docs/rpi-io-boards-parts.md` now cites Mouser invoice 92489596 (shipped 2026-09-14, PDF in the
+> OneDrive Claude folder), which carries the five MAL202138101E3 for INT C1 that the 09-12 cart lacked.
+> Merged as PR #206 (7bb3321). PR #205 (changeover interlock deferred) is still open; the Pi is at 5078b76.
+>
+> **Next:**
+> 1. Merge PR #205 and pull on the Pi (brings #206 too).
+> 2. Assemble one INT and one EXT board per the sheet; bench-check on the spare Pi; make the 5-way link
+>    cable; swap into the housing per `rpi-io-boards-pcb-plan.md` §6 steps 6–8. `HPCOOL` (BCM 13) is
+>    `SP-C` on the J8 pads, a soldered wire; `SP-E` (BCM 16) is free for `Y2` logging. Check Sentry
+>    `decodeMargin` and `registrationScore` after the visit.
+> 3. Hydronic pressure 20.2–21.8 psi since the filter install: top up with premixed 30 % glycol, never
+>    through the demineralised fill, and record the date.
+> 4. `P52` = 2 has not stopped the pump (idle flow 6.9 L/min all day on 09-18); check a later day, then
+>    ask Chiltrix support if it never stops.
+> 5. Pump-step sentinel on each month's strainer check; decide whether it earns a panel or derived path.
+> 6. Exclude the 09-19 12:45 changeover firing (power return) from the count; confirm valve wiring,
+>    where `ZV` picks up, and the old CDP lockout on site.
+> 7. Kids room duty baseline 09-18 (0.41 at 73.5 °F mean outdoor); master bedroom is the next
+>    setpoint-gap question. Kids dehumidify never engaged on 09-18.
+> 8. Return transfer plan (#198) re-read once the setpoint gap has data. `P12` stays 2. First cold week:
+>    standby kWh, starts, defrosts (`r216`; `r217` = 1 unexplained). The 5.5 gal/min draw under the
+>    09-17 16:40 shower is unexplained.
+>
+> **Notes:**
+> - Rev A channel map: SP-D = BCM 19 = `DHWX` on J4.3; SP-C = BCM 13, SP-E = BCM 16 on J8; CHIL on J2.1 =
+>   `HPCALL`. J9 carries none of the channel GPIOs, so the C-pin continuity check goes to the Pi header
+>   pin (ZV 11, DHW 13, BLR 15, CHIL 22, BOS1 31, BOS2 29, DEHUM 32, SCALA 16, HPHEAT 18, SP-D 35, SP-C 33,
+>   SP-E 36). EXT JP2 pads run left to right DATA · H3 · U2; the bus default is centre-to-left.
+> - A requested "doc" is a `.md` in `docs/`, not a Claude Doc; short table cells, instructions listed
+>   under the table.
+> - Pressure analysis recipe: six measurements pulled one per `influx query --raw` with
+>   `aggregateWindow(every: 1m, fn: mean)`, pandas on the Mini; a flow edge is `waterFlow` crossing
+>   15 L/min (idle reads 6.9, never 0); step_on = mean of the first two minutes minus the three before;
+>   fit `psi ~ flow²` and check the residual against the temperatures.
+> - Analysis data pulls: one measurement per call with `aggregateWindow` on the Pi, tar to the Mac,
+>   pandas in `~/pivac-venv` on the Mini; parse timestamps with `format='ISO8601'`. A 5-min `mean` of
+>   `statenum` is duty; 1-min `min` gives call edges.
+> - A boiler-room circuit outage: both Arduinos, their Shelly, the water meter, Sentry `waterTemp` and
+>   `HPCOOL` all gone at once, chiller `switchOn` 1 with `compressorHz` 0 and `waterFlow` 6.9, five
+>   staleness alerts at +30 min, and the changeover rule firing when `HPCOOL` returns.
+> - Relays are stored as `electrical.ac.switch.utility.<NAME>.statenum`; the bare path returns nothing.
+>   InfluxDB times are UTC. Leaving the Prestige installer menu restarts the staging.
+> - Grafana: prove a rule fires by lowering the threshold in the Pi's /etc copy, restart, read
+>   `/api/prometheus/grafana/api/v1/rules`, restore from the repo copy. Alert history:
+>   `/grafana/api/annotations?type=alert`.
+> - Session 65 notes still apply: Emporia backfill script; 782 sockets; Prestige installer path (Resideo
+>   69-2490); RedLink `fan` statenum 0.5; PivacR uid `bdxar09dh34sgc`; relay rename recipe.
+> - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
+>   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a ; an abandoned
+>   Claude Doc "Kids Room Return Transfer Plan" can be deleted.
+
 > ### ▶ ACTIVE HANDOFF — Boiler-loop pressure dip on chiller runs is the pump differential, recorded as a fouling sentinel; P52 = 2 has not stopped the pump; 2026-09-21, Mac Mini
 >
 > Session 69 (2026-09-20 to 09-21, Mac Mini). Settled why the boiler-loop pressure dips on every

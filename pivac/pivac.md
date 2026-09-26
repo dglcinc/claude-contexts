@@ -10,63 +10,45 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Rev A boards arrived; assembly bench sheet merged (PR #206); Pi still needs a pull; 2026-09-25, Mac Mini
+> ### ▶ ACTIVE HANDOFF — Rev A boards bench-checked; new Pi arrives 09-26 for the swap; 2026-09-25, M2
 >
-> Session 71 (2026-09-25, Mac Mini). The rev A boards arrived from OSH Park. Wrote
-> `docs/rpi-io-boards-assembly.md`, the bench sheet for populating them: order of work (flattest to
-> tallest, EXT first, Pi socket last on the spare Pi as a jig), a three-column table per board of
-> reference, invoiced part and location with the handling notes as a numbered list under it, the checks
-> with rev A's values (12 kΩ per channel, about 35 V on VS), the link cable and the housing swap.
-> `docs/rpi-io-boards-parts.md` now cites Mouser invoice 92489596 (shipped 2026-09-14, PDF in the
-> OneDrive Claude folder), which carries the five MAL202138101E3 for INT C1 that the 09-12 cart lacked.
-> Merged as PR #206 (7bb3321). PR #205 (changeover interlock deferred) is still open; the Pi is at 5078b76.
+> Session 72 (2026-09-25, M2). Bench-checked the first rev A INT and EXT boards on a fresh bench card
+> (Trixie Lite, cloud-init `pibench`, user `pi`, password `pivac-bench`, M2 keys, SSH and I2C on,
+> `io-board-test.py` in the home directory). INT: 37.1 V DC on TP1–TP2; nine channels proven end to
+> end (ZV, DHW, BLR, BOS1, BOS2, DEHUM, SCALA, HPHEAT, SP-D). CHIL, SP-C and SP-E are unproven: the
+> bench Pi (`dc:a6:32:19:12:ee`, the DS18B20 calibration Pi) has BCM 13, 16 and 25 dead on the bare
+> header. EXT: DS2482 at 0x18, probe `0516a36816ff` on H1, H2 and H3, so JP2 is right. Merged #205,
+> #207 (tone map `docs/rpi-io-boards-reva-tone-map.svg`, rev A map default in the test script, bench
+> record, the off-Pi rule) and #208 (rev A is one plug position short; rev B keeps one COM per board).
+> The Pi is at b6cce8d. Bench Pi shut down.
 >
 > **Next:**
-> 1. Merge PR #205 and pull on the Pi (brings #206 too).
-> 2. Assemble one INT and one EXT board per the sheet; bench-check on the spare Pi; make the 5-way link
->    cable; swap into the housing per `rpi-io-boards-pcb-plan.md` §6 steps 6–8. `HPCOOL` (BCM 13) is
->    `SP-C` on the J8 pads, a soldered wire; `SP-E` (BCM 16) is free for `Y2` logging. Check Sentry
->    `decodeMargin` and `registrationScore` after the visit.
-> 3. Hydronic pressure 20.2–21.8 psi since the filter install: top up with premixed 30 % glycol, never
->    through the demineralised fill, and record the date.
-> 4. `P52` = 2 has not stopped the pump (idle flow 6.9 L/min all day on 09-18); check a later day, then
->    ask Chiltrix support if it never stops.
-> 5. Pump-step sentinel on each month's strainer check; decide whether it earns a panel or derived path.
-> 6. Exclude the 09-19 12:45 changeover firing (power return) from the count; confirm valve wiring,
->    where `ZV` picks up, and the old CDP lockout on site.
-> 7. Kids room duty baseline 09-18 (0.41 at 73.5 °F mean outdoor); master bedroom is the next
->    setpoint-gap question. Kids dehumidify never engaged on 09-18.
-> 8. Return transfer plan (#198) re-read once the setpoint gap has data. `P12` stays 2. First cold week:
->    standby kWh, starts, defrosts (`r216`; `r217` = 1 unexplained). The 5.5 gal/min draw under the
->    09-17 16:40 shower is unexplained.
+> 1. New Pi 09-26: boot the bench card, read all twelve channel pins high bare, then prove CHIL, SP-C,
+>    SP-E with the INT board (`--only 4`, `11`, `12`).
+> 2. J8 pigtail (SP-C = `HPCOOL`, SP-E, COM) with strain relief, and the 5-way link cable. For a
+>    pluggable pigtail try a 3-way PTSM header in the EXT proto field first (1.0 mm holes vs 1.1).
+> 3. Housing swap per `rpi-io-boards-pcb-plan.md` §6 steps 6–8: J4.1 24 VAC hot, J4.2 return
+>    (unlabelled), HPCOOL from J4.2 to J8 SP-C, J4.4 stays J4's COM. Freeze and clone first; prove
+>    `HPCALL` on the first call and the 1-wire bus; check Sentry `decodeMargin`/`registrationScore`.
+> 4. Carried: glycol top-up (premixed, record the date); `P52` = 2 pump check; pump-step sentinel;
+>    exclude the 09-19 changeover firing; kids room duty and master setpoint gap; return transfer
+>    plan (#198); first cold week record.
 >
 > **Notes:**
-> - Rev A channel map: SP-D = BCM 19 = `DHWX` on J4.3; SP-C = BCM 13, SP-E = BCM 16 on J8; CHIL on J2.1 =
->   `HPCALL`. J9 carries none of the channel GPIOs, so the C-pin continuity check goes to the Pi header
->   pin (ZV 11, DHW 13, BLR 15, CHIL 22, BOS1 31, BOS2 29, DEHUM 32, SCALA 16, HPHEAT 18, SP-D 35, SP-C 33,
->   SP-E 36). EXT JP2 pads run left to right DATA · H3 · U2; the bus default is centre-to-left.
-> - A requested "doc" is a `.md` in `docs/`, not a Claude Doc; short table cells, instructions listed
->   under the table.
-> - Pressure analysis recipe: six measurements pulled one per `influx query --raw` with
->   `aggregateWindow(every: 1m, fn: mean)`, pandas on the Mini; a flow edge is `waterFlow` crossing
->   15 L/min (idle reads 6.9, never 0); step_on = mean of the first two minutes minus the three before;
->   fit `psi ~ flow²` and check the residual against the temperatures.
-> - Analysis data pulls: one measurement per call with `aggregateWindow` on the Pi, tar to the Mac,
->   pandas in `~/pivac-venv` on the Mini; parse timestamps with `format='ISO8601'`. A 5-min `mean` of
->   `statenum` is duty; 1-min `min` gives call edges.
-> - A boiler-room circuit outage: both Arduinos, their Shelly, the water meter, Sentry `waterTemp` and
->   `HPCOOL` all gone at once, chiller `switchOn` 1 with `compressorHz` 0 and `waterFlow` 6.9, five
->   staleness alerts at +30 min, and the changeover rule firing when `HPCOOL` returns.
-> - Relays are stored as `electrical.ac.switch.utility.<NAME>.statenum`; the bare path returns nothing.
->   InfluxDB times are UTC. Leaving the Prestige installer menu restarts the staging.
-> - Grafana: prove a rule fires by lowering the threshold in the Pi's /etc copy, restart, read
->   `/api/prometheus/grafana/api/v1/rules`, restore from the repo copy. Alert history:
->   `/grafana/api/annotations?type=alert`.
-> - Session 65 notes still apply: Emporia backfill script; 782 sockets; Prestige installer path (Resideo
->   69-2490); RedLink `fan` statenum 0.5; PivacR uid `bdxar09dh34sgc`; relay rename recipe.
+> - Every continuity check on an I/O board is made OFF the Pi: the SoC's protection diodes tone every
+>   GPIO to ground on the header. Read a low pin on the bare Pi before blaming the board.
+> - J4.2 has no silkscreen label. Transformer to J4.1/J4.2; neither is COM. A return on COM shorts the
+>   transformer through a diode and the PTC (it survived several minutes of that).
+> - Socket pins: bottom row 1–8 from the left, top row 9–16 from the RIGHT. C pins: U1 10 CHIL, 12
+>   BLR, 14 DHW, 16 ZV; U2 10 SCALA, 12 DEHUM, 14 BOS2, 16 BOS1; U3 10 SP-E, 12 SP-C, 14 SP-D, 16 HPHEAT.
+> - 11 relays vs 10 plug channel positions on rev A; J7 (VS, COM, +5V, GND) cannot carry channels;
+>   J9 pads have no opto behind them. PTSM 0,5 takes 26–20 AWG.
+> - Card writing on the M2: built-in reader `/dev/disk15`; `! sudo sh -c 'xz -dc … > /dev/rdisk15'`
+>   from the prompt; `user-data`, `meta-data` (`instance-id`), `network-config` and the script onto
+>   `/Volumes/bootfs`. Bench Pi `~/edges.py` logs pin edges (`setsid nohup … & disown`; never
+>   `pkill -f edges.py` from an ssh command line that contains the name).
 > - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
->   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a ; an abandoned
->   Claude Doc "Kids Room Return Transfer Plan" can be deleted.
+>   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
