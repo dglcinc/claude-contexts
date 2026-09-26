@@ -1,3 +1,70 @@
+> ### ▶ ACTIVE HANDOFF — Boiler-loop pressure dip on chiller runs is the pump differential, recorded as a fouling sentinel; P52 = 2 has not stopped the pump; 2026-09-21, Mac Mini
+>
+> Session 69 (2026-09-20 to 09-21, Mac Mini). Settled why the boiler-loop pressure dips on every
+> chiller run: the tank separates flow, never pressure, and the `.219` gauge sits on the suction side of
+> the Chiltrix pump's path from the expansion tank connection. On 2026-09-18 (23 runs) the gauge stepped
+> −1.23 psi (−1.00 to −1.56) in the first minutes at the 52.9 L/min startup plateau, climbed back about
+> 0.5 psi as the chiller trimmed flow to 25–35 L/min, and took the rest back at the stop. Flow squared
+> explains 63 % of the day's pressure variance; the residual has no relationship to `IN`, `LBT` or the
+> chiller inlet, so thermal contraction of the chilled glycol is −0.19 psi net per run, at the noise
+> level. Recorded in CLAUDE.md as a second fouling sentinel, baseline 1.0–1.6 psi at about 5 % screen
+> coverage (5078b76, pushed to master and pulled on the Pi). The same record shows the flow meter at
+> 6.9 L/min through all 588 idle minutes of 09-18 and never 0, so `P52` = 2 has not stopped the pump
+> between runs and the 6.9 L/min trickle is the idle baseline.
+>
+> **Next:**
+> 1. Hydronic pressure sits at 20.2–21.8 psi since the filter install, the floor of the 21–23 rule: top up
+>    with premixed 30 % glycol, never through the demineralised fill, and record the date (moves the
+>    `startupFlow` baseline and may move the pump-step baseline).
+> 2. `P52` = 2 has not stopped the pump: idle flow read 6.9 L/min all day on 09-18. Check a later day
+>    (09-20/21) for any zero; if the pump never stops, ask Chiltrix support whether `P52` = 2 needs a
+>    restart or a companion parameter. `chiltrix-zero-flow` keeps its 7-minute window until then.
+> 3. Pump-step sentinel: read `electrical.ac.arduinoThermPSI.psi` drop at the 52.9 L/min plateau on each
+>    month's strainer check alongside `.startupFlow`. A Grafana panel or a derived path in
+>    `pivac.ChiltrixModbus` would make it routine; decide whether it earns one.
+> 4. Sentry after the 09-19 boiler-room visit: check `decodeMargin` and `registrationScore` (16 score
+>    dips under 0.60 on 09-19 afternoon).
+> 5. Exclude the 09-19 12:45 `hz432-mode-changeover` firing (panel power return) from the changeover
+>    count; common → §7.1 interlock. Confirm on site: valve wiring, where `ZV` picks up, old CDP lockout.
+> 6. Kids room duty comparison baseline is 09-18 (kids 74, family 75, gap 1 °F): 0.41 at 73.5 °F mean
+>    outdoor. 09-19 is unusable. Master bedroom is the next setpoint-gap question (continuous 4 h calls
+>    at 80 °F+ outdoor, room 1–2 °F over, already 1 °F above the kids room).
+> 7. Fan-stage check is inconclusive from loop A ΔT; `Y2` logging on BCM 16 is the only way to see it.
+> 8. Kids room dehumidify never engaged on 09-18 (RH 53–56 %, 142 min at or above 55 %, room never
+>    below 74.0).
+> 9. Return transfer plan (#198) re-read once the setpoint gap has data. `P12` stays 2. First real
+>    bridged call: `DHWX` 1, `ZV` 1, `BLR` 1, `DHW` 1, `HPCALL` 0. Board swap: `HPCOOL` needs
+>    `SP-C`/`SP-E` from J8 on rev A. First cold week: standby kWh, starts, defrosts (`r216`; `r217` = 1
+>    unexplained). Plan §11 carried items. The 5.5 gal/min steady domestic draw under the 09-17 16:40
+>    shower is unexplained.
+>
+> **Notes:**
+> - Pressure analysis recipe: six measurements pulled one per `influx query --raw` with
+>   `aggregateWindow(every: 1m, fn: mean)`, pandas on the Mini; a flow edge is `waterFlow` crossing
+>   15 L/min (idle reads 6.9, never 0); step_on = mean of the first two minutes minus the three before;
+>   fit `psi ~ flow²` and check the residual against the temperatures.
+> - Analysis data pulls in general: one measurement per call with `aggregateWindow` on the Pi, tar to
+>   the Mac, pandas in `~/pivac-venv` on the Mini; parse timestamps with `format='ISO8601'`. A 5-min
+>   `mean` of `statenum` is duty; 1-min `min` gives call edges. Loop A ΔT ratio = ΔT ÷ (room − LOOPA_SUP)
+>   in °F.
+> - A boiler-room circuit outage looks like: both Arduinos, their Shelly, the water meter, Sentry
+>   `waterTemp` and `HPCOOL` all gone at once, chiller `switchOn` 1 with `compressorHz` 0 and `waterFlow`
+>   6.9, `IN` warming toward room temperature, five staleness alerts at +30 min, the watchdog logging a
+>   failed cycle every 5 min, and the changeover rule firing when `HPCOOL` returns. With the HZ-432
+>   unpowered both Chiltrix mode contacts are closed, so the chiller holds no mode (1.8 °F/h tank drift).
+> - Relays are stored as `electrical.ac.switch.utility.<NAME>.statenum` (and `.state`); the bare path
+>   returns nothing. InfluxDB times are UTC; the Pi's `date` gives EDT.
+> - Leaving the Prestige installer menu restarts the staging and the equipment timers.
+> - Grafana: no max/min across queries, pairwise `abs()` ORs; `notification_settings.repeat_interval`
+>   works; prove a rule fires by lowering the threshold in the Pi's /etc copy, restart, read
+>   `/api/prometheus/grafana/api/v1/rules`, restore from the repo copy. Alert state history:
+>   `/grafana/api/annotations?type=alert`.
+> - Session 65 notes still apply: Emporia backfill script; 782 sockets; Prestige installer path (Resideo
+>   69-2490); RedLink `fan` statenum 0.5; PivacR uid `bdxar09dh34sgc`; relay rename recipe.
+> - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
+>   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a ; an abandoned
+>   Claude Doc "Kids Room Return Transfer Plan" can be deleted.
+
 > ### ▶ ACTIVE HANDOFF — Load moved from the kids room to the family room; Caleffi demineralisation filter installed, boiler-room circuit dark 08:15–12:45; 2026-09-19, Mac Mini
 >
 > Session 68 (2026-09-18 evening and 09-19, Mac Mini). Analysed 09-18, the first full day under the 1 °F
