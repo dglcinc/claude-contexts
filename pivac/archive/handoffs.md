@@ -1,3 +1,33 @@
+> ### ▶ ACTIVE HANDOFF — rev A cutover run; new Pi is production; USB leads to confirm; 2026-09-26, M2
+>
+> Session 75 (2026-09-26, M2). The new Pi 4 Rev 1.5 (`88:a2:9e:3c:c3:73`, wlan0 `…:74`) is
+> the production Pi at 10.0.0.82 on the re-cloned spare card (disk id `0xf8c4a716`) with the
+> rev A INT+EXT boards, 24 VAC on J4.1/J4.2 and `HPCOOL` on the J8 pigtail (1 SP-C, 2 SP-E,
+> 3 COM). Ten relays read live at once; `HPCOOL` was a loose connector on the pigtail's SP-C
+> wire and reads 1 after the reseat. 1-wire passed twice. RedLink needed one restart. wlan0
+> reservation moved, old UCG records renamed `pibench`, `pivac.img` disk id set, CLAUDE.md on
+> master, docs on PR #211, label regenerated with the new MAC. Old production Pi
+> (`2c:cf:67:80:55:00`) with the perfboards is the rollback until 2026-10-10, then the bench set.
+>
+> **Next:**
+> 1. Merge #211; pull on the Pi.
+> 2. Confirm the Chiltrix UNO R4 bridge and the USB SD reader are plugged back in (both were
+>    off at 15:10; `pivac-chiltrix` restart-loops without `/dev/ttyACM0`); extra card in the
+>    reader as the weekly clone target.
+> 3. 2026-10-10: old Pi onto the `pibench` card as the bench set.
+> 4. Rev B power plan into `docs/rpi-io-boards-pcb-plan.md` once David decides.
+> 5. Carried: glycol top-up; `P52` = 2 pump check; pump-step sentinel; exclude the 09-19
+>    changeover firing; kids room duty and master setpoint gap; return transfer plan (#198);
+>    first cold week record.
+>
+> **Notes:**
+> - pivac sets pull-ups only on configured pins: the unused SP-E (BCM 16) reads low at the boot
+>   pull-down with nothing on it; `pinctrl set 16 ip pu` before reading a spare.
+> - Live relay feedback: a Monitor tailing a `pinctrl` loop over ssh while David shorts plugs.
+> - Session 72–74 notes in `archive/handoffs.md`.
+> - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
+>   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
+
 > ### ▶ ACTIVE HANDOFF — SP-E proven through the J8 pigtail; CHIL and SP-C wait for the new Pi or the meter; 2026-09-26, M2
 >
 > Session 73 (2026-09-26, M2). Proved SP-E on the rev A INT board through a PTSM-3 header in the

@@ -10,35 +10,33 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — rev A cutover run; new Pi is production; USB leads to confirm; 2026-09-26, M2
+> ### ▶ ACTIVE HANDOFF — rev B boards and parts ordered; PR #214 open; 2026-09-27, M2
 >
-> Session 75 (2026-09-26, M2). The new Pi 4 Rev 1.5 (`88:a2:9e:3c:c3:73`, wlan0 `…:74`) is
-> the production Pi at 10.0.0.82 on the re-cloned spare card (disk id `0xf8c4a716`) with the
-> rev A INT+EXT boards, 24 VAC on J4.1/J4.2 and `HPCOOL` on the J8 pigtail (1 SP-C, 2 SP-E,
-> 3 COM). Ten relays read live at once; `HPCOOL` was a loose connector on the pigtail's SP-C
-> wire and reads 1 after the reseat. 1-wire passed twice. RedLink needed one restart. wlan0
-> reservation moved, old UCG records renamed `pibench`, `pivac.img` disk id set, CLAUDE.md on
-> master, docs on PR #211, label regenerated with the new MAC. Old production Pi
-> (`2c:cf:67:80:55:00`) with the perfboards is the rollback until 2026-10-10, then the bench set.
+> Session 75 (2026-09-26/27, M2). First `sd-clone.sh` run on the new Pi's spare card done
+> (4 m 19 s, disk id `f9199e61`). Rev B went from plan to order: `docs/rpi-io-boards-revb-plan.md`,
+> the layout SVG, `docs/rpi-io-boards-revb-review.md`, and `hardware/` regenerated (build.sh
+> retries route+DRC until clean, exports gerbers, copper plots, schematic SVGs). Both boards
+> DRC-clean, nothing unconnected. David ordered the boards from OSH Park and parts from
+> Digi-Key/Amazon on 2026-09-27; gerber zips also in `~/OneDrive - DGLC/Claude/*-revB-gerbers.zip`.
 >
 > **Next:**
-> 1. Merge #211; pull on the Pi.
-> 2. Confirm the Chiltrix UNO R4 bridge and the USB SD reader are plugged back in (both were
->    off at 15:10; `pivac-chiltrix` restart-loops without `/dev/ttyACM0`); extra card in the
->    reader as the weekly clone target.
-> 3. 2026-10-10: old Pi onto the `pibench` card as the bench set.
-> 4. Rev B power plan into `docs/rpi-io-boards-pcb-plan.md` once David decides.
-> 5. Carried: glycol top-up; `P52` = 2 pump check; pump-step sentinel; exclude the 09-19
->    changeover firing; kids room duty and master setpoint gap; return transfer plan (#198);
->    first cold week record.
+> 1. Merge PR #214 and pull the Pi.
+> 2. Boards arrive: populate per plan §7, bench-prove per plan §9 step 4 with the retired Pi.
+>    Not in the cart: four PTSM 0,5/4 headers for the new INT; check three spare 3-way headers.
+> 3. Install per plan §9 step 5 (transformer to EXT J3, pigtail to the Pi, adapter removed,
+>    PivacPower Shelly to the transformer outlet, J8 pigtail retired, label J4 row). Rev A is rollback.
+> 4. Open: KiCad 3D fit check; David's rev A edge-alignment observation on the 3- and 5-way headers.
+> 5. Carried: glycol top-up; `P52` pump check; pump-step sentinel; 09-19 changeover firing;
+>    kids room duty and master setpoint gap; return transfer plan (#198); first cold week record.
 >
 > **Notes:**
-> - pivac sets pull-ups only on configured pins: the unused SP-E (BCM 16) reads low at the boot
->   pull-down with nothing on it; `pinctrl set 16 ip pu` before reading a spare.
-> - Live relay feedback: a Monitor tailing a `pinctrl` loop over ssh while David shorts plugs.
-> - Session 72–74 notes in `archive/handoffs.md`.
-> - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
->   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
+> - Rev B: 24 VAC on EXT J3, F1 60R110XU, D1-D4, C3 470 µF, U3 TMR 12-4811WI (SIP-8, pins
+>   1,2,3,6,7,8), J4 XH → USB-C pigtail into the Pi's USB-C; GH 7-way link (INT J6 side entry,
+>   EXT J1 top entry, pin 1 at the bottom); INT J4 = HPCOOL 13, DHWX 19, SP-E 16, J8 gone.
+> - Hand-laid tracks: INT GPIO6 (F), GPIO24 (B), GND J6.5→TP3; EXT VS C3→D1, U2.1↔U2.8.
+> - GH is Digi-Key only; PA/PH are the through-hole fallbacks; XA does not fit INT.
+> - Pages: layout https://claude.ai/artifact/M8sBqVoureWu6L9ia9s1DF ; renders and copper
+>   https://claude.ai/artifact/XydsRbY9nMBgi673MQvSrw ; monogram https://claude.ai/artifact/SKAZqP4qcRNdWFSPCgBLPx
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
