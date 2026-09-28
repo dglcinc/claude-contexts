@@ -19,12 +19,12 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > working pressure (#216). Rev C EXT board from idea to gerbers: surface-mount PTSM headers
 > flush with the edge, plan, drawing, routed board, review, fit check against Phoenix's STEP
 > models (#217, #219). #218 fixed the pinout test. Boards ordered from OSH Park and
-> connectors from Mouser the same day. PR #220 (parts list and order status) is open.
+> connectors from Mouser the same day. No PR open.
 >
 > **Next:**
 > 1. Thermostats on Heat, or family room and kids room cool setpoints to 78 °F.
 > 2. Glycol top-up to 22–23 psi cold; gauge the expansion tank's air valve.
-> 3. Merge #220. Rev C EXT boards arrive: header on a 1:1 print, populate (rev C plan §7),
+> 3. Rev C EXT boards arrive: header on a 1:1 print, populate (rev C plan §7),
 >    bench-prove. Connectors: 1778777 ×6, 1778764, 1778696; latching plugs 1709459 white,
 >    1709442, 1709457.
 > 4. Rev B boards arrive: populate, bench-prove, install (rev B plan §7, §9).
