@@ -10,7 +10,7 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — rev C EXT generated, not ordered; Pi upgraded and hardened; chiller changeovers daily; 2026-09-27, Mini
+> ### ▶ ACTIVE HANDOFF — rev C EXT boards and connectors ordered; Pi upgraded and hardened; chiller changeovers daily; 2026-09-27, Mini
 >
 > Session 76 (2026-09-27, Mac Mini). #214 merged. Hygiene check: Pi journal cap 1 GB,
 > `apt full-upgrade` (kernel 6.18.50), Signal K 2.33.0, key-only ssh, nginx catch-all,
@@ -18,13 +18,15 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > changeovers in six days, heating COP measured 3.4 to 4.1, loop below its expansion tank's
 > working pressure (#216). Rev C EXT board from idea to gerbers: surface-mount PTSM headers
 > flush with the edge, plan, drawing, routed board, review, fit check against Phoenix's STEP
-> models (#217, #219). #218 fixed the pinout test. No PR open; master at `e75b140`.
+> models (#217, #219). #218 fixed the pinout test. Boards ordered from OSH Park and
+> connectors from Mouser the same day. PR #220 (parts list and order status) is open.
 >
 > **Next:**
 > 1. Thermostats on Heat, or family room and kids room cool setpoints to 78 °F.
 > 2. Glycol top-up to 22–23 psi cold; gauge the expansion tank's air valve.
-> 3. Rev C EXT: order when ready. Gerbers `~/OneDrive - DGLC/Claude/ext-board-revC-gerbers.zip`;
->    parts 1808200 ×2, 1778764, 1778696, one spare each; latching plugs optional.
+> 3. Merge #220. Rev C EXT boards arrive: header on a 1:1 print, populate (rev C plan §7),
+>    bench-prove. Connectors: 1778777 ×6, 1778764, 1778696; latching plugs 1709459 white,
+>    1709442, 1709457.
 > 4. Rev B boards arrive: populate, bench-prove, install (rev B plan §7, §9).
 > 5. 2026-10-10: old Pi onto the `pibench` card.
 > 6. Carried: `P52` pump check; 09-19 changeover firing; return transfer plan (#198); first
@@ -33,7 +35,7 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > **Notes:**
 > - Rev C is `hardware/extc-board`, built by `hardware/build.sh extc`; INT stays rev B.
 > - J3 black `24VAC input` (R, C), J4 white vertical `5VDC output only / to Pi`; they take
->   the same plug. H1 and H2 are HH0 headers, no pegs.
+>   the same plug. All three header types have locating pegs.
 > - No copper under U3 but four pin escapes on the back; the Pi's 5 V is hand-laid at 1.0 mm.
 > - Undo key-only ssh: delete `/etc/ssh/sshd_config.d/10-key-only.conf`, reload ssh.
 
