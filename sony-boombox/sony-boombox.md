@@ -6,16 +6,16 @@ Restore David's Sony CFD-G50 CD radio cassette-corder (US model, about 2000) to 
 
 ## Current State
 
-Branch `add-service-manual`, local only, three commits ahead of `main`, unmerged. The repo has no remote, so there are no PRs.
+Branch `add-service-manual`, local only, six commits ahead of `main`, unmerged. The repo has no remote, so there are no PRs.
 
-Copied Sony's CFD-G30/G50 service manual into `docs/` and reviewed it, reading the power, main-board and control schematics at 300 dpi and the CD, tape and tuner schematics at overview level. Wrote `docs/cfd-g50-diagnosis-and-service.md`: how the power circuit works, Sony's reference voltages and supply currents, tools, a staged diagnostic procedure (A to E), a servicing procedure listing all 74 electrolytics by board and value, and the optional adjustments. Filled in the project CLAUDE.md with the goal, the document map and how to read the raster schematic pages.
+David ran the first power tests. A series lamp on mains stayed dark and the set stayed dead. With the cord out and 12 V (500 mA limit) on the pack-end contacts on the BATT board, there was no short and zero current before and after pressing POWER. An earlier "short" came from clipping across the BATT COM board, which is only the mid-string link. Results are in section 8 (Findings) of `docs/cfd-g50-diagnosis-and-service.md`.
 
-No measurements have been taken yet. The leading suspect is an open primary in transformer T901: the US model has no primary fuse, so the winding is energized whenever the set is plugged in. That is a hypothesis from the schematic, untested. AC-side figures and ESR thresholds in the plan are estimates and are marked as such.
+Zero standby current means B+ never reaches IC502, so the break is ahead of the main-board circuits. The leading suspect is an open J901 changeover contact, since it would kill both supplies. An open T901 primary or F902 remains possible; the dark lamp fits either.
 
 ## Next Steps
 
-1. David reviews the plan and sets up his tools, then runs Stage A later in the week of 2026-09-28: plug-blade resistance with the cord in the set, then 12 V DC at the battery terminals with the cord removed, noting supply current before and after pressing POWER.
-2. Interpret his Stage A readings against the table in section 4 of the plan and direct him to Stage C, D or E.
-3. Fit the tape belt (Sony 3-933-020-01, ordered 2026-09-30) when it arrives; inspect the pinch roller (3-933-024-01) at the same time.
-4. Record measurements and findings in the repo as they come in.
+1. Cycle the AC plug in and out of J901 a dozen times to wipe the changeover contact, then retest on 12 V, confirming zero current with a meter in series on mA.
+2. If still dead, open the set (Stage B) and trace 12 V along the positive path: BATT board KH952, CNP902 BATT pin, J901 BATT contact and COM, CNP903 COM pin, KH321, C347 positive. Then trace the ground path. If both reach C347, the break is between C347 and IC502 pin 2.
+3. While open, check F902 and the T901 primary (Stage C).
+4. Fit the tape belt (3-933-020-01, ordered 2026-09-30) when it arrives; inspect the pinch roller.
 5. Merge `add-service-manual` into `main` when David wants it; a PR needs a GitHub remote, which he has deferred.
