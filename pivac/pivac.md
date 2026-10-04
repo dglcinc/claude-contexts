@@ -10,34 +10,28 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — rev C EXT boards and connectors ordered; Pi upgraded and hardened; chiller changeovers daily; 2026-09-27, Mini
+> ### ▶ ACTIVE HANDOFF — MBR air-handler node planned; late-morning losses are load; PR #223 open; 2026-10-03, Mini
 >
-> Session 76 (2026-09-27, Mac Mini). #214 merged. Hygiene check: Pi journal cap 1 GB,
-> `apt full-upgrade` (kernel 6.18.50), Signal K 2.33.0, key-only ssh, nginx catch-all,
-> RedLink timeouts rolled up to one warning an hour (#215). Chiller: 35 heat/cool
-> changeovers in six days, heating COP measured 3.4 to 4.1, loop below its expansion tank's
-> working pressure (#216). Rev C EXT board from idea to gerbers: surface-mount PTSM headers
-> flush with the edge, plan, drawing, routed board, review, fit check against Phoenix's STEP
-> models (#217, #219). #218 fixed the pinout test. Boards ordered from OSH Park and
-> connectors from Mouser the same day. No PR open.
+> Session 77 (2026-10-01 to 10-03, Mac Mini). Merged #221 and #222. The 10-01 alarm burst was the
+> monthly NAS backup. The master bedroom's late-morning setpoint losses are load: startup flow
+> steady, loop A supply at the tank, coil ΔT rising with approach, coil at about 60–75 % of its
+> catalog rating (Unico §5.10). PR #223 adds `docs/mbr-air-handler-node-plan.md` and the wiring
+> SVG: UNO R4 WiFi at the MBR Unico, PA5 DS18B20 pair on D2, 10K NTCs on A0/A1, Y2 on a 792 relay
+> into D6, power from the Unico transformer through a 24 VAC→5 V USB-C buck, DIN rail.
 >
 > **Next:**
-> 1. Thermostats on Heat, or family room and kids room cool setpoints to 78 °F.
-> 2. Glycol top-up to 22–23 psi cold; gauge the expansion tank's air valve.
-> 3. Rev C EXT boards arrive: header on a 1:1 print, populate (rev C plan §7),
->    bench-prove. Connectors: 1778777 ×6, 1778764, 1778696; latching plugs 1709459 white,
->    1709442, 1709457.
-> 4. Rev B boards arrive: populate, bench-prove, install (rev B plan §7, §9).
-> 5. 2026-10-10: old Pi onto the `pibench` card.
-> 6. Carried: `P52` pump check; 09-19 changeover firing; return transfer plan (#198); first
->    cold week record.
+> 1. Review #223: relay jumpers or one pole + 470 Ω; LED matrix under the shield.
+> 2. At the air handler: Y2 screw, transformer VA, converter and probe-sheath isolation, NTC 10K/20K.
+> 3. Write the `AirHandler` sketch and `ArduinoSensor` `offset:`; service and alerts per plan §5.4.
+> 4. MBR: shade the window, check sun on the thermostat, pre-cool 74 °F 08:00–11:00, check filter
+>    and high fan during an episode.
+> 5. Carried: thermostats on Heat or setpoints; glycol top-up and tank air valve; rev C and rev B
+>    boards; 2026-10-10 old Pi to `pibench`; `P52`, 09-19 firing, #198, first cold week.
 >
 > **Notes:**
-> - Rev C is `hardware/extc-board`, built by `hardware/build.sh extc`; INT stays rev B.
-> - J3 black `24VAC input` (R, C), J4 white vertical `5VDC output only / to Pi`; they take
->   the same plug. All three header types have locating pegs.
-> - No copper under U3 but four pin escapes on the back; the Pi's 5 V is hand-laid at 1.0 mm.
-> - Undo key-only ssh: delete `/etc/ssh/sshd_config.d/10-key-only.conf`, reload ssh.
+> - MBR thermostat holds the setpoint display until ~1.5 °F off: 75 → 77 → 75, never 76.
+> - 792: coil 13/14, NO 5–8, COM 9–12; min switching 10 mA at 17 V, hence two poles in parallel.
+> - Digi-Key blocks automated page loads; plan links came from search.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
