@@ -6,16 +6,15 @@ Restore David's Sony CFD-G50 CD radio cassette-corder (US model, about 2000) to 
 
 ## Current State
 
-Branch `add-service-manual`, local only, six commits ahead of `main`, unmerged. The repo has no remote, so there are no PRs.
+Branch `add-service-manual`, local only, 26 commits ahead of `main`, unmerged. The repo has no remote, so there are no PRs.
 
-David ran the first power tests. A series lamp on mains stayed dark and the set stayed dead. With the cord out and 12 V (500 mA limit) on the pack-end contacts on the BATT board, there was no short and zero current before and after pressing POWER. An earlier "short" came from clipping across the BATT COM board, which is only the mid-string link. Results are in section 8 (Findings) of `docs/cfd-g50-diagnosis-and-service.md`.
+The power fault is found: J901, the AC inlet, has both changeover contacts to COM (B+) failed open, which killed the set on batteries and mains. With a jumper from RECT.OUT to COM the set runs on mains, and the CD and radio work. The plan carries the Schottky diode-OR fallback (1N5822) for J901, the twelve capacitors to replace regardless of test, leakage checks, and glue guidance.
 
-Zero standby current means B+ never reaches IC502, so the break is ahead of the main-board circuits. The leading suspect is an open J901 changeover contact, since it would kill both supplies. An open T901 primary or F902 remains possible; the dark lamp fits either.
+On a bench supply with no cells, the set powers up then shuts down with a battery warning; the battery check most likely reads the string's floating mid-point. David never uses batteries in this set.
 
 ## Next Steps
 
-1. Cycle the AC plug in and out of J901 a dozen times to wipe the changeover contact, then retest on 12 V, confirming zero current with a meter in series on mA.
-2. If still dead, open the set (Stage B) and trace 12 V along the positive path: BATT board KH952, CNP902 BATT pin, J901 BATT contact and COM, CNP903 COM pin, KH321, C347 positive. Then trace the ground path. If both reach C347, the break is between C347 and IC502 pin 2.
-3. While open, check F902 and the T901 primary (Stage C).
-4. Fit the tape belt (3-933-020-01, ordered 2026-09-30) when it arrives; inspect the pinch roller.
-5. Merge `add-service-manual` into `main` when David wants it; a PR needs a GitHub remote, which he has deferred.
+1. When Sony's substitute inlet 1-843-191-11 arrives, check that it has three switch pins and the same footprint, then fit it. If it lacks the switch, fit the Schottky fallback in plan section 5.4.
+2. Capacitor service when the parts arrive: replace C909, C347, C349, C503, C504, C518, C953, C955, C959, C135, C235, C707 regardless; test the rest; record standby current and speaker DC before and after.
+3. Fit the tape belt (3-933-020-01) when it arrives, then test tape and demagnetize the head.
+4. Merge `add-service-manual` into `main` when David wants it.
