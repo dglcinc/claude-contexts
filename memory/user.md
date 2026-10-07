@@ -21,3 +21,5 @@ Machines (David names Macs by Apple-silicon generation — "M4" = the Mac Mini, 
 Prefers clean, maintainable systems over clever ones. Thinks through architecture before building. Asks probing questions to understand tradeoffs before committing to an approach.
 
 **Obsidian vault layout** (path + perimeter rules are in CLAUDE.md): `notes/` is organized **one folder per notebook** (Recipes, Paint Codes, Cars, Motorcycles, etc.), imported from Evernote in April 2026 via yarle. Resources (images, PDFs) live in per-note `_resources/` subfolders alongside the corresponding `.md`. When navigating or adding: don't flatten the notebook structure, and keep new resources in a sibling `_resources/` folder rather than a global assets dir.
+
+**Bench tools (2026-10-06):** David owns a Hakko desoldering gun and uses it confidently, e.g. on the sony-boombox power socket. Don't argue for sockets or parts choices on the grounds that desoldering through-holes is hard for him.
