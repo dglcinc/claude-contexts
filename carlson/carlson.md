@@ -6,15 +6,14 @@ Builds of Mr Carlson's Lab Patreon projects. The first is the SIFT board from Vi
 
 ## Current State
 
-**Branch:** main. **Open PRs:** none (#1, #2 and #3 merged).
+**Branch:** main. **Open PRs:** none (#1–#4 merged).
 
-**Last worked on.** Converted the SIFT layout PDF into `gerbers/sift-oshpark.zip`, with the discontinued LM3914V replaced by the DIP-18 LM3914N-1 (verified against Carlson's netlist by `tools/verify_dip.py`). Worked through the parts order and merged PR #3: both panel toggles are the Dailywell 1AD1T2B1M1QES (DPDT, power uses one pole), the coax is a Superbat RG-316 20 ft roll, the standoffs are M3 × 25 mm metal, and every SMD passive is a Mouser cut-tape line in place of the Amazon kits.
+**Last worked on.** Checked the Amazon and Mouser carts against `PARTS.md`; both now cover the whole SIFT list. Merged PR #4, which names the off-board parts: the Alpha RV24AF-10-15R1-B100K-3LA pot (1/4 in round shaft, M8 bushing, 8 mm panel hole), the APEM MPKG50B1/4 set-screw knob, and the TT MFR4-120RFI resistor (0.5 W).
 
-**Notes.** Three standoff holes are ground and one is isolated, so metal standoffs are safe. The source PDFs are in `~/OneDrive - DGLC/Carlson/Video 49 - SIFT/`; the photos, parts list and Dailywell datasheet are in `~/OneDrive - DGLC/Claude/Carlson/`. The tools need shapely and `pdftocairo`.
+**Notes.** The datasheets for the pot, knob, resistor and toggles sit with the cart PDFs in `~/OneDrive - DGLC/Claude/Carlson/`. Three standoff holes are ground and one is isolated, so the metal standoffs are safe. The source PDFs are in `~/OneDrive - DGLC/Carlson/Video 49 - SIFT/`. The tools need shapely and `pdftocairo`.
 
 ## Next Steps
 
-1. Upload the zip to OSH Park as a standard 1.6 mm, 1 oz board, compare its previews with `review/index.html`, and order 3.
-2. Place the Mouser order from `PARTS.md`; use TS5A3159DBVT or TS5A3159ADBVR if the DBVR is out.
-3. Order the LM3914N-1 and the coax from Amazon, and a panel-mount 100K linear pot with solder lugs.
-4. Build and test.
+1. Place the Mouser and Amazon orders.
+2. Upload the zip to OSH Park as a standard 1.6 mm, 1 oz board, compare its previews with `review/index.html`, and order 3.
+3. Build and test.
