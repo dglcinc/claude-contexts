@@ -126,3 +126,7 @@ at 04:00. Log: `utilityserver:~/.local/share/mempalace-patch.log`. Any
 #1 (interrupt→correction pair extraction), #4 (stable per-message IDs), and
 #6 (sessions catch-all classifier) remain unaddressed — larger refactors,
 worth doing as a batch when the upstream fixes for P1–P3 land.
+
+## Redacting a secret (2026-10-08)
+
+`~/.local/bin/mempalace-redact.py <dir> <secret> [--live]` replaces a secret with `[REDACTED]` in chroma documents, the `embeddings_queue` write log, the FTS copy and text files under `incoming/`, then vacuums. Run it with `~/.local/share/uv/tools/mempalace/bin/python` and `--live` on `~/.mempalace`, then call `mempalace_reconnect`; for a backup, extract the tarball, run it without `--live`, and re-tar with the original mtime. Why: the write log and the vacuumed free pages keep a secret after the drawer is redacted, and the per-session checkpoint diary re-files anything typed in the current session.

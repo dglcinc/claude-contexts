@@ -14,7 +14,7 @@ Read this file at session start. Load a topic file only when relevant.
 | `tools/gh.md` | gh and git-lfs TLS bug (rebuild with `CGO_ENABLED=0`); Pi gh token recovery from the M4 | 2026-07-03 |
 | `tools/arduino-cli.md` | arduino-cli on the Pi for UNO R4 compile and flash; placeholder credentials warning | 2026-07-03 |
 | `tools/ralph.md` | Ralph loop: PLAN.md checklist plus `ralph.sh` driver | 2026-05-22 |
-| `tools/mempalace.md` | MemPalace hooks, palace contents, drawers versus KG triples | 2026-05-25 |
+| `tools/mempalace.md` | MemPalace hooks, palace contents, drawers versus KG triples; redacting a secret | 2026-10-08 |
 | `tools/gh-stacked-prs.md` | Squash-merging a parent auto-closes child PRs; recovery | 2026-09-01 |
 | `tools/nfs.md` | D-state processes survive SIGKILL; lazy unmount; non-blocking fstab | 2026-05-08 |
 | `tools/rsync.md` | rsync over NFSv4 with sparse files; `--old-args` for old servers | 2026-05-08 |
