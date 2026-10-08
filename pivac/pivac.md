@@ -10,28 +10,26 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — MBR air-handler node planned; late-morning losses are load; PR #223 open; 2026-10-03, Mini
+> ### ▶ ACTIVE HANDOFF — MBR node on the Olimex shield with 2.54 mm terminal blocks; parts traced; PR #223 open; 2026-10-07, Mini
 >
-> Session 77 (2026-10-01 to 10-03, Mac Mini). Merged #221 and #222. The 10-01 alarm burst was the
-> monthly NAS backup. The master bedroom's late-morning setpoint losses are load: startup flow
-> steady, loop A supply at the tank, coil ΔT rising with approach, coil at about 60–75 % of its
-> catalog rating (Unico §5.10). PR #223 adds `docs/mbr-air-handler-node-plan.md` and the wiring
-> SVG: UNO R4 WiFi at the MBR Unico, PA5 DS18B20 pair on D2, 10K NTCs on A0/A1, Y2 on a 792 relay
-> into D6, power from the Unico transformer through a 24 VAC→5 V USB-C buck, DIN rail.
+> Session 78 (2026-10-07, Mac Mini). SMD parts would save nothing on the EXT boards in hand
+> assembly; U3 dominates and David holds two Traco TMR 12-4811WI. MBR node parts: Digi-Key
+> 102026319 (10 kΩ 0.1 %, 0.1 µF X7R, three Olimex PROTO-SHIELDs) shipped 10-05, FedEx
+> 546025980126. PR #223 now builds on the Olimex shield with 2.54 mm screw terminal blocks, one
+> wire per terminal: TB1 6-way probes, TB2 6-way air sensors with SH drains, TB3 2-way relay.
 >
 > **Next:**
-> 1. Review #223: relay jumpers or one pole + 470 Ω; LED matrix under the shield.
-> 2. At the air handler: Y2 screw, transformer VA, converter and probe-sheath isolation, NTC 10K/20K.
-> 3. Write the `AirHandler` sketch and `ArduinoSensor` `offset:`; service and alerts per plan §5.4.
-> 4. MBR: shade the window, check sun on the thermostat, pre-cool 74 °F 08:00–11:00, check filter
->    and high fan during an episode.
-> 5. Carried: thermostats on Heat or setpoints; glycol top-up and tank air valve; rev C and rev B
->    boards; 2026-10-10 old Pi to `pibench`; `P52`, 09-19 firing, #198, first cold week.
+> 1. David checks for 5.08 mm blocks; if used, revert §3.4 to shared terminals with twin ferrules.
+> 2. Confirm UNO R4, DIN bracket 4557, R1 4.7 kΩ, R5 1 kΩ, Belden 8451 ordered or on hand.
+> 3. Review #223: relay jumpers or one pole + 470 Ω; LED matrix under the shield.
+> 4. At the air handler: Y2 screw, transformer VA, converter and probe-sheath isolation, NTC 10K/20K.
+> 5. `AirHandler` sketch and `ArduinoSensor` `offset:`; service and alerts per plan §5.4.
+> 6. Carried: MBR shading and pre-cool; thermostats; glycol top-up; rev C and rev B boards;
+>    2026-10-10 old Pi to `pibench`; `P52`, 09-19 firing, #198, first cold week.
 >
 > **Notes:**
+> - Digi-Key order PDF: `~/OneDrive - DGLC/Claude/Review Order - My DigiKey.pdf`.
 > - MBR thermostat holds the setpoint display until ~1.5 °F off: 75 → 77 → 75, never 76.
-> - 792: coil 13/14, NO 5–8, COM 9–12; min switching 10 mA at 17 V, hence two poles in parallel.
-> - Digi-Key blocks automated page loads; plan links came from search.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
