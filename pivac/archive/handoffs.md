@@ -1,3 +1,24 @@
+> ### ▶ ACTIVE HANDOFF — MBR node on the Olimex shield with 2.54 mm terminal blocks; parts traced; PR #223 open; 2026-10-07, Mini
+>
+> Session 78 (2026-10-07, Mac Mini). SMD parts would save nothing on the EXT boards in hand
+> assembly; U3 dominates and David holds two Traco TMR 12-4811WI. MBR node parts: Digi-Key
+> 102026319 (10 kΩ 0.1 %, 0.1 µF X7R, three Olimex PROTO-SHIELDs) shipped 10-05, FedEx
+> 546025980126. PR #223 now builds on the Olimex shield with 2.54 mm screw terminal blocks, one
+> wire per terminal: TB1 6-way probes, TB2 6-way air sensors with SH drains, TB3 2-way relay.
+>
+> **Next:**
+> 1. David checks for 5.08 mm blocks; if used, revert §3.4 to shared terminals with twin ferrules.
+> 2. Confirm UNO R4, DIN bracket 4557, R1 4.7 kΩ, R5 1 kΩ, Belden 8451 ordered or on hand.
+> 3. Review #223: relay jumpers or one pole + 470 Ω; LED matrix under the shield.
+> 4. At the air handler: Y2 screw, transformer VA, converter and probe-sheath isolation, NTC 10K/20K.
+> 5. `AirHandler` sketch and `ArduinoSensor` `offset:`; service and alerts per plan §5.4.
+> 6. Carried: MBR shading and pre-cool; thermostats; glycol top-up; rev C and rev B boards;
+>    2026-10-10 old Pi to `pibench`; `P52`, 09-19 firing, #198, first cold week.
+>
+> **Notes:**
+> - Digi-Key order PDF: `~/OneDrive - DGLC/Claude/Review Order - My DigiKey.pdf`.
+> - MBR thermostat holds the setpoint display until ~1.5 °F off: 75 → 77 → 75, never 76.
+
 > ### ▶ ACTIVE HANDOFF — MBR air-handler node planned; late-morning losses are load; PR #223 open; 2026-10-03, Mini
 >
 > Session 77 (2026-10-01 to 10-03, Mac Mini). Merged #221 and #222. The 10-01 alarm burst was the

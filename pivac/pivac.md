@@ -10,26 +10,24 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — MBR node on the Olimex shield with 2.54 mm terminal blocks; parts traced; PR #223 open; 2026-10-07, Mini
+> ### ▶ ACTIVE HANDOFF — WilhelmSK login and grant fixed at nginx; secret scrubbed; #225 merged; PR #223 open; 2026-10-08, Mini
 >
-> Session 78 (2026-10-07, Mac Mini). SMD parts would save nothing on the EXT boards in hand
-> assembly; U3 dominates and David holds two Traco TMR 12-4811WI. MBR node parts: Digi-Key
-> 102026319 (10 kΩ 0.1 %, 0.1 µF X7R, three Olimex PROTO-SHIELDs) shipped 10-05, FedEx
-> 546025980126. PR #223 now builds on the Olimex shield with 2.54 mm screw terminal blocks, one
-> wire per terminal: TB1 6-way probes, TB2 6-way air sensors with SH drains, TB3 2-way relay.
+> Session 78 (2026-10-07 to 10-08, Mac Mini). nginx had no location for Signal K's root `/login`
+> or `/security/`: WilhelmSK logins 404ed (read-only since at least 09-24) and access grants
+> 405ed. Both proxied on the Pi; CLAUDE.md updated; the app now logs in as `admin`. The Signal K
+> admin password was redacted from the palace, its backups and the Pi's transcripts
+> (`~/.local/bin/mempalace-redact.py`). #223 builds the MBR node on the Olimex shield with 2.54 mm
+> terminal blocks; #225 merged (rev B INT resistors are Ohmite OK1235E-R52 on hand).
 >
 > **Next:**
-> 1. David checks for 5.08 mm blocks; if used, revert §3.4 to shared terminals with twin ferrules.
-> 2. Confirm UNO R4, DIN bracket 4557, R1 4.7 kΩ, R5 1 kΩ, Belden 8451 ordered or on hand.
-> 3. Review #223: relay jumpers or one pole + 470 Ω; LED matrix under the shield.
-> 4. At the air handler: Y2 screw, transformer VA, converter and probe-sheath isolation, NTC 10K/20K.
-> 5. `AirHandler` sketch and `ArduinoSensor` `offset:`; service and alerts per plan §5.4.
-> 6. Carried: MBR shading and pre-cool; thermostats; glycol top-up; rev C and rev B boards;
->    2026-10-10 old Pi to `pibench`; `P52`, 09-19 firing, #198, first cold week.
+> 1. Re-run the palace redaction (this session's transcript); recipe in `tools/mempalace.md`.
+> 2. WilhelmSK stale-on-resume: check nginx for a stream after `POST /login` when it recurs.
+> 3. Slow-connection crashes: device logs via Xcode with the iPad cabled; Xcode 27 to install.
+> 4. MBR node parts and #223 review; carried items as in session state.
 >
 > **Notes:**
-> - Digi-Key order PDF: `~/OneDrive - DGLC/Claude/Review Order - My DigiKey.pdf`.
-> - MBR thermostat holds the setpoint display until ~1.5 °F off: 75 → 77 → 75, never 76.
+> - Organizer crash access works as `david@dglc.com` (WilhelmSK v1.18, team `F5FEBHD6EF`).
+> - An expired access-request alert clears only with `restart signalk`.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
