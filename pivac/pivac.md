@@ -10,24 +10,23 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — WilhelmSK login and grant fixed at nginx; secret scrubbed; #225 merged; PR #223 open; 2026-10-08, Mini
+> ### ▶ ACTIVE HANDOFF — hydronic loop refilled (25 %, ~75 gal); balance point 35 °F; PR #223 open; 2026-10-11, Mini
 >
-> Session 78 (2026-10-07 to 10-08, Mac Mini). nginx had no location for Signal K's root `/login`
-> or `/security/`: WilhelmSK logins 404ed (read-only since at least 09-24) and access grants
-> 405ed. Both proxied on the Pi; CLAUDE.md updated; the app now logs in as `admin`. The Signal K
-> admin password was redacted from the palace, its backups and the Pi's transcripts
-> (`~/.local/bin/mempalace-redact.py`). #223 builds the MBR node on the Olimex shield with 2.54 mm
-> terminal blocks; #225 merged (rev B INT resistors are Ohmite OK1235E-R52 on hand).
+> Session 78 (2026-10-07 to 10-11, Mac Mini). David drained, flushed and refilled the loop
+> (finished 2026-10-10 21:30 EDT): 25 % PG measured, about 75 gal by glycol balance, tank
+> precharge 21 psi, startup flow 55 L/min and clean. His checklist is
+> `docs/hydronic-drain-and-refill-checklist.md`. Heating data to date: coldest hour 41 °F, no
+> defrost, COP 3.1 at 40–45 °F; HZ-432 balance point set to 35 °F. Earlier: WilhelmSK nginx
+> `/login` and `/security/` fixes; Signal K password scrubbed from the palace.
 >
 > **Next:**
 > 1. Re-run the palace redaction (this session's transcript); recipe in `tools/mempalace.md`.
-> 2. WilhelmSK stale-on-resume: check nginx for a stream after `POST /login` when it recurs.
-> 3. Slow-connection crashes: device logs via Xcode with the iPad cabled; Xcode 27 to install.
-> 4. MBR node parts and #223 review; carried items as in session state.
+> 2. First cold week: defrost, capacity, COP below 40 °F, then 30 °F; thermostats to Heat only.
+> 3. Pressure 22–24 psi hot with 13–14 psi pump-start dips; second pressure sensor to plan.
+> 4. WilhelmSK resume and crash logs; MBR node #223; valve-handle rust before cooling season.
 >
 > **Notes:**
-> - Organizer crash access works as `david@dglc.com` (WilhelmSK v1.18, team `F5FEBHD6EF`).
-> - An expired access-request alert clears only with `restart signalk`.
+> - Influx token is in Signal K's `signalk-to-influxdb2` plugin config on the Pi.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 

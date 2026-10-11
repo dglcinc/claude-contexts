@@ -1,3 +1,22 @@
+> ### ▶ ACTIVE HANDOFF — WilhelmSK login and grant fixed at nginx; secret scrubbed; #225 merged; PR #223 open; 2026-10-08, Mini
+>
+> Session 78 (2026-10-07 to 10-08, Mac Mini). nginx had no location for Signal K's root `/login`
+> or `/security/`: WilhelmSK logins 404ed (read-only since at least 09-24) and access grants
+> 405ed. Both proxied on the Pi; CLAUDE.md updated; the app now logs in as `admin`. The Signal K
+> admin password was redacted from the palace, its backups and the Pi's transcripts
+> (`~/.local/bin/mempalace-redact.py`). #223 builds the MBR node on the Olimex shield with 2.54 mm
+> terminal blocks; #225 merged (rev B INT resistors are Ohmite OK1235E-R52 on hand).
+>
+> **Next:**
+> 1. Re-run the palace redaction (this session's transcript); recipe in `tools/mempalace.md`.
+> 2. WilhelmSK stale-on-resume: check nginx for a stream after `POST /login` when it recurs.
+> 3. Slow-connection crashes: device logs via Xcode with the iPad cabled; Xcode 27 to install.
+> 4. MBR node parts and #223 review; carried items as in session state.
+>
+> **Notes:**
+> - Organizer crash access works as `david@dglc.com` (WilhelmSK v1.18, team `F5FEBHD6EF`).
+> - An expired access-request alert clears only with `restart signalk`.
+
 > ### ▶ ACTIVE HANDOFF — MBR node on the Olimex shield with 2.54 mm terminal blocks; parts traced; PR #223 open; 2026-10-07, Mini
 >
 > Session 78 (2026-10-07, Mac Mini). SMD parts would save nothing on the EXT boards in hand
