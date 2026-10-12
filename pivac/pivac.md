@@ -16,7 +16,7 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > #230 in `docs/rpi-io-boards-revc-plan.md` and both paragraphs were kept. Drew a 316 stainless
 > replacement for the rusted A.Y. McDonald ball-valve lever (double-D 5.1 × 8.1 mm hole, M8×1.25
 > stem, 100 mm reach, 15 mm jog at 60°, stop lugs measured off IMG_1862): DXF, 1:1 SVG and
-> `make_lever.py` in `~/Downloads/valve-lever/` on the Mini. Parked, not urgent.
+> `make_lever.py` in `hardware/valve-lever/`, doc `docs/valve-lever-replacement.md` (PR #233). Parked.
 >
 > **Next:**
 > 1. Order a backup rev B/rev C board set.
