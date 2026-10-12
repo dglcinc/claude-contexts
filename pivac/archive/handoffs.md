@@ -1,122 +1,21 @@
-> ### ▶ ACTIVE HANDOFF — WilhelmSK login and grant fixed at nginx; secret scrubbed; #225 merged; PR #223 open; 2026-10-08, Mini
+> ### ▶ ACTIVE HANDOFF — hydronic loop refilled (25 %, ~75 gal); balance point 35 °F; PR #223 open; 2026-10-11, Mini
 >
-> Session 78 (2026-10-07 to 10-08, Mac Mini). nginx had no location for Signal K's root `/login`
-> or `/security/`: WilhelmSK logins 404ed (read-only since at least 09-24) and access grants
-> 405ed. Both proxied on the Pi; CLAUDE.md updated; the app now logs in as `admin`. The Signal K
-> admin password was redacted from the palace, its backups and the Pi's transcripts
-> (`~/.local/bin/mempalace-redact.py`). #223 builds the MBR node on the Olimex shield with 2.54 mm
-> terminal blocks; #225 merged (rev B INT resistors are Ohmite OK1235E-R52 on hand).
+> Session 78 (2026-10-07 to 10-11, Mac Mini). David drained, flushed and refilled the loop
+> (finished 2026-10-10 21:30 EDT): 25 % PG measured, about 75 gal by glycol balance, tank
+> precharge 21 psi, startup flow 55 L/min and clean. His checklist is
+> `docs/hydronic-drain-and-refill-checklist.md`. Heating data to date: coldest hour 41 °F, no
+> defrost, COP 3.1 at 40–45 °F; HZ-432 balance point set to 35 °F. Earlier: WilhelmSK nginx
+> `/login` and `/security/` fixes; Signal K password scrubbed from the palace.
 >
 > **Next:**
 > 1. Re-run the palace redaction (this session's transcript); recipe in `tools/mempalace.md`.
-> 2. WilhelmSK stale-on-resume: check nginx for a stream after `POST /login` when it recurs.
-> 3. Slow-connection crashes: device logs via Xcode with the iPad cabled; Xcode 27 to install.
-> 4. MBR node parts and #223 review; carried items as in session state.
+> 2. First cold week: defrost, capacity, COP below 40 °F, then 30 °F; thermostats to Heat only.
+> 3. Pressure 22–24 psi hot with 13–14 psi pump-start dips; second pressure sensor to plan.
+> 4. WilhelmSK resume and crash logs; MBR node #223; valve-handle rust before cooling season.
 >
 > **Notes:**
-> - Organizer crash access works as `david@dglc.com` (WilhelmSK v1.18, team `F5FEBHD6EF`).
-> - An expired access-request alert clears only with `restart signalk`.
-
-> ### ▶ ACTIVE HANDOFF — MBR node on the Olimex shield with 2.54 mm terminal blocks; parts traced; PR #223 open; 2026-10-07, Mini
->
-> Session 78 (2026-10-07, Mac Mini). SMD parts would save nothing on the EXT boards in hand
-> assembly; U3 dominates and David holds two Traco TMR 12-4811WI. MBR node parts: Digi-Key
-> 102026319 (10 kΩ 0.1 %, 0.1 µF X7R, three Olimex PROTO-SHIELDs) shipped 10-05, FedEx
-> 546025980126. PR #223 now builds on the Olimex shield with 2.54 mm screw terminal blocks, one
-> wire per terminal: TB1 6-way probes, TB2 6-way air sensors with SH drains, TB3 2-way relay.
->
-> **Next:**
-> 1. David checks for 5.08 mm blocks; if used, revert §3.4 to shared terminals with twin ferrules.
-> 2. Confirm UNO R4, DIN bracket 4557, R1 4.7 kΩ, R5 1 kΩ, Belden 8451 ordered or on hand.
-> 3. Review #223: relay jumpers or one pole + 470 Ω; LED matrix under the shield.
-> 4. At the air handler: Y2 screw, transformer VA, converter and probe-sheath isolation, NTC 10K/20K.
-> 5. `AirHandler` sketch and `ArduinoSensor` `offset:`; service and alerts per plan §5.4.
-> 6. Carried: MBR shading and pre-cool; thermostats; glycol top-up; rev C and rev B boards;
->    2026-10-10 old Pi to `pibench`; `P52`, 09-19 firing, #198, first cold week.
->
-> **Notes:**
-> - Digi-Key order PDF: `~/OneDrive - DGLC/Claude/Review Order - My DigiKey.pdf`.
-> - MBR thermostat holds the setpoint display until ~1.5 °F off: 75 → 77 → 75, never 76.
-
-> ### ▶ ACTIVE HANDOFF — MBR air-handler node planned; late-morning losses are load; PR #223 open; 2026-10-03, Mini
->
-> Session 77 (2026-10-01 to 10-03, Mac Mini). Merged #221 and #222. The 10-01 alarm burst was the
-> monthly NAS backup. The master bedroom's late-morning setpoint losses are load: startup flow
-> steady, loop A supply at the tank, coil ΔT rising with approach, coil at about 60–75 % of its
-> catalog rating (Unico §5.10). PR #223 adds `docs/mbr-air-handler-node-plan.md` and the wiring
-> SVG: UNO R4 WiFi at the MBR Unico, PA5 DS18B20 pair on D2, 10K NTCs on A0/A1, Y2 on a 792 relay
-> into D6, power from the Unico transformer through a 24 VAC→5 V USB-C buck, DIN rail.
->
-> **Next:**
-> 1. Review #223: relay jumpers or one pole + 470 Ω; LED matrix under the shield.
-> 2. At the air handler: Y2 screw, transformer VA, converter and probe-sheath isolation, NTC 10K/20K.
-> 3. Write the `AirHandler` sketch and `ArduinoSensor` `offset:`; service and alerts per plan §5.4.
-> 4. MBR: shade the window, check sun on the thermostat, pre-cool 74 °F 08:00–11:00, check filter
->    and high fan during an episode.
-> 5. Carried: thermostats on Heat or setpoints; glycol top-up and tank air valve; rev C and rev B
->    boards; 2026-10-10 old Pi to `pibench`; `P52`, 09-19 firing, #198, first cold week.
->
-> **Notes:**
-> - MBR thermostat holds the setpoint display until ~1.5 °F off: 75 → 77 → 75, never 76.
-> - 792: coil 13/14, NO 5–8, COM 9–12; min switching 10 mA at 17 V, hence two poles in parallel.
-> - Digi-Key blocks automated page loads; plan links came from search.
-
-> ### ▶ ACTIVE HANDOFF — rev C EXT boards and connectors ordered; Pi upgraded and hardened; chiller changeovers daily; 2026-09-27, Mini
->
-> Session 76 (2026-09-27, Mac Mini). #214 merged. Hygiene check: Pi journal cap 1 GB,
-> `apt full-upgrade` (kernel 6.18.50), Signal K 2.33.0, key-only ssh, nginx catch-all,
-> RedLink timeouts rolled up to one warning an hour (#215). Chiller: 35 heat/cool
-> changeovers in six days, heating COP measured 3.4 to 4.1, loop below its expansion tank's
-> working pressure (#216). Rev C EXT board from idea to gerbers: surface-mount PTSM headers
-> flush with the edge, plan, drawing, routed board, review, fit check against Phoenix's STEP
-> models (#217, #219). #218 fixed the pinout test. Boards ordered from OSH Park and
-> connectors from Mouser the same day. No PR open.
->
-> **Next:**
-> 1. Thermostats on Heat, or family room and kids room cool setpoints to 78 °F.
-> 2. Glycol top-up to 22–23 psi cold; gauge the expansion tank's air valve.
-> 3. Rev C EXT boards arrive: header on a 1:1 print, populate (rev C plan §7),
->    bench-prove. Connectors: 1778777 ×6, 1778764, 1778696; latching plugs 1709459 white,
->    1709442, 1709457.
-> 4. Rev B boards arrive: populate, bench-prove, install (rev B plan §7, §9).
-> 5. 2026-10-10: old Pi onto the `pibench` card.
-> 6. Carried: `P52` pump check; 09-19 changeover firing; return transfer plan (#198); first
->    cold week record.
->
-> **Notes:**
-> - Rev C is `hardware/extc-board`, built by `hardware/build.sh extc`; INT stays rev B.
-> - J3 black `24VAC input` (R, C), J4 white vertical `5VDC output only / to Pi`; they take
->   the same plug. All three header types have locating pegs.
-> - No copper under U3 but four pin escapes on the back; the Pi's 5 V is hand-laid at 1.0 mm.
-> - Undo key-only ssh: delete `/etc/ssh/sshd_config.d/10-key-only.conf`, reload ssh.
-
-> ### ▶ ACTIVE HANDOFF — rev B boards and parts ordered; PR #214 open; 2026-09-27, M2
->
-> Session 75 (2026-09-26/27, M2). First `sd-clone.sh` run on the new Pi's spare card done
-> (4 m 19 s, disk id `f9199e61`). Rev B went from plan to order: `docs/rpi-io-boards-revb-plan.md`,
-> the layout SVG, `docs/rpi-io-boards-revb-review.md`, and `hardware/` regenerated (build.sh
-> retries route+DRC until clean, exports gerbers, copper plots, schematic SVGs). Both boards
-> DRC-clean, nothing unconnected. David ordered the boards from OSH Park and parts from
-> Digi-Key/Amazon on 2026-09-27; gerber zips also in `~/OneDrive - DGLC/Claude/*-revB-gerbers.zip`.
->
-> **Next:**
-> 1. Merge PR #214 and pull the Pi.
-> 2. Boards arrive: populate per plan §7, bench-prove per plan §9 step 4 with the retired Pi.
->    Not in the cart: four PTSM 0,5/4 headers for the new INT; check three spare 3-way headers.
-> 3. Install per plan §9 step 5 (transformer to EXT J3, pigtail to the Pi, adapter removed,
->    PivacPower Shelly to the transformer outlet, J8 pigtail retired, label J4 row). Rev A is rollback.
-> 4. Open: KiCad 3D fit check; David's rev A edge-alignment observation on the 3- and 5-way headers.
-> 5. Carried: glycol top-up; `P52` pump check; pump-step sentinel; 09-19 changeover firing;
->    kids room duty and master setpoint gap; return transfer plan (#198); first cold week record.
->
-> **Notes:**
-> - Rev B: 24 VAC on EXT J3, F1 60R110XU, D1-D4, C3 470 µF, U3 TMR 12-4811WI (SIP-8, pins
->   1,2,3,6,7,8), J4 XH → USB-C pigtail into the Pi's USB-C; GH 7-way link (INT J6 side entry,
->   EXT J1 top entry, pin 1 at the bottom); INT J4 = HPCOOL 13, DHWX 19, SP-E 16, J8 gone.
-> - Hand-laid tracks: INT GPIO6 (F), GPIO24 (B), GND J6.5→TP3; EXT VS C3→D1, U2.1↔U2.8.
-> - GH is Digi-Key only; PA/PH are the through-hole fallbacks; XA does not fit INT.
-> - Pages: layout https://claude.ai/artifact/M8sBqVoureWu6L9ia9s1DF ; renders and copper
->   https://claude.ai/artifact/XydsRbY9nMBgi673MQvSrw ; monogram https://claude.ai/artifact/SKAZqP4qcRNdWFSPCgBLPx
+> - Influx token is in Signal K's `signalk-to-influxdb2` plugin config on the Pi.
+=======
 
 > ### ▶ ACTIVE HANDOFF — rev A cutover run; new Pi is production; USB leads to confirm; 2026-09-26, M2
 >
