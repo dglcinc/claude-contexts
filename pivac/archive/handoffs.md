@@ -1,3 +1,40 @@
+> ### ▶ ACTIVE HANDOFF — rev B INT + rev C EXT bench-proven and in production; boiler camera recalibrated; 2026-10-11, M2
+>
+> Session 76 (2026-10-11, M2). Prepped the `pibench` card from the M2's reader (`--revb` walk script
+> from PR #228, `w1-proof.sh`, cloud-init instance bumped), bench-proved the rev B INT and rev C EXT
+> set (5.09 V at J4, 35 V at TP1–TP2, COM open to GND, all twelve channels PASS, probe 40/40 clean on
+> H1 and H2 through a replaced DS2482), then cut production over to it the same evening on the
+> production Pi `88:a2:9e:3c:c3:73` and its own card: writers stopped 19:25, clone verified, Pi back
+> 19:43, every path live, no alerts. Three harness faults on the way: pigtail black lead in `+5`
+> (Pi survived), GH link mirrored 1↔7 (35 V on SDA killed GPIO2 on bench Pi `2c:cf:67:80:55:00`),
+> 24 VAC plug seated in H1 with power on (killed the DS2482). The swap knocked the boiler camera
+> ~200 px; David re-aimed by hand with a live readout, then the residual was registered offline
+> against `/var/lib/pivac/sentry-registration.npz` (−65, −12 px), lenses re-aimed, search applied,
+> reader back at margin 92. CLAUDE.md on master records all of it.
+>
+> **Next:**
+> 1. David merges #232 (label, printable copy on the M2 Desktop), #231 (bench record, install note,
+>    plug/link/pigtail corrections, Sentry notes, `w1-proof.sh`), #230 (test pads), #228 (`--revb`).
+> 2. Order a backup board set.
+> 3. Add an offline-registration option to `scripts/sentry-warp-search.py` (rebase quad and lenses
+>    from the saved reference over a wide window) so the next large knock needs no ad-hoc code.
+> 4. Next EXT revision (rev C plan §9): a 24 VAC connector that cannot enter a probe socket, labelled
+>    test pads, pin-1 legend on the GH headers.
+> 5. Carried: `P52` = 2 pump check; pump-step sentinel; exclude the 09-19 changeover firing; kids
+>    room duty and master setpoint gap; return transfer plan (#198); first cold week record.
+>
+> **Notes:**
+> - Bench Pis share the `pibench` card and take DHCP leases (find by MAC on the UCG): `2c:cf:67:80:55:00`
+>   walks channels only (GPIO2 and GPIO26 dead); `dc:a6:32:19:12:ee` does I2C/1-wire (BCM 13, 25 dead,
+>   16 pull-up dead).
+> - On rev B INT the sense rail feeds the opto anodes; the 12 kΩ sits between cathode and plug.
+> - A PTSM plug with fewer positions enters a larger socket.
+> - `pkill -f "io-board-tes[t]"` in an ssh command line that also names the script kills the session.
+> - Rev C EXT's probe sockets and 24 VAC entry sit at the opposite ends from the rev A board's; the
+>   rev C orientation is the one to keep.
+> - Pages: board review https://claude.ai/code/artifact/b0e30280-ffbe-4e69-b9a5-24dcec8be736 ; Sentry
+>   eyecheck https://claude.ai/code/artifact/577a962a-3a1b-410c-bedb-1322883c809a .
+
 > ### ▶ ACTIVE HANDOFF — hydronic loop refilled (25 %, ~75 gal); balance point 35 °F; PR #223 open; 2026-10-11, Mini
 >
 > Session 78 (2026-10-07 to 10-11, Mac Mini). David drained, flushed and refilled the loop
@@ -15,7 +52,6 @@
 >
 > **Notes:**
 > - Influx token is in Signal K's `signalk-to-influxdb2` plugin config on the Pi.
-=======
 
 > ### ▶ ACTIVE HANDOFF — rev A cutover run; new Pi is production; USB leads to confirm; 2026-09-26, M2
 >
