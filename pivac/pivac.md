@@ -10,27 +10,25 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — pressure reset to 20 psi on 18; butterfly handle modelled for 316L; 2026-10-13, Mini
+> ### ▶ ACTIVE HANDOFF — pressure trimmed to about 19.3 psi cold on 17; both handles ordered; 2026-10-13, Mini
 >
-> Session 80 (2026-10-12 to 10-13, Mac Mini). David let the expansion tank down to about 18 psi and the
-> loop to 20 psi cold with the regulator below 20 (PR #236: printable checklist, new rules). Opened #234
-> (fill through the bypass) and #235 (DEHUM relay retired, Pi edited live). Designed a 316L replacement for
-> the red butterfly handle on the drain valves (PR #237, `hardware/butterfly-handle/`): 5 × 8 double-D hole
-> held tight, lug in line with the flats, nut seat 3.5 above the rim, 85 mm rising wings. David is pricing
-> it at Xometry (DMLS 316L) and JLC3DP from `~/OneDrive - DGLC/Claude/butterfly-handle.step`.
+> Session 80 (2026-10-12 to 10-13, Mac Mini). Hydronic reset in two steps: 20 psi cold on an 18.2 psi tank
+> on 10-12 (first heating night 24.5–26.5 psi, dips 1.5–2 psi, relief dripped), then a further 1.3 psi vent
+> on 10-13 with the tank cold: about 19.3 psi cold on 17.0 psi, hot peak predicted about 25 psi. PR #236
+> still states 20 on 18. Butterfly handle (PR #237) ordered in PA12 MJF from Xometry (due 10-22) and 316L SLM
+> from JLC3DP (file review pending). Limits from the manuals in OneDrive `HVAC Documentation/Equipment
+> Manuals`: Ti-200 15 psi minimum, 10 psi cutoff, 30 psi relief; CX65 14.5 min, 20–30 ideal.
 >
 > **Next:**
-> 1. Pressure check since 2026-10-12T22:20Z: expect 22–23 psi hot, 1–2 psi pump-start dips (were 5–6).
-> 2. Merge #234–#237 on approval; `git pull` on the Pi after #235 for the Relays panel.
-> 3. Handle: old base on the 1:1 SVG, order, file the flats to fit.
-> 4. Backup rev B/rev C board set; sentry offline registration; rev C §9; palace redaction.
-> 5. First cold week: defrost, capacity, COP below 40 °F, then balance point 30 °F.
-> 6. WilhelmSK resume and crash logs; MBR node #223; valve lever quote when picked up.
+> 1. Confirm the about 25 psi hot peak and the relief dry, then update #236 to 19.3 on 17.0 (sentinel 18.5).
+> 2. Next cold tank should read about 19.3 psi; higher means the autofill fed (David to close it).
+> 3. Merge #234–#237 on approval; `git pull` on the Pi after #235.
+> 4. Handles on arrival: clear supports, flatten seats, file flats to the 5 × 8 stem, washer under nut.
+> 5. Backup board set; sentry offline registration; rev C §9; palace redaction; cold-week COP; #223.
 >
 > **Notes:**
-> - Keep the cold fill 1.5–2 psi above the tank precharge and the regulator below the cold fill.
-> - Photos on this Mac export via `osascript` by media-item index; HEIC via `sips`.
-> - `/opt/homebrew/bin/python3.11` has CadQuery 2.8; system python3 needs the Xcode license.
+> - Equipment manuals live in OneDrive `HVAC Documentation/Equipment Manuals`, not the Claude folder.
+> - `/opt/homebrew/bin/python3.11` has CadQuery 2.8; photos export via osascript by media-item index.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
