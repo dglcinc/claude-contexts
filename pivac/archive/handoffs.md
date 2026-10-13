@@ -1,3 +1,29 @@
+> ### ▶ ACTIVE HANDOFF — #230–#232 merged; valve-lever drawing parked; 2026-10-12, Mini
+>
+> Session 79 (2026-10-11 to 10-12, Mac Mini). Merged #230, #231 and #232; #231 conflicted with
+> #230 in `docs/rpi-io-boards-revc-plan.md` and both paragraphs were kept. Drew a 316 stainless
+> replacement for the rusted A.Y. McDonald ball-valve lever (double-D 5.1 × 8.1 mm hole, M8×1.25
+> stem, 100 mm reach, 15 mm jog at 60°, stop lugs measured off IMG_1862): DXF, 1:1 SVG and
+> `make_lever.py` in `hardware/valve-lever/`, doc `docs/valve-lever-replacement.md` (PR #233). Parked.
+>
+> **Next:**
+> 1. Order a backup rev B/rev C board set.
+> 2. Offline-registration option in `scripts/sentry-warp-search.py` for the next large knock.
+> 3. Next EXT revision (rev C plan §9): keyed 24 VAC entry, labelled test pads, GH pin-1 legend.
+> 4. Re-run the palace redaction for the Signal K password; recipe in `tools/mempalace.md`.
+> 5. First cold week: defrost, capacity, COP below 40 °F, then 30 °F; thermostats to Heat only.
+> 6. Pressure 22–24 psi hot with 13–14 psi pump-start dips; second pressure sensor to plan.
+> 7. WilhelmSK resume and crash logs; MBR node #223.
+> 8. Valve lever (when David picks it up): lay the old handle on the 1:1 print, then quote
+>    SendCutSend and Xometry for 4–5 pieces; A4 M8×1.25 nylon-insert nut.
+>
+> **Notes:**
+> - Bench Pis share the `pibench` card: `2c:cf:67:80:55:00` walks channels only (GPIO2, GPIO26
+>   dead); `dc:a6:32:19:12:ee` does I2C/1-wire (BCM 13, 25 dead, 16 pull-up dead).
+> - Influx token is in Signal K's `signalk-to-influxdb2` plugin config on the Pi.
+> - Photos on this Mac export via `osascript` (Photos `export … with using originals`); HEIC needs
+>   `ImageOps.exif_transpose` before cropping.
+
 > ### ▶ ACTIVE HANDOFF — rev B INT + rev C EXT bench-proven and in production; boiler camera recalibrated; 2026-10-11, M2
 >
 > Session 76 (2026-10-11, M2). Prepped the `pibench` card from the M2's reader (`--revb` walk script

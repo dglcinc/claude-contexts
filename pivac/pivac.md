@@ -10,31 +10,27 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — #230–#232 merged; valve-lever drawing parked; 2026-10-12, Mini
+> ### ▶ ACTIVE HANDOFF — pressure reset to 20 psi on 18; butterfly handle modelled for 316L; 2026-10-13, Mini
 >
-> Session 79 (2026-10-11 to 10-12, Mac Mini). Merged #230, #231 and #232; #231 conflicted with
-> #230 in `docs/rpi-io-boards-revc-plan.md` and both paragraphs were kept. Drew a 316 stainless
-> replacement for the rusted A.Y. McDonald ball-valve lever (double-D 5.1 × 8.1 mm hole, M8×1.25
-> stem, 100 mm reach, 15 mm jog at 60°, stop lugs measured off IMG_1862): DXF, 1:1 SVG and
-> `make_lever.py` in `hardware/valve-lever/`, doc `docs/valve-lever-replacement.md` (PR #233). Parked.
+> Session 80 (2026-10-12 to 10-13, Mac Mini). David let the expansion tank down to about 18 psi and the
+> loop to 20 psi cold with the regulator below 20 (PR #236: printable checklist, new rules). Opened #234
+> (fill through the bypass) and #235 (DEHUM relay retired, Pi edited live). Designed a 316L replacement for
+> the red butterfly handle on the drain valves (PR #237, `hardware/butterfly-handle/`): 5 × 8 double-D hole
+> held tight, lug in line with the flats, nut seat 3.5 above the rim, 85 mm rising wings. David is pricing
+> it at Xometry (DMLS 316L) and JLC3DP from `~/OneDrive - DGLC/Claude/butterfly-handle.step`.
 >
 > **Next:**
-> 1. Order a backup rev B/rev C board set.
-> 2. Offline-registration option in `scripts/sentry-warp-search.py` for the next large knock.
-> 3. Next EXT revision (rev C plan §9): keyed 24 VAC entry, labelled test pads, GH pin-1 legend.
-> 4. Re-run the palace redaction for the Signal K password; recipe in `tools/mempalace.md`.
-> 5. First cold week: defrost, capacity, COP below 40 °F, then 30 °F; thermostats to Heat only.
-> 6. Pressure 22–24 psi hot with 13–14 psi pump-start dips; second pressure sensor to plan.
-> 7. WilhelmSK resume and crash logs; MBR node #223.
-> 8. Valve lever (when David picks it up): lay the old handle on the 1:1 print, then quote
->    SendCutSend and Xometry for 4–5 pieces; A4 M8×1.25 nylon-insert nut.
+> 1. Pressure check since 2026-10-12T22:20Z: expect 22–23 psi hot, 1–2 psi pump-start dips (were 5–6).
+> 2. Merge #234–#237 on approval; `git pull` on the Pi after #235 for the Relays panel.
+> 3. Handle: old base on the 1:1 SVG, order, file the flats to fit.
+> 4. Backup rev B/rev C board set; sentry offline registration; rev C §9; palace redaction.
+> 5. First cold week: defrost, capacity, COP below 40 °F, then balance point 30 °F.
+> 6. WilhelmSK resume and crash logs; MBR node #223; valve lever quote when picked up.
 >
 > **Notes:**
-> - Bench Pis share the `pibench` card: `2c:cf:67:80:55:00` walks channels only (GPIO2, GPIO26
->   dead); `dc:a6:32:19:12:ee` does I2C/1-wire (BCM 13, 25 dead, 16 pull-up dead).
-> - Influx token is in Signal K's `signalk-to-influxdb2` plugin config on the Pi.
-> - Photos on this Mac export via `osascript` (Photos `export … with using originals`); HEIC needs
->   `ImageOps.exif_transpose` before cropping.
+> - Keep the cold fill 1.5–2 psi above the tank precharge and the regulator below the cold fill.
+> - Photos on this Mac export via `osascript` by media-item index; HEIC via `sips`.
+> - `/opt/homebrew/bin/python3.11` has CadQuery 2.8; system python3 needs the Xcode license.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
