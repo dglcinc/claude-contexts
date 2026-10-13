@@ -18,6 +18,8 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > still states 20 on 18. Butterfly handle (PR #237) ordered in PA12 MJF from Xometry (due 10-22) and 316L SLM
 > from JLC3DP (file review pending). Limits from the manuals in OneDrive `HVAC Documentation/Equipment
 > Manuals`: Ti-200 15 psi minimum, 10 psi cutoff, 30 psi relief; CX65 14.5 min, 20–30 ideal.
+> HVAC System Manual v1.9 gained "Expansion Tank and Loop Pressure" (why the cold fill must stay above the
+> precharge) and corrected pressure figures, make-up valve guidance and swapped sensor IPs.
 >
 > **Next:**
 > 1. Confirm the about 25 psi hot peak and the relief dry, then update #236 to 19.3 on 17.0 (sentinel 18.5).
