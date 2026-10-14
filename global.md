@@ -20,6 +20,10 @@ Write commit messages that explain why, not just what. Reference the problem bei
 
 When explaining an approach or decision, write in sentences rather than fragmenting into bullet lists.
 
+"A doc" or "a one-pager" means a `.md` file in the repo's `docs/` folder, never a Claude Doc or a web page. David reads these at the bench or in a plain markdown viewer, where column widths cannot be set, so keep every table cell short: reference, part, location. Put handling notes and instructions in a numbered list under the table, keyed by the row's reference, never in a wide fourth column.
+
+When recommending a hardware part, give the maker's part number, a Digi-Key product link and an Amazon link, in every project. David buys from both and picks per part: Digi-Key for specs, stock and genuine parts, Amazon for speed and for prebuilt modules Digi-Key does not carry. Open the Digi-Key page rather than building the URL from the part number, and confirm stock, price and Active status. Say when a part is surface-mount and needs a breakout adapter.
+
 ### Prose style
 
 Copyedit yourself against Strunk & White's *The Elements of Style* before sending. Plain, concrete, short. Compress the wording and keep every idea. Cut commentary. Keep evidence: numbers, file paths, commands, caveats, and the reasoning behind a recommendation. Use full grammatical sentences; never drop articles or write telegraphese.
