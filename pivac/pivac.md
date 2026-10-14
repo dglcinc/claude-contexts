@@ -26,7 +26,9 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > 2. Next cold tank should read about 19.3 psi; higher means the autofill fed (David to close it).
 > 3. Merge #234–#237 on approval; `git pull` on the Pi after #235.
 > 4. Handles on arrival: clear supports, flatten seats, file flats to the 5 × 8 stem, washer under nut.
-> 5. Backup board set; sentry offline registration; rev C §9; palace redaction; cold-week COP; #223.
+>    JLC3DP's thin-wall flag was a knife edge at the wing roots, fixed in 53f81a9; re-upload pending.
+> 5. No backup board set; next board run (rev C §9) consider JLCPCB ($40 for 5 of each, ENIG, $3.12
+>    shipping, vs about $64 at OSH Park). Sentry offline registration; palace redaction; cold-week COP; #223.
 >
 > **Notes:**
 > - Equipment manuals live in OneDrive `HVAC Documentation/Equipment Manuals`, not the Claude folder.
