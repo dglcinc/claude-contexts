@@ -32,6 +32,7 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 >
 > **Notes:**
 > - Equipment manuals live in OneDrive `HVAC Documentation/Equipment Manuals`, not the Claude folder.
+> - Loop fluid 2026-10-13: 25 % PG, pH 8–9 by paper (limits 7.5–9.5 boiler, 9.0 exchanger); in #236's CLAUDE.md.
 > - `/opt/homebrew/bin/python3.11` has CadQuery 2.8; photos export via osascript by media-item index.
 
 ## Backup Runbook (drivable from a Mac Claude session)
