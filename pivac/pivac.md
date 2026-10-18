@@ -10,30 +10,26 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — pressure trimmed to about 19.3 psi cold on 17; both handles ordered; 2026-10-13, Mini
+> ### ▶ ACTIVE HANDOFF — balance point 30 °F; MBR node sketches; ST-25 DHW tank; 2026-10-18, Mini
 >
-> Session 80 (2026-10-12 to 10-13, Mac Mini). Hydronic reset in two steps: 20 psi cold on an 18.2 psi tank
-> on 10-12 (first heating night 24.5–26.5 psi, dips 1.5–2 psi, relief dripped), then a further 1.3 psi vent
-> on 10-13 with the tank cold: about 19.3 psi cold on 17.0 psi, hot peak predicted about 25 psi. PR #236
-> still states 20 on 18. Butterfly handle (PR #237) ordered in PA12 MJF from Xometry (due 10-22) and 316L SLM
-> from JLC3DP (file review pending). Limits from the manuals in OneDrive `HVAC Documentation/Equipment
-> Manuals`: Ti-200 15 psi minimum, 10 psi cutoff, 30 psi relief; CX65 14.5 min, 20–30 ideal.
-> HVAC System Manual v1.9 gained "Expansion Tank and Loop Pressure" (why the cold fill must stay above the
-> precharge) and corrected pressure figures, make-up valve guidance and swapped sensor IPs.
+> Session 81 (2026-10-17 to 10-18, Mac Mini). The heating review of the 35 °F week (no boiler heat calls,
+> 75–87 % duty on a 38 °F night, overall COP 2.94 at 33–36 °F) led David to set the HZ-432 balance point to
+> 30 °F; the panel does not offer 32. CLAUDE.md on master records it, and plan §3/§5/§8/§9 follow in #239.
+> The ST-25 DHW expansion tank (since 10-17) holds 51.5–69 psi; 60 psi precharge is right and a 3–5 psi
+> recovery rise is expected. The MBR node shield drawings name every lead hole and scale to one page (#223).
+> Arduino #11 adds the bench sketch and the WiFi node sketch, both compiled with arduino-cli under Rosetta.
 >
 > **Next:**
-> 1. Confirm the about 25 psi hot peak and the relief dry, then update #236 to 19.3 on 17.0 (sentinel 18.5).
-> 2. Next cold tank should read about 19.3 psi; higher means the autofill fed (David to close it).
-> 3. Merge #234–#237 on approval; `git pull` on the Pi after #235.
-> 4. Handles on arrival: clear supports, flatten seats, file flats to the 5 × 8 stem, washer under nut.
->    JLC3DP's thin-wall flag was a knife edge at the wing roots, fixed in 53f81a9; re-upload pending.
-> 5. No backup board set; next board run (rev C §9) consider JLCPCB ($40 for 5 of each, ENIG, $3.12
->    shipping, vs about $64 at OSH Park). Sentry offline registration; palace redaction; cold-week COP; #223.
+> 1. Bench test on the M2 with `AirHandlerBench`, then `AirHandler_MBR` on the transformer over WiFi; with
+>    the board's IP, make the UCG reservation and add the pivac config (plan §5.2).
+> 2. Cold nights at 30 °F: back to 35 °F if an hour exceeds 95 % duty or a room falls 1 °F overnight.
+> 3. Thermostats to Heat (David). Merge #239 and #234–#237 on approval.
+> 4. Carried: #236 to 19.3 psi on 17.0 after the hot peak; handles on arrival; rev C §9, sentry offline
+>    registration, palace redaction.
 >
 > **Notes:**
-> - Equipment manuals live in OneDrive `HVAC Documentation/Equipment Manuals`, not the Claude folder.
-> - Loop fluid 2026-10-13: 25 % PG, pH 8–9 by paper (limits 7.5–9.5 boiler, 9.0 exchanger); in #236's CLAUDE.md.
-> - `/opt/homebrew/bin/python3.11` has CadQuery 2.8; photos export via osascript by media-item index.
+> - `r216` stayed 0 through the first defrosts, so it is not the defrost register.
+> - DHW precharge cannot be read or set without isolating and draining the water side.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
