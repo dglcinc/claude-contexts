@@ -10,44 +10,26 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — MBR node bench-proven on WiFi at 10.0.0.180; NTC bath calibration pending; 2026-10-19, M2
+> ### ▶ ACTIVE HANDOFF — P1 lockout; Devon's settings; 2026-10-20, Mini
 >
-> Session 82 (2026-10-18, M2). Bench-tested the master bedroom air-handler node (UNO R4 WiFi on the
-> Olimex PROTO-SHIELD) with the Arduino #11 sketches, compiled on the M2 after installing Rosetta (the
-> renesas core's compiler and bossac are x86_64). The shield is proved: spare DS18B20 `0516a36816ff` reads
-> clean, both NTC dividers read 10.65 and 10.78 kΩ (74.4 and 74.0 °F against 72.05 °F on the probe), the
-> Y2 input follows the relay (81 bounce edges on make, 3 on break). The node joins `redux` in about 2 s and
-> answers at the UCG reservation 10.0.0.180 (MAC `e8:f6:0a:aa:a3:88`, client AirHandler-MBR). The 24 VAC
-> converter is isolated and gives 4.65 V at the shield against 4.86 V from USB; David will install as is and
-> watch `uptimeMs` for dropouts. Arduino #12 fixes a watchdog reboot loop (`WiFi.setHostname()` blocks past
-> the 5 s WDT) and a −196.6 °F sentinel on a disconnected probe (double/float compare). pivac #240 adds
-> `offset:` to ArduinoSensor with tests, `pivac-ah-mbr.service`, the backup lists, a paused
-> `ah-mbr-air-return-stale` rule, the config sample block, and the bench record in plan §2/§4 and CLAUDE.md.
-> The spare production Pi is recorded on master (81fba53).
+> Session 83 (2026-10-20, Mac Mini; ran alongside the M2's session 82 below). The morning's low-flow alarm
+> was a P1 lockout (`284` = 2, 08:30–09:42 EDT), not fouling; the strainer clean and breaker cycle at about
+> 09:44 cleared it. #243 (pump-gated `.startupFlow`, `chiltrix-fault-latched` alert, P1 panel-log analysis)
+> merged and deployed on the Pi. On Devon Powell's advice: heating target 48 °C (enter 119 °F), `P38` 15,
+> `P39` 12, `P53` 50, set 12:23. Devon confirmed that a couple of P1s in a row lock the unit out until a
+> power cycle (#244 merged).
 >
 > **Next:**
-> 1. NTC two-point calibration in the sous-vide bath (plan §6 step 2); David will say when it is set up.
->    Suggested 95 and 130 °F with the bench 73 °F as a third point; reference is `0516a36816ff` on the bus
->    (`wsup` field while the ROMs are zero; subtract its +0.496 K); bundle both NTC tips against the probe
->    sheath, ten minutes per plateau. Same error at both points → `offset:` in config; a changing error →
->    adjust `NTC_BETA` in `AirHandler_MBR.ino` first. The CSV logger `airhandler-log.sh` in the M2 session
->    scratchpad polls .180 then .39 every 5 s into `airhandler-bench.csv`; restart one if it is gone.
-> 2. PA5 pair on the bus: rescan (`AirHandlerBench`, 'r'), write the ROMs into `AirHandler_MBR.ino`, record
->    which probe is on which pipe (plan §3.1), split the pair offset into config.
-> 3. Install: live `/etc/pivac/config.yml` block from the sample, copy and enable `pivac-ah-mbr.service`,
->    unpause the rule and verify in `alert_rule`; plan §6 steps 3–5.
-> 4. David merges Arduino #12 and pivac #240 (#241, #236, #237 still open).
-> 5. After a week with loop B on HIGH: great room alone was 7.8 °F ΔT on LOW, expect about 6.3;
->    LOOPB_SUP − IN −0.45 °F on LOW, −2 °F with both loops calling means MEDIUM.
-> 6. Carried: thermostats to Heat (David); cold nights at 30 °F; spare Pi model and MAC for CLAUDE.md;
->    #236 pressure; handles; sentry offline registration; rev C §9; backup board set; palace redaction.
+> 1. Watch P1 count and `chiltrix-fault-latched` for a week or two at 48 °C.
+> 2. NTC calibration on the wired board: follow session 82's plan (sous-vide at 95 and 130 °F, reference
+>    `0516a36816ff`, archive). The Mini session suggested an ice point with the PA5 pair; use the PA5 pair
+>    only once its ROMs are on the bus.
+> 3. Loop at 19.4 psi chilled, back at the fill; optional regulator 2 psi down. #236 to 19.3 on 17.0.
+> 4. Outdoor coil after the first freezing night; session 82's install steps and carried items (archive).
 >
 > **Notes:**
-> - Homebrew `bossa` does not know the RA4M1 ("No device found"); use the core's bossac under Rosetta.
-> - A faulted sensor is omitted from the node's line, so its path goes stale; no sentinels.
-> - UCG fixed IP: scan `rest/user` fixed_ips and `stat/sta` leases for a free address first (.189 was taken).
-> - The node is not on the Arduinos Shelly, so the watchdog cannot cycle it.
-> - Y2 release is debounced 100 ms in the node sketch.
+> - °F entries truncate to whole °C; `P72` caps heating at 50 °C.
+> - The HZ-432 went to cooling at 10:00 as the day warmed; tank chilled to about 50 °F.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
