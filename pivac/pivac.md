@@ -23,23 +23,23 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > heating). Merged: pivac #240, #245, #246, #247. The node's first readings exposed a loose R and C pair in
 > the master bedroom's RedLink EIM (the thermostat reported a heat call the HZ-432 never saw for 17 min);
 > seated, the coil went 82 to 112 °F and the supply air 71 to 108 °F on the low fan, water ΔT about −3.1 K.
-> Rule in CLAUDE.md under RedLink, timeline in `docs/operational-notes.md`.
+> Rule in CLAUDE.md under RedLink, timeline in `docs/operational-notes.md`. Arduino #12 merged too, so
+> `AirHandler_MBR` on main is what the node runs.
 >
 > **Next:**
 > 1. Plan §6 steps 3–5: fan-on agreement of the pairs within 0.3 °F, sign check on the first cooling call
 >    (`wret` above `wsup`, `asup` below `aret`), and Y2 within one poll on a high-fan call (this zone has no
 >    W2, so Y2 is the only staged output; watch it on a call that runs long enough to stage).
-> 2. David merges Arduino #12 (#241, #242, #236, #237 open on pivac).
-> 3. Relay bank for the HZ-432 zone calls (David's wish, 2026-10-20): the rev C EXT has one spare input
+> 2. Relay bank for the HZ-432 zone calls (David's wish, 2026-10-20): the rev C EXT has one spare input
 >    (`SP-E`, J4.3), so five zones of W and Y need an MCP23017 on the DS2482's I2C bus behind 24 VAC
 >    optocouplers or sense relays like SCALA's. It would also close the `LoopDelta` gap: a call that never
 >    reaches the panel still opens the gate.
-> 4. After a week with loop B on HIGH: great room alone was 7.8 °F ΔT on LOW, expect about 6.3;
+> 3. After a week with loop B on HIGH: great room alone was 7.8 °F ΔT on LOW, expect about 6.3;
 >    LOOPB_SUP − IN −0.45 °F on LOW, −2 °F with both loops calling means MEDIUM.
-> 5. From the Mini's session 83 (archived): watch the P1 count and `chiltrix-fault-latched` for a week or
+> 4. From the Mini's session 83 (archived): watch the P1 count and `chiltrix-fault-latched` for a week or
 >    two at the 48 °C heating target; loop at 19.4 psi chilled, back at the fill, optional regulator 2 psi
 >    down, #236 to 19.3 on 17.0; outdoor coil after the first freezing night.
-> 6. Carried: thermostats to Heat (David); cold nights at 30 °F; spare Pi model and MAC; sentry offline
+> 5. Carried: thermostats to Heat (David); cold nights at 30 °F; spare Pi model and MAC; sentry offline
 >    registration; rev C §9; backup board set; palace redaction.
 >
 > **Notes:**
