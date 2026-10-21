@@ -10,27 +10,30 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — MBR node calibrated and flashed, ready to install; 2026-10-20, M2
+> ### ▶ ACTIVE HANDOFF — MBR node installed and live; 2026-10-20, M2
 >
-> Session 83 (2026-10-20, M2). Bath calibration of the master bedroom air-handler node on the bench with
-> `AirHandlerBench`. The two probes on its bus are the PA5 pair (PA5A `000000cb6e28`, PA5B `0000001a8cda`),
-> ice-calibrated 08-22 and never in a hot bath before. Three baths, tips bundled with the Thermapen: ice
-> (32.2 °F by the Thermapen), 90.0 and 129.65 °F, ten minutes each. The PA5 slopes differ by 0.7 %, so the
-> pair correction crosses zero between seasons: offsets +0.280/+0.186 K at 55 °F (deployed) and
-> +0.143/+0.295 K at 115 °F. The NTCs' error grew with temperature under beta 3950; the shared `NTC_BETA`
-> is 3995 with `asup` −0.25 K and `aret` +0.03 K in config. David chose A0 = supply air (terminal 6) and
-> A1 = return air (terminal 11), and PA5A on the supply pipe, PA5B on the return; the sketch has both ROMs.
-> `AirHandler_MBR` is flashed: the node joins `redux` and answers at 10.0.0.180 with the sensors unplugged
-> for the move. Record in `docs/ds18b20-PA1-5-calibration.md`, logs in `docs/data/ah-mbr-node/`, all on
-> pivac #240 and Arduino #12.
+> Session 83 (2026-10-20, M2). Bath calibration of the master bedroom air-handler node on the bench, then
+> its install and deployment the same evening. The water pair is PA5 (PA5A `000000cb6e28` supply pipe,
+> PA5B `0000001a8cda` return), three-point since today: offsets +0.280/+0.186 K at 55 °F (deployed) and
+> +0.143/+0.295 K at 115 °F. The NTCs run `NTC_BETA` 3995 with `asup` −0.25 K and `aret` +0.03 K; A0 is
+> supply air, A1 return air. David installed the node and `pivac-ah-mbr` went live at 23:34 EDT: all seven
+> `environment.inside.hvac.ah.mbr.*` paths publish at a 5 s poll and reach InfluxDB,
+> `ah-mbr-air-return-stale` is unpaused, and `LoopDelta` publishes `ah.mbr.water.deltaT` and
+> `ah.mbr.air.deltaT` gated on `HPCALL` narrowed to `MASTER_BR` (return minus supply, negative in
+> heating). Merged: pivac #240, #245, #246, #247. The node's first readings exposed a loose R and C pair in
+> the master bedroom's RedLink EIM (the thermostat reported a heat call the HZ-432 never saw for 17 min);
+> seated, the coil went 82 to 112 °F and the supply air 71 to 108 °F on the low fan, water ΔT about −3.1 K.
+> Rule in CLAUDE.md under RedLink, timeline in `docs/operational-notes.md`.
 >
 > **Next:**
-> 1. David installs the node (probes on copper at the coil, NTCs in the plenums, Y2 relay, 24 VAC).
-> 2. Then: live `/etc/pivac/config.yml` block from the sample (all four offsets set), copy and enable
->    `pivac-ah-mbr.service`, unpause `ah-mbr-air-return-stale` and verify in `alert_rule`; plan §6 steps
->    3–5 (fan-on agreement within 0.3 °F, `wret` above `wsup` and `asup` below `aret` on the first cooling
->    call, Y2 within one poll).
-> 3. David merges Arduino #12 and pivac #240 (#241, #242, #236, #237 open).
+> 1. Plan §6 steps 3–5: fan-on agreement of the pairs within 0.3 °F, sign check on the first cooling call
+>    (`wret` above `wsup`, `asup` below `aret`), and Y2 within one poll on a high-fan call (this zone has no
+>    W2, so Y2 is the only staged output; watch it on a call that runs long enough to stage).
+> 2. David merges Arduino #12 (#241, #242, #236, #237 open on pivac).
+> 3. Relay bank for the HZ-432 zone calls (David's wish, 2026-10-20): the rev C EXT has one spare input
+>    (`SP-E`, J4.3), so five zones of W and Y need an MCP23017 on the DS2482's I2C bus behind 24 VAC
+>    optocouplers or sense relays like SCALA's. It would also close the `LoopDelta` gap: a call that never
+>    reaches the panel still opens the gate.
 > 4. After a week with loop B on HIGH: great room alone was 7.8 °F ΔT on LOW, expect about 6.3;
 >    LOOPB_SUP − IN −0.45 °F on LOW, −2 °F with both loops calling means MEDIUM.
 > 5. From the Mini's session 83 (archived): watch the P1 count and `chiltrix-fault-latched` for a week or
@@ -41,10 +44,9 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 >
 > **Notes:**
 > - The node sends no sentinel: an unplugged sensor is simply absent from its line and its path goes stale.
-> - The board dropped off USB when moved to the bath (stale `/dev/cu.usbmodem…` node, bossac "No device
->   found", no Arduino in `system_profiler`); a replug fixed it. A serial logger keeps a dead fd open.
-> - Bundling the tips changed nothing at 90 °F, so the pair spreads are the sensors.
 > - Heating-season swap for the node: `wsup` +0.143, `wret` +0.295 K, with the loop probes' 140 °F values.
+> - The node is not on the Arduinos Shelly; a `uptimeMs` reset with no WiFi message is a supply dropout.
+> - Live config backup before the block was appended: `/etc/pivac/config.yml.bak-20261020` on the Pi.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
