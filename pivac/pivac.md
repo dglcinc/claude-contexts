@@ -10,7 +10,7 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — MBR node installed and live; 2026-10-20, M2
+> ### ▶ ACTIVE HANDOFF — MBR node installed and live; 2026-10-21, M2
 >
 > Session 83 (2026-10-20, M2). Bath calibration of the master bedroom air-handler node on the bench, then
 > its install and deployment the same evening. The water pair is PA5 (PA5A `000000cb6e28` supply pipe,
@@ -24,7 +24,9 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > the master bedroom's RedLink EIM (the thermostat reported a heat call the HZ-432 never saw for 17 min);
 > seated, the coil went 82 to 112 °F and the supply air 71 to 108 °F on the low fan, water ΔT about −3.1 K.
 > Rule in CLAUDE.md under RedLink, timeline in `docs/operational-notes.md`. Arduino #12 merged too, so
-> `AirHandler_MBR` on main is what the node runs.
+> `AirHandler_MBR` on main is what the node runs. Plan §3.2 now asks for 20 AWG thermostat wire on its
+> own run for the duct NTCs (#248, #249); Belden 8451 is only for a shared run, and the installed node is
+> on it because it was on hand.
 >
 > **Next:**
 > 1. Plan §6 steps 3–5: fan-on agreement of the pairs within 0.3 °F, sign check on the first cooling call
