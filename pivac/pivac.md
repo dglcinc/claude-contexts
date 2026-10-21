@@ -10,26 +10,41 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — P1 lockout; Devon's settings; 2026-10-20, Mini
+> ### ▶ ACTIVE HANDOFF — MBR node calibrated and flashed, ready to install; 2026-10-20, M2
 >
-> Session 83 (2026-10-20, Mac Mini; ran alongside the M2's session 82 below). The morning's low-flow alarm
-> was a P1 lockout (`284` = 2, 08:30–09:42 EDT), not fouling; the strainer clean and breaker cycle at about
-> 09:44 cleared it. #243 (pump-gated `.startupFlow`, `chiltrix-fault-latched` alert, P1 panel-log analysis)
-> merged and deployed on the Pi. On Devon Powell's advice: heating target 48 °C (enter 119 °F), `P38` 15,
-> `P39` 12, `P53` 50, set 12:23. Devon confirmed that a couple of P1s in a row lock the unit out until a
-> power cycle (#244 merged).
+> Session 83 (2026-10-20, M2). Bath calibration of the master bedroom air-handler node on the bench with
+> `AirHandlerBench`. The two probes on its bus are the PA5 pair (PA5A `000000cb6e28`, PA5B `0000001a8cda`),
+> ice-calibrated 08-22 and never in a hot bath before. Three baths, tips bundled with the Thermapen: ice
+> (32.2 °F by the Thermapen), 90.0 and 129.65 °F, ten minutes each. The PA5 slopes differ by 0.7 %, so the
+> pair correction crosses zero between seasons: offsets +0.280/+0.186 K at 55 °F (deployed) and
+> +0.143/+0.295 K at 115 °F. The NTCs' error grew with temperature under beta 3950; the shared `NTC_BETA`
+> is 3995 with `asup` −0.25 K and `aret` +0.03 K in config. David chose A0 = supply air (terminal 6) and
+> A1 = return air (terminal 11), and PA5A on the supply pipe, PA5B on the return; the sketch has both ROMs.
+> `AirHandler_MBR` is flashed: the node joins `redux` and answers at 10.0.0.180 with the sensors unplugged
+> for the move. Record in `docs/ds18b20-PA1-5-calibration.md`, logs in `docs/data/ah-mbr-node/`, all on
+> pivac #240 and Arduino #12.
 >
 > **Next:**
-> 1. Watch P1 count and `chiltrix-fault-latched` for a week or two at 48 °C.
-> 2. NTC calibration on the wired board: follow session 82's plan (sous-vide at 95 and 130 °F, reference
->    `0516a36816ff`, archive). The Mini session suggested an ice point with the PA5 pair; use the PA5 pair
->    only once its ROMs are on the bus.
-> 3. Loop at 19.4 psi chilled, back at the fill; optional regulator 2 psi down. #236 to 19.3 on 17.0.
-> 4. Outdoor coil after the first freezing night; session 82's install steps and carried items (archive).
+> 1. David installs the node (probes on copper at the coil, NTCs in the plenums, Y2 relay, 24 VAC).
+> 2. Then: live `/etc/pivac/config.yml` block from the sample (all four offsets set), copy and enable
+>    `pivac-ah-mbr.service`, unpause `ah-mbr-air-return-stale` and verify in `alert_rule`; plan §6 steps
+>    3–5 (fan-on agreement within 0.3 °F, `wret` above `wsup` and `asup` below `aret` on the first cooling
+>    call, Y2 within one poll).
+> 3. David merges Arduino #12 and pivac #240 (#241, #242, #236, #237 open).
+> 4. After a week with loop B on HIGH: great room alone was 7.8 °F ΔT on LOW, expect about 6.3;
+>    LOOPB_SUP − IN −0.45 °F on LOW, −2 °F with both loops calling means MEDIUM.
+> 5. From the Mini's session 83 (archived): watch the P1 count and `chiltrix-fault-latched` for a week or
+>    two at the 48 °C heating target; loop at 19.4 psi chilled, back at the fill, optional regulator 2 psi
+>    down, #236 to 19.3 on 17.0; outdoor coil after the first freezing night.
+> 6. Carried: thermostats to Heat (David); cold nights at 30 °F; spare Pi model and MAC; sentry offline
+>    registration; rev C §9; backup board set; palace redaction.
 >
 > **Notes:**
-> - °F entries truncate to whole °C; `P72` caps heating at 50 °C.
-> - The HZ-432 went to cooling at 10:00 as the day warmed; tank chilled to about 50 °F.
+> - The node sends no sentinel: an unplugged sensor is simply absent from its line and its path goes stale.
+> - The board dropped off USB when moved to the bath (stale `/dev/cu.usbmodem…` node, bossac "No device
+>   found", no Arduino in `system_profiler`); a replug fixed it. A serial logger keeps a dead fd open.
+> - Bundling the tips changed nothing at 90 °F, so the pair spreads are the sensors.
+> - Heating-season swap for the node: `wsup` +0.143, `wret` +0.295 K, with the loop probes' 140 °F values.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 

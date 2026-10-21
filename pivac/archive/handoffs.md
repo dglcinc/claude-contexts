@@ -1,3 +1,24 @@
+> ### ▶ ACTIVE HANDOFF — P1 lockout; Devon's settings; 2026-10-20, Mini
+>
+> Session 83 (2026-10-20, Mac Mini; ran alongside the M2's session 82 below). The morning's low-flow alarm
+> was a P1 lockout (`284` = 2, 08:30–09:42 EDT), not fouling; the strainer clean and breaker cycle at about
+> 09:44 cleared it. #243 (pump-gated `.startupFlow`, `chiltrix-fault-latched` alert, P1 panel-log analysis)
+> merged and deployed on the Pi. On Devon Powell's advice: heating target 48 °C (enter 119 °F), `P38` 15,
+> `P39` 12, `P53` 50, set 12:23. Devon confirmed that a couple of P1s in a row lock the unit out until a
+> power cycle (#244 merged).
+>
+> **Next:**
+> 1. Watch P1 count and `chiltrix-fault-latched` for a week or two at 48 °C.
+> 2. NTC calibration on the wired board: follow session 82's plan (sous-vide at 95 and 130 °F, reference
+>    `0516a36816ff`, archive). The Mini session suggested an ice point with the PA5 pair; use the PA5 pair
+>    only once its ROMs are on the bus.
+> 3. Loop at 19.4 psi chilled, back at the fill; optional regulator 2 psi down. #236 to 19.3 on 17.0.
+> 4. Outdoor coil after the first freezing night; session 82's install steps and carried items (archive).
+>
+> **Notes:**
+> - °F entries truncate to whole °C; `P72` caps heating at 50 °C.
+> - The HZ-432 went to cooling at 10:00 as the day warmed; tank chilled to about 50 °F.
+
 > ### ▶ ACTIVE HANDOFF — MBR node bench-proven on WiFi at 10.0.0.180; NTC bath calibration pending; 2026-10-19, M2
 >
 > Session 82 (2026-10-18, M2). Bench-tested the master bedroom air-handler node (UNO R4 WiFi on the
