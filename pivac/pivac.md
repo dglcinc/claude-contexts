@@ -10,6 +10,27 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
+> ### ▶ ACTIVE HANDOFF — Unico SCB serial live test, staged for the M2; 2026-10-24
+>
+> Goal: read and set the master bedroom Unico S.M.A.R.T. Control Board (SCB) ourselves, in place of
+> Unico's Windows ECMConfig, then put the same serial tap on the air-handler node's rev B board.
+> Everything is on pivac branch `feat/unico-scb-serial`, PR #251 (not merged):
+> `docs/unico-scb-protocol.md` (the protocol from the decompiled ECMConfig 4.6, with harness pin maps),
+> `scripts/unico-scb.py` (listen / decode / mirror / set), `tests/test_unico_scb.py` (14 checks, all
+> pass) and `docs/unico-scb-live-test.md`, the procedure to follow. In short: 4800 8N1 through the
+> A01470 USB board's FTDI chip (`/dev/cu.usbserial-*` on macOS, no driver needed). The SCB is bus
+> master, sends a 51-byte `01 83` status frame unprompted, and treats every PC answer as a write, so
+> stage 1 listens only, stage 2 answers with exactly the stored values, and stage 3 changes the fan-only
+> (`G`) airflow by 25 CFM and restores it, each stage only after David's go-ahead. Never send the
+> thermostat override bits or the test bytes. Run the tool as
+> `uv run --no-project --with pyserial python scripts/unico-scb.py listen -v --raw scb-raw.txt`.
+>
+> Decided: the node keeps the UNO R4 WiFi (2.4 GHz accepted); rev B is the rev A shield PCB
+> (`hardware/ah-board`, PR #242) plus an interface from the SCB data line to the UNO's `Serial1`. The
+> live test must measure the data wires' levels (meter common on the data cable's black wire, then on
+> the SCB's `C`) because the interface design waits on them. Data cable pins at the SCB header:
+> 1 Blue, 2 Yellow, 3 Orange, 4 Black.
+>
 > ### ▶ ACTIVE HANDOFF — MBR node installed and live; 2026-10-21, M2
 >
 > Session 83 (2026-10-20, M2). Bath calibration of the master bedroom air-handler node on the bench, then
