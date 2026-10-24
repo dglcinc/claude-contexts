@@ -12,3 +12,7 @@
 # MemPalace per-project files (issue #185)
 mempalace.yaml
 entities.json
+
+# Claude Code skill sync output, rewritten on each machine
+skills/synced/
+skills/.trash/
