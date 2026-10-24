@@ -31,6 +31,12 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > the SCB's `C`) because the interface design waits on them. Data cable pins at the SCB header:
 > 1 Blue, 2 Yellow, 3 Orange, 4 Black.
 >
+> Also open from the 2026-10-24 session (utilityserver Mac): the Sentry camera was recalibrated for
+> David's closer mount (PR #252, lens radii 10/83, `led_ratio` 0.85, margin ~180); the Pi runs
+> `fix/sentry-new-mount` until #252 merges, then goes back to master. The MBR remote sensor removed the
+> morning solar overshoot (stat held 75 °F with no high fan on 10-24, against 77 °F and 2–3.5 h of high
+> fan on 10-21 to 10-23); write that into assessment §5.10 on PR #250 after checking the afternoon.
+>
 > ### ▶ ACTIVE HANDOFF — MBR node installed and live; 2026-10-21, M2
 >
 > Session 83 (2026-10-20, M2). Bath calibration of the master bedroom air-handler node on the bench, then
