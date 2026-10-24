@@ -10,72 +10,35 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Unico SCB serial live test, staged for the M2; 2026-10-24
+> ### ▶ ACTIVE HANDOFF — Unico SCB proven, utility air handler publishing, rev B is a Pico carrier; 2026-10-24, M2
 >
-> Goal: read and set the master bedroom Unico S.M.A.R.T. Control Board (SCB) ourselves, in place of
-> Unico's Windows ECMConfig, then put the same serial tap on the air-handler node's rev B board.
-> Everything is on pivac branch `feat/unico-scb-serial`, PR #251 (not merged):
-> `docs/unico-scb-protocol.md` (the protocol from the decompiled ECMConfig 4.6, with harness pin maps),
-> `scripts/unico-scb.py` (listen / decode / mirror / set), `tests/test_unico_scb.py` (14 checks, all
-> pass) and `docs/unico-scb-live-test.md`, the procedure to follow. In short: 4800 8N1 through the
-> A01470 USB board's FTDI chip (`/dev/cu.usbserial-*` on macOS, no driver needed). The SCB is bus
-> master, sends a 51-byte `01 83` status frame unprompted, and treats every PC answer as a write, so
-> stage 1 listens only, stage 2 answers with exactly the stored values, and stage 3 changes the fan-only
-> (`G`) airflow by 25 CFM and restores it, each stage only after David's go-ahead. Never send the
-> thermostat override bits or the test bytes. Run the tool as
-> `uv run --no-project --with pyserial python scripts/unico-scb.py listen -v --raw scb-raw.txt`.
->
-> Decided: the node keeps the UNO R4 WiFi (2.4 GHz accepted); rev B is the rev A shield PCB
-> (`hardware/ah-board`, PR #242) plus an interface from the SCB data line to the UNO's `Serial1`. The
-> live test must measure the data wires' levels (meter common on the data cable's black wire, then on
-> the SCB's `C`) because the interface design waits on them. Data cable pins at the SCB header:
-> 1 Blue, 2 Yellow, 3 Orange, 4 Black.
->
-> Also open from the 2026-10-24 session (utilityserver Mac): the Sentry camera was recalibrated for
-> David's closer mount (PR #252, lens radii 10/83, `led_ratio` 0.85, margin ~180); the Pi runs
-> `fix/sentry-new-mount` until #252 merges, then goes back to master. The MBR remote sensor removed the
-> morning solar overshoot (stat held 75 °F with no high fan on 10-24, against 77 °F and 2–3.5 h of high
-> fan on 10-21 to 10-23); write that into assessment §5.10 on PR #250 after checking the afternoon.
->
-> ### ▶ ACTIVE HANDOFF — MBR node installed and live; 2026-10-21, M2
->
-> Session 83 (2026-10-20, M2). Bath calibration of the master bedroom air-handler node on the bench, then
-> its install and deployment the same evening. The water pair is PA5 (PA5A `000000cb6e28` supply pipe,
-> PA5B `0000001a8cda` return), three-point since today: offsets +0.280/+0.186 K at 55 °F (deployed) and
-> +0.143/+0.295 K at 115 °F. The NTCs run `NTC_BETA` 3995 with `asup` −0.25 K and `aret` +0.03 K; A0 is
-> supply air, A1 return air. David installed the node and `pivac-ah-mbr` went live at 23:34 EDT: all seven
-> `environment.inside.hvac.ah.mbr.*` paths publish at a 5 s poll and reach InfluxDB,
-> `ah-mbr-air-return-stale` is unpaused, and `LoopDelta` publishes `ah.mbr.water.deltaT` and
-> `ah.mbr.air.deltaT` gated on `HPCALL` narrowed to `MASTER_BR` (return minus supply, negative in
-> heating). Merged: pivac #240, #245, #246, #247. The node's first readings exposed a loose R and C pair in
-> the master bedroom's RedLink EIM (the thermostat reported a heat call the HZ-432 never saw for 17 min);
-> seated, the coil went 82 to 112 °F and the supply air 71 to 108 °F on the low fan, water ΔT about −3.1 K.
-> Rule in CLAUDE.md under RedLink, timeline in `docs/operational-notes.md`. Arduino #12 merged too, so
-> `AirHandler_MBR` on main is what the node runs. Plan §3.2 now asks for 20 AWG thermostat wire on its
-> own run for the duct NTCs (#248, #249); Belden 8451 is only for a shared run, and the installed node is
-> on it because it was on hand.
+> Session 84 (2026-10-24, M2). The Unico SCB live test passed on the utility zone's M2430 (fw 3.21): the SCB
+> sends a 36-byte frame every 0.85 s unanswered and the 51-byte frame only after a reply, the idle frame writes
+> nothing, a set stores in under a second, no echo. `pivac.UnicoSCB` (protocol core `pivac/unico_scb_protocol.py`)
+> runs on the Pi as `pivac-scb-utility.service` over USB (`/dev/serial/by-id/*unicousb*`) and publishes
+> `environment.inside.hvac.ah.utility.{call.*,fan.airflow,fan.rpm,fan.stored.*,scb.*}` since 18:03 EDT. The tool
+> has idle, backup, restore, override (a real zone call here: the SCB's relays are the HZ-432's W/Y) and the
+> Air Cycle settings behind a typed guard. Merged #251, #252; #253 writes up the 10-24 P4 (not visible in `284`).
+> Rev B: the UNO R4 cannot host USB, so the node becomes a Pico WH carrier plugged into the SCB's USB-B jack,
+> in a CamdenBoss CNMB/6/KIT DIN module (PCB 86.5 × 103 mm), Würth 4065B push-in 5.08 mm blocks behind the
+> guards, power and USB on the top face, sensors on the bottom (shield plan #242 §0). David ordered from
+> Digi-Key: Feather RP2040 USB Host 5723 (the bench test), Pico WH, CNMB/6/KIT, 2× TMR 3-4811WI, 4× 2P and
+> 3× 3P blocks, 2× USB-A jack 61400416021, 3× 20-pin sockets. HZ-432 relay bank is on the backlog.
 >
 > **Next:**
-> 1. Plan §6 steps 3–5: fan-on agreement of the pairs within 0.3 °F, sign check on the first cooling call
->    (`wret` above `wsup`, `asup` below `aret`), and Y2 within one poll on a high-fan call (this zone has no
->    W2, so Y2 is the only staged output; watch it on a call that runs long enough to stage).
-> 2. Relay bank for the HZ-432 zone calls (David's wish, 2026-10-20): the rev C EXT has one spare input
->    (`SP-E`, J4.3), so five zones of W and Y need an MCP23017 on the DS2482's I2C bus behind 24 VAC
->    optocouplers or sense relays like SCALA's. It would also close the `LoopDelta` gap: a call that never
->    reaches the panel still opens the gate.
-> 3. After a week with loop B on HIGH: great room alone was 7.8 °F ΔT on LOW, expect about 6.3;
->    LOOPB_SUP − IN −0.45 °F on LOW, −2 °F with both loops calling means MEDIUM.
-> 4. From the Mini's session 83 (archived): watch the P1 count and `chiltrix-fault-latched` for a week or
->    two at the 48 °C heating target; loop at 19.4 psi chilled, back at the fill, optional regulator 2 psi
->    down, #236 to 19.3 on 17.0; outdoor coil after the first freezing night.
-> 5. Carried: thermostats to Heat (David); cold nights at 30 °F; spare Pi model and MAC; sentry offline
->    registration; rev C §9; backup board set; palace redaction.
+> 1. Feather: bench sketch (TinyUSB `serial_host_bridge` at 4800 + the frame decoder in C), plug into the
+>    utility control box; decoded frames prove the route.
+> 2. Pico WH on the breadboard: WiFi, DS2482/1-wire, NTCs at 3.3 V, HTTP line with the §7 fields.
+> 3. Draw the carrier for the CNMB/6 base, review doc, OSH Park; chip parts from the rev A spares.
+> 4. Pre-drilled guards (CNMB/3/TG508 ×4, TGUSB) from Newark if wanted; the kit's perforated ones serve.
+> 5. Watch `ah.utility.call.y2`; P1/P4 count at 48 °C; loop B HIGH review.
+> 6. Carried: thermostats to Heat; cold nights at 30 °F; spare Pi; sentry offline registration; rev C §9;
+>    backup board set; palace redaction.
 >
 > **Notes:**
-> - The node sends no sentinel: an unplugged sensor is simply absent from its line and its path goes stale.
-> - Heating-season swap for the node: `wsup` +0.143, `wret` +0.295 K, with the loop probes' 140 °F values.
-> - The node is not on the Arduinos Shelly; a `uptimeMs` reset with no WiFi message is a supply dropout.
-> - Live config backup before the block was appended: `/etc/pivac/config.yml.bak-20261020` on the Pi.
+> - The override has only been dry-run; guard word CALL-THE-PLANT.
+> - The DS2482 line added to the cart by mistake may be on the order; check the invoice.
+> - Digi-Key and Amazon refuse the fetch agent; parts checks go through the Chrome extension.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
