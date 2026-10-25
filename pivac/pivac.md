@@ -10,30 +10,30 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Sentry at an angled IR mount; SCB at 5 s; 2026-10-24 evening, M4
+> ### ▶ ACTIVE HANDOFF — Loop B stays on HIGH; P1 3 in 119 at 48 °C; Feather SCB sketch written; 2026-10-25, M4
 >
-> Session 85 (2026-10-24, M4). The Sentry camera went through three remounts after the shop lights went
-> off at 19:40. The 10-diopter close-up bloomed in colour in the dark (97 read as 88, a false call with
-> every light on); the 4-diopter face-on view reflected the camera's own infrared from every segment; the
-> angled view reads in infrared (Night, Night Boost off) at margin 52–56 dark and 87–91 lit, tracker 0.82
-> or better, no misses through the light changes. Live config: corners TL(911,434) TR(1051,435)
-> BR(1048,501) BL(915,498), lens radii 4/25, `led_ratio` 1.05, `indicator_ratio` 1.15; backups
-> `/etc/pivac/config.yml.bak-20261024-near` and `-skew`. CLAUDE.md rule on master, notes in PR #255.
-> `pivac-scb-utility` dropped to `daemon_sleep: 5` live (it wrote ~1.4 M points/day at 1 s); PR #254
-> also drains the serial buffer fully. The SCB had caught one Y1+G call (18:02–18:10, 300 CFM, 1078 rpm).
+> Session 86 (2026-10-25, M4). Merged #254 and #255; the Pi pulled master and `pivac-scb-utility` runs at
+> `daemon_sleep` 5. At the angled mount the Sentry `burnerOn`/`circAuxOn` followed `DHW` minute for minute
+> through both overnight DHW calls. Loop B on HIGH measured 6.0 °F ΔT calling alone and 5.2 °F with both loops
+> (8.4/7.2 on LOW), supply 0.45 °F under `IN`, so HIGH stays. The panel ERROR log photographed 08:20 holds
+> P1s at 10-21 01:12, 10-21 23:41 and 10-24 22:37 plus the known 10-24 07:27 P4: 3 P1s in 119 heating starts
+> (about 2.5 %, 4 % at 50 °C); `284` missed the 23:41 one. CLAUDE.md on master (77f1273, 640d382). Wrote
+> `UnicoSCBBench` for the Feather RP2040 USB Host (Arduino PR #13): listen-only at 4800, ports of
+> `split_frames`/`decode_status`, compiles, host test matches Python; not yet on hardware. The SCB shows one
+> call since install (Y1+G, 10-24 18:03–18:07) and no y2.
 >
 > **Next:**
-> 1. Confirm the lit status-LED ratio on the next boiler or DHW call (dark 0.55–0.70 against 1.05);
->    check `burnerOn`/`circAuxOn` follow `BLR`/`DHW`.
-> 2. Merge #254 and #255; pull on the Pi (it runs master).
-> 3. Feather RP2040 USB Host bench sketch for the SCB (session 84 next steps 1–4 stand).
-> 4. Watch `ah.utility.call.y2`; P1/P4 count at 48 °C; loop B HIGH review.
-> 5. Carried: thermostats to Heat; cold nights at 30 °F; spare Pi; sentry offline registration; rev C §9;
->    backup board set; palace redaction.
+> 1. Flash UnicoSCBBench on the Feather, plug it into the utility control box; expect a frame every ~850 ms.
+> 2. Thermostats to Heat (MASTER_BR cools at 75 °F afternoons, KIDS_ROOM at 75 °F nights: ~2 changeovers
+>    a day). On 10-21 23:50 a kids room cool call chilled the tank to 54 °F and the great room fell 2 °F.
+> 3. Pico WH on the breadboard, then the carrier (session 84 steps 2–3 in archive/handoffs.md).
+> 4. Read P1/P4 from the panel log, never `284` alone; keep watching `ah.utility.call.y2`.
+> 5. Carried: cold nights at 30 °F; spare Pi; sentry offline registration; rev C §9; backup board set;
+>    palace redaction.
 >
 > **Notes:**
-> - The Tapo app shows no "Infrared" option; Night is the IR mode, and Auto drops to IR once the room is dark.
-> - The 10-24 P4 (07:27 panel clock, ~07:30 Modbus) is written up in #253; no action.
+> - Panel photos are in the Photos library originals (`~/Pictures/Photos Library.photoslibrary/originals/`, HEIC).
+> - arduino-cli on the M4 has the rp2040 core and the `Pico PIO USB` library.
 > - The override has only been dry-run; guard word CALL-THE-PLANT.
 
 ## Backup Runbook (drivable from a Mac Claude session)
