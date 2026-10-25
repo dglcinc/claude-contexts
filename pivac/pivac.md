@@ -10,35 +10,31 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Unico SCB proven, utility air handler publishing, rev B is a Pico carrier; 2026-10-24, M2
+> ### ▶ ACTIVE HANDOFF — Sentry at an angled IR mount; SCB at 5 s; 2026-10-24 evening, M4
 >
-> Session 84 (2026-10-24, M2). The Unico SCB live test passed on the utility zone's M2430 (fw 3.21): the SCB
-> sends a 36-byte frame every 0.85 s unanswered and the 51-byte frame only after a reply, the idle frame writes
-> nothing, a set stores in under a second, no echo. `pivac.UnicoSCB` (protocol core `pivac/unico_scb_protocol.py`)
-> runs on the Pi as `pivac-scb-utility.service` over USB (`/dev/serial/by-id/*unicousb*`) and publishes
-> `environment.inside.hvac.ah.utility.{call.*,fan.airflow,fan.rpm,fan.stored.*,scb.*}` since 18:03 EDT. The tool
-> has idle, backup, restore, override (a real zone call here: the SCB's relays are the HZ-432's W/Y) and the
-> Air Cycle settings behind a typed guard. Merged #251, #252; #253 writes up the 10-24 P4 (not visible in `284`).
-> Rev B: the UNO R4 cannot host USB, so the node becomes a Pico WH carrier plugged into the SCB's USB-B jack,
-> in a CamdenBoss CNMB/6/KIT DIN module (PCB 86.5 × 103 mm), Würth 4065B push-in 5.08 mm blocks behind the
-> guards, power and USB on the top face, sensors on the bottom (shield plan #242 §0). David ordered from
-> Digi-Key: Feather RP2040 USB Host 5723 (the bench test), Pico WH, CNMB/6/KIT, 2× TMR 3-4811WI, 4× 2P and
-> 3× 3P blocks, 2× USB-A jack 61400416021, 3× 20-pin sockets. HZ-432 relay bank is on the backlog.
+> Session 85 (2026-10-24, M4). The Sentry camera went through three remounts after the shop lights went
+> off at 19:40. The 10-diopter close-up bloomed in colour in the dark (97 read as 88, a false call with
+> every light on); the 4-diopter face-on view reflected the camera's own infrared from every segment; the
+> angled view reads in infrared (Night, Night Boost off) at margin 52–56 dark and 87–91 lit, tracker 0.82
+> or better, no misses through the light changes. Live config: corners TL(911,434) TR(1051,435)
+> BR(1048,501) BL(915,498), lens radii 4/25, `led_ratio` 1.05, `indicator_ratio` 1.15; backups
+> `/etc/pivac/config.yml.bak-20261024-near` and `-skew`. CLAUDE.md rule on master, notes in PR #255.
+> `pivac-scb-utility` dropped to `daemon_sleep: 5` live (it wrote ~1.4 M points/day at 1 s); PR #254
+> also drains the serial buffer fully. The SCB had caught one Y1+G call (18:02–18:10, 300 CFM, 1078 rpm).
 >
 > **Next:**
-> 1. Feather: bench sketch (TinyUSB `serial_host_bridge` at 4800 + the frame decoder in C), plug into the
->    utility control box; decoded frames prove the route.
-> 2. Pico WH on the breadboard: WiFi, DS2482/1-wire, NTCs at 3.3 V, HTTP line with the §7 fields.
-> 3. Draw the carrier for the CNMB/6 base, review doc, OSH Park; chip parts from the rev A spares.
-> 4. Pre-drilled guards (CNMB/3/TG508 ×4, TGUSB) from Newark if wanted; the kit's perforated ones serve.
-> 5. Watch `ah.utility.call.y2`; P1/P4 count at 48 °C; loop B HIGH review.
-> 6. Carried: thermostats to Heat; cold nights at 30 °F; spare Pi; sentry offline registration; rev C §9;
+> 1. Confirm the lit status-LED ratio on the next boiler or DHW call (dark 0.55–0.70 against 1.05);
+>    check `burnerOn`/`circAuxOn` follow `BLR`/`DHW`.
+> 2. Merge #254 and #255; pull on the Pi (it runs master).
+> 3. Feather RP2040 USB Host bench sketch for the SCB (session 84 next steps 1–4 stand).
+> 4. Watch `ah.utility.call.y2`; P1/P4 count at 48 °C; loop B HIGH review.
+> 5. Carried: thermostats to Heat; cold nights at 30 °F; spare Pi; sentry offline registration; rev C §9;
 >    backup board set; palace redaction.
 >
 > **Notes:**
+> - The Tapo app shows no "Infrared" option; Night is the IR mode, and Auto drops to IR once the room is dark.
+> - The 10-24 P4 (07:27 panel clock, ~07:30 Modbus) is written up in #253; no action.
 > - The override has only been dry-run; guard word CALL-THE-PLANT.
-> - The DS2482 line added to the cart by mistake may be on the order; check the invoice.
-> - Digi-Key and Amazon refuse the fetch agent; parts checks go through the Chrome extension.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 

@@ -1,3 +1,33 @@
+> ### ▶ ACTIVE HANDOFF — Unico SCB proven, utility air handler publishing, rev B is a Pico carrier; 2026-10-24, M2
+>
+> Session 84 (2026-10-24, M2). The Unico SCB live test passed on the utility zone's M2430 (fw 3.21): the SCB
+> sends a 36-byte frame every 0.85 s unanswered and the 51-byte frame only after a reply, the idle frame writes
+> nothing, a set stores in under a second, no echo. `pivac.UnicoSCB` (protocol core `pivac/unico_scb_protocol.py`)
+> runs on the Pi as `pivac-scb-utility.service` over USB (`/dev/serial/by-id/*unicousb*`) and publishes
+> `environment.inside.hvac.ah.utility.{call.*,fan.airflow,fan.rpm,fan.stored.*,scb.*}` since 18:03 EDT. The tool
+> has idle, backup, restore, override (a real zone call here: the SCB's relays are the HZ-432's W/Y) and the
+> Air Cycle settings behind a typed guard. Merged #251, #252; #253 writes up the 10-24 P4 (not visible in `284`).
+> Rev B: the UNO R4 cannot host USB, so the node becomes a Pico WH carrier plugged into the SCB's USB-B jack,
+> in a CamdenBoss CNMB/6/KIT DIN module (PCB 86.5 × 103 mm), Würth 4065B push-in 5.08 mm blocks behind the
+> guards, power and USB on the top face, sensors on the bottom (shield plan #242 §0). David ordered from
+> Digi-Key: Feather RP2040 USB Host 5723 (the bench test), Pico WH, CNMB/6/KIT, 2× TMR 3-4811WI, 4× 2P and
+> 3× 3P blocks, 2× USB-A jack 61400416021, 3× 20-pin sockets. HZ-432 relay bank is on the backlog.
+>
+> **Next:**
+> 1. Feather: bench sketch (TinyUSB `serial_host_bridge` at 4800 + the frame decoder in C), plug into the
+>    utility control box; decoded frames prove the route.
+> 2. Pico WH on the breadboard: WiFi, DS2482/1-wire, NTCs at 3.3 V, HTTP line with the §7 fields.
+> 3. Draw the carrier for the CNMB/6 base, review doc, OSH Park; chip parts from the rev A spares.
+> 4. Pre-drilled guards (CNMB/3/TG508 ×4, TGUSB) from Newark if wanted; the kit's perforated ones serve.
+> 5. Watch `ah.utility.call.y2`; P1/P4 count at 48 °C; loop B HIGH review.
+> 6. Carried: thermostats to Heat; cold nights at 30 °F; spare Pi; sentry offline registration; rev C §9;
+>    backup board set; palace redaction.
+>
+> **Notes:**
+> - The override has only been dry-run; guard word CALL-THE-PLANT.
+> - The DS2482 line added to the cart by mistake may be on the order; check the invoice.
+> - Digi-Key and Amazon refuse the fetch agent; parts checks go through the Chrome extension.
+
 > ### ▶ ACTIVE HANDOFF — Unico SCB serial live test, staged for the M2; 2026-10-24
 >
 > Goal: read and set the master bedroom Unico S.M.A.R.T. Control Board (SCB) ourselves, in place of
