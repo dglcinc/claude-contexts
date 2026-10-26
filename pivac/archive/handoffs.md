@@ -1,3 +1,29 @@
+> ### ▶ ACTIVE HANDOFF — Loop B stays on HIGH; P1 3 in 119 at 48 °C; Feather SCB sketch written; 2026-10-25, M4
+>
+> Session 86 (2026-10-25, M4). Merged #254 and #255; the Pi pulled master and `pivac-scb-utility` runs at
+> `daemon_sleep` 5. At the angled mount the Sentry `burnerOn`/`circAuxOn` followed `DHW` minute for minute
+> through both overnight DHW calls. Loop B on HIGH measured 6.0 °F ΔT calling alone and 5.2 °F with both loops
+> (8.4/7.2 on LOW), supply 0.45 °F under `IN`, so HIGH stays. The panel ERROR log photographed 08:20 holds
+> P1s at 10-21 01:12, 10-21 23:41 and 10-24 22:37 plus the known 10-24 07:27 P4: 3 P1s in 119 heating starts
+> (about 2.5 %, 4 % at 50 °C); `284` missed the 23:41 one. CLAUDE.md on master (77f1273, 640d382). Wrote
+> `UnicoSCBBench` for the Feather RP2040 USB Host (Arduino PR #13): listen-only at 4800, ports of
+> `split_frames`/`decode_status`, compiles, host test matches Python; not yet on hardware. The SCB shows one
+> call since install (Y1+G, 10-24 18:03–18:07) and no y2.
+>
+> **Next:**
+> 1. Flash UnicoSCBBench on the Feather, plug it into the utility control box; expect a frame every ~850 ms.
+> 2. Thermostats to Heat (MASTER_BR cools at 75 °F afternoons, KIDS_ROOM at 75 °F nights: ~2 changeovers
+>    a day). On 10-21 23:50 a kids room cool call chilled the tank to 54 °F and the great room fell 2 °F.
+> 3. Pico WH on the breadboard, then the carrier (session 84 steps 2–3 in archive/handoffs.md).
+> 4. Read P1/P4 from the panel log, never `284` alone; keep watching `ah.utility.call.y2`.
+> 5. Carried: cold nights at 30 °F; spare Pi; sentry offline registration; rev C §9; backup board set;
+>    palace redaction.
+>
+> **Notes:**
+> - Panel photos are in the Photos library originals (`~/Pictures/Photos Library.photoslibrary/originals/`, HEIC).
+> - arduino-cli on the M4 has the rp2040 core and the `Pico PIO USB` library.
+> - The override has only been dry-run; guard word CALL-THE-PLANT.
+
 > ### ▶ ACTIVE HANDOFF — Sentry at an angled IR mount; SCB at 5 s; 2026-10-24 evening, M4
 >
 > Session 85 (2026-10-24, M4). The Sentry camera went through three remounts after the shop lights went
