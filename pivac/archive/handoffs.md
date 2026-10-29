@@ -1,3 +1,27 @@
+> ### ▶ ACTIVE HANDOFF — Shield rev A powered and both inputs working; P1 seen at 6 s sampling; 2026-10-28, M4
+>
+> Session 88 (2026-10-27/28, M4). Air-handler shield rev A bring-up: U2 overheated and held the rail at
+> 1.72 V because an ICM7555 from the Carlson parts sat in its place; the DS2482 is on and the board powers
+> properly. W2 failed with one end of LED3 unsoldered (current only through D4, half the cycle); reflowed,
+> W2 matches Y2. Build is U2 fitted, R15 off, JP1 open, LED1/R16 off (build sheet on #242). Wrote
+> `OneWireBus.h` (DS2482 with D2 fallback) and ported AirHandler and AirHandlerBench (Arduino #14,
+> compiled, not on hardware; `SHIELD_PCB` puts return air on A0). The faster Chiltrix sampling caught a P1:
+> `raw.r284` = 2 at 02:47:51 EDT 10-28 for ~15 s, heating at 40 Hz, 54 °C leaving, 45 °F outdoors.
+>
+> **Next:**
+> 1. Fit the shield headers, flash AirHandlerBench; expect `1-Wire master: DS2482 at 0x18`, ROMs `CRC ok`.
+> 2. Order the TB1 plug (Phoenix MC 1,5/4, 1803594); 0805 LED kit ordered (Amazon B09Y1K1MFD).
+> 3. Chiltrix P1: hold the 50 °C target until days in the low 30s / high 20s, then read every r284 ≠ 0
+>    event and the 30 °F boiler cutover and recommend; no email wanted. Sooner if trips get frequent.
+> 4. After a DHW call, confirm the Sentry's hundreds `1` and lit `burnerOn`/`circAuxOn`.
+> 5. Flash UnicoSCBBench on the Feather; thermostats to Heat; Pico WH carrier.
+> 6. Carried: spare Pi; sentry offline registration; rev C §9; backup board set; palace redaction.
+>
+> **Notes:**
+> - Shield AC side is measured against COM (TB1 pad 3), never J1 GND; the Traco isolates them.
+> - Test LEDs loose: LED1 fails the diode test in circuit through R16 and the rail.
+> - r284 now samples every ~6 s, so P1 trips of 10–30 s show; the panel log still names the code.
+
 > ### ▶ ACTIVE HANDOFF — Sentry recalibrated after the camera move; #256 merged; 2026-10-25 night, M4
 >
 > Session 87 (2026-10-25, M4). David moved the Sentry camera; the view shifted 6 px left and 22 px down,

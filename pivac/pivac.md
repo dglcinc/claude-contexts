@@ -10,29 +10,28 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Shield rev A powered and both inputs working; P1 seen at 6 s sampling; 2026-10-28, M4
+> ### ▶ ACTIVE HANDOFF — Shield rev A 1-wire proven through the DS2482 after a TB3 tail reflow; 2026-10-28 evening, M2
 >
-> Session 88 (2026-10-27/28, M4). Air-handler shield rev A bring-up: U2 overheated and held the rail at
-> 1.72 V because an ICM7555 from the Carlson parts sat in its place; the DS2482 is on and the board powers
-> properly. W2 failed with one end of LED3 unsoldered (current only through D4, half the cycle); reflowed,
-> W2 matches Y2. Build is U2 fitted, R15 off, JP1 open, LED1/R16 off (build sheet on #242). Wrote
-> `OneWireBus.h` (DS2482 with D2 fallback) and ported AirHandler and AirHandlerBench (Arduino #14,
-> compiled, not on hardware; `SHIELD_PCB` puts return air on A0). The faster Chiltrix sampling caught a P1:
-> `raw.r284` = 2 at 02:47:51 EDT 10-28 for ~15 s, heating at 40 Hz, 54 °C leaving, 45 °F outdoors.
+> Session 89 (2026-10-28 evening, M2). Ran AirHandlerBench (Arduino #14) on the rev A shield over USB. The
+> DS2482 answered at 0x18 and passed its reset, but the bus showed no presence with a probe on TB3: line high,
+> no presence, no short, 4.85 V on TB3.V and TB3.D. Reflowing TB3's three PTSM tails brought the ROM up in
+> five seconds: `0516a36816ff` (the +0.496 K spare) at 76.2 °F, A0/A1 10.1 and 10.0 kΩ at 76.5 and 76.9 °F,
+> D8 HIGH. Bench sketch gained `r` (reprint the master; the R4's boot banner is lost before a monitor opens)
+> and `s` (DS2482 presence/short/line); the tail finding is in `docs/air-handler-shield-assembly.md` on #242.
 >
 > **Next:**
-> 1. Fit the shield headers, flash AirHandlerBench; expect `1-Wire master: DS2482 at 0x18`, ROMs `CRC ok`.
-> 2. Order the TB1 plug (Phoenix MC 1,5/4, 1803594); 0805 LED kit ordered (Amazon B09Y1K1MFD).
-> 3. Chiltrix P1: hold the 50 °C target until days in the low 30s / high 20s, then read every r284 ≠ 0
->    event and the 30 °F boiler cutover and recommend; no email wanted. Sooner if trips get frequent.
-> 4. After a DHW call, confirm the Sentry's hundreds `1` and lit `burnerOn`/`circAuxOn`.
-> 5. Flash UnicoSCBBench on the Feather; thermostats to Heat; Pico WH carrier.
+> 1. TB1 plug (Phoenix MC 1,5/4, 1803594) arrives 10-29: run from 24 VAC through U1, R4 off USB; R to Y2
+>    (D8 LOW, LED2) and to W2 (LED3); console at 115200. Y2/W2 are AC inputs and cannot be tested on USB.
+> 2. Second DS18B20 on TB3 when one is to hand; flash the zone sketch with `SHIELD_PCB` once proven on 24 VAC.
+> 3. Pico WH carrier and UnicoSCBBench on the Feather (#13).
+> 4. Chiltrix P1: hold 50 °C until nights in the low 30s, then read `.faultCode` rises against the panel log.
+> 5. After a DHW call, confirm the Sentry's hundreds `1` and lit `burnerOn`/`circAuxOn` (#257).
 > 6. Carried: spare Pi; sentry offline registration; rev C §9; backup board set; palace redaction.
 >
 > **Notes:**
-> - Shield AC side is measured against COM (TB1 pad 3), never J1 GND; the Traco isolates them.
-> - Test LEDs loose: LED1 fails the diode test in circuit through R16 and the rail.
-> - r284 now samples every ~6 s, so P1 trips of 10–30 s show; the panel log still names the code.
+> - Probe VDD/GND reversed on the plug reads millivolts across TB3 V–G: F2 trips and self-resets.
+> - JP1 open, R15 off, U2 fitted is the intended build. Arduino clone is on `feat/airhandler-ds2482`.
+> - No pyserial on the M2; read the port with a stdlib termios script.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
