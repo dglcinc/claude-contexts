@@ -10,33 +10,29 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Sentry recalibrated after the camera move; #256 merged; 2026-10-25 night, M4
+> ### ▶ ACTIVE HANDOFF — Shield rev A powered and both inputs working; P1 seen at 6 s sampling; 2026-10-28, M4
 >
-> Session 87 (2026-10-25, M4). David moved the Sentry camera; the view shifted 6 px left and 22 px down,
-> past the tracker's 15 px, so `waterTemp`/`outdoorTemp` went stale from 22:39 EDT at margin 12. Lens
-> centroids from a 450-frame Mac capture fit the 10-24 spots by homography (≤1.2 px); the mapped quad,
-> searched, read 100 % clean at margin 62 (61–64 on every ±1 px), water 88, air 57 (RedLink 49 + the 8 °F
-> night offset), gas 0. Live config: corners TL(913,455) TR(1045,457) BR(1038,525) BL(905,521), LEDs
-> (1073,453) (1073,479) (1074,505) (1073,529), indicators (910,541) (954,541) (997,544) (1041,544); backup
-> `/etc/pivac/config.yml.bak-20261025-remount`. Live: margin 60, misses 0, tracker 0.947. CLAUDE.md on
-> master (2bff806); notes in #256 (merged, 79fd0d1).
+> Session 88 (2026-10-27/28, M4). Air-handler shield rev A bring-up: U2 overheated and held the rail at
+> 1.72 V because an ICM7555 from the Carlson parts sat in its place; the DS2482 is on and the board powers
+> properly. W2 failed with one end of LED3 unsoldered (current only through D4, half the cycle); reflowed,
+> W2 matches Y2. Build is U2 fitted, R15 off, JP1 open, LED1/R16 off (build sheet on #242). Wrote
+> `OneWireBus.h` (DS2482 with D2 fallback) and ported AirHandler and AirHandlerBench (Arduino #14,
+> compiled, not on hardware; `SHIELD_PCB` puts return air on A0). The faster Chiltrix sampling caught a P1:
+> `raw.r284` = 2 at 02:47:51 EDT 10-28 for ~15 s, heating at 40 Hz, 54 °C leaving, 45 °F outdoors.
 >
 > **Next:**
-> 1. After the first DHW call, check the Sentry for a hundreds `1` and lit `burnerOn`/`circAuxOn`
->    (`journalctl -u pivac-sentry | grep "nothing decoded\|lit-threshold"`); neither was in the capture.
-> 2. Flash UnicoSCBBench on the Feather, plug it into the utility control box; expect a frame every ~850 ms.
-> 3. Thermostats to Heat (MASTER_BR cools at 75 °F afternoons, KIDS_ROOM at 75 °F nights: ~2 changeovers
->    a day), or raise their cool setpoints.
-> 4. Pico WH on the breadboard, then the carrier (session 84 steps 2–3 in archive/handoffs.md).
-> 5. Read P1/P4 from the panel log, never `284` alone; keep watching `ah.utility.call.y2`.
-> 6. Carried: cold nights at 30 °F; spare Pi; sentry offline registration; rev C §9; backup board set;
->    palace redaction.
+> 1. Fit the shield headers, flash AirHandlerBench; expect `1-Wire master: DS2482 at 0x18`, ROMs `CRC ok`.
+> 2. Order the TB1 plug (Phoenix MC 1,5/4, 1803594); 0805 LED kit ordered (Amazon B09Y1K1MFD).
+> 3. Chiltrix P1: hold the 50 °C target until days in the low 30s / high 20s, then read every r284 ≠ 0
+>    event and the 30 °F boiler cutover and recommend; no email wanted. Sooner if trips get frequent.
+> 4. After a DHW call, confirm the Sentry's hundreds `1` and lit `burnerOn`/`circAuxOn`.
+> 5. Flash UnicoSCBBench on the Feather; thermostats to Heat; Pico WH carrier.
+> 6. Carried: spare Pi; sentry offline registration; rev C §9; backup board set; palace redaction.
 >
 > **Notes:**
-> - The Mac's `~/pivac-venv` has OpenCV 5.0 (the Pi stays on 4.13); the warp search runs there with
->   `--config` pointing at a private copy of the live config. Delete that copy afterwards: it holds credentials.
-> - Panel photos are in the Photos library originals (`~/Pictures/Photos Library.photoslibrary/originals/`, HEIC).
-> - arduino-cli on the M4 has the rp2040 core and the `Pico PIO USB` library.
+> - Shield AC side is measured against COM (TB1 pad 3), never J1 GND; the Traco isolates them.
+> - Test LEDs loose: LED1 fails the diode test in circuit through R16 and the rail.
+> - r284 now samples every ~6 s, so P1 trips of 10–30 s show; the panel log still names the code.
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
