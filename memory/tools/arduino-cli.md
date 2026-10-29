@@ -24,3 +24,11 @@
 - **DomesticWater node board (flashed 2026-07-03):** the spare third UNO R4 WiFi,
   USB serial/WiFi MAC `34:b7:da:65:99:1c` (`esp32s3-65991C`), UniFi-reserved to
   **10.0.0.188** (name "DomesticWater"). Meter-only sketch live, `GET /` verified.
+- **2026-10-29 — durable M2-over-SSH setup.** `~/arduino-user` on the M2 holds
+  `ArduinoGraphics` and `OneWire`, installed with
+  `ARDUINO_DIRECTORIES_USER=$HOME/arduino-user arduino-cli lib install ...`. Export
+  that variable and `PATH=/opt/homebrew/bin:$PATH` (Homebrew is not on the SSH
+  PATH) for both `compile` and `upload`; no `--libraries` flag needed. The M2 has
+  no pyserial: read an R4's console with a stdlib `termios` script (raw, 115200,
+  `O_NONBLOCK`); opening the port does not reset the R4. A charge-only USB-C cable
+  shows as nothing in `ioreg -p IOUSB`.

@@ -10,28 +10,31 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 
 ## Current State
 
-> ### ▶ ACTIVE HANDOFF — Shield rev A 1-wire proven through the DS2482 after a TB3 tail reflow; 2026-10-28 evening, M2
+> ### ▶ ACTIVE HANDOFF — Chiltrix target 46 °C after a P1 lockout; shield rev A passed on 24 VAC over WiFi; 2026-10-29, M4
 >
-> Session 89 (2026-10-28 evening, M2). Ran AirHandlerBench (Arduino #14) on the rev A shield over USB. The
-> DS2482 answered at 0x18 and passed its reset, but the bus showed no presence with a probe on TB3: line high,
-> no presence, no short, 4.85 V on TB3.V and TB3.D. Reflowing TB3's three PTSM tails brought the ROM up in
-> five seconds: `0516a36816ff` (the +0.496 K spare) at 76.2 °F, A0/A1 10.1 and 10.0 kΩ at 76.5 and 76.9 °F,
-> D8 HIGH. Bench sketch gained `r` (reprint the master; the R4's boot banner is lost before a monitor opens)
-> and `s` (DS2482 presence/short/line); the tail finding is in `docs/air-handler-shield-assembly.md` on #242.
+> Session 90 (2026-10-29, M4). The Chiltrix latched on two P1s (07:15, 07:37 EDT) and was cleared by a breaker cycle.
+> Registers 210 and 215 read as high-side pressure and saturation temperature: a P1 is a 350–650 kPa jump in the last
+> minute of a 36–40 Hz plateau with flow and water steady, and steady pressure shows no exchanger fouling. The P1 rate
+> is 14 % of heating stops since the fast poll went live (10-26 17:49), against 3.4–4.2 % before. Heating target set
+> to 46 °C at 12:58 (register 143 confirmed); P53 stays 50 %. An email to Devon is drafted for David to send. Evidence
+> in `docs/chiltrix-modbus.md` on #253; rules in CLAUDE.md (911ca06).
+>
+> The rev A shield passed its final bench run powered from TB1 alone, no USB, on WiFi at 10.0.0.69 with
+> `AirHandler_Bench` (Arduino #14, 149faf2): DS2482 and probe, both NTCs, Y2 call and release, W2 at J1.4 0.3 V. Both
+> fitted LTV-814s had dead inputs (4.8 V AC across pins 1–2 at the legs, outputs stuck at 5 V); David replaced them.
+> Build sheet updated on #242 (1b8546e).
 >
 > **Next:**
-> 1. TB1 plug (Phoenix MC 1,5/4, 1803594) arrives 10-29: run from 24 VAC through U1, R4 off USB; R to Y2
->    (D8 LOW, LED2) and to W2 (LED3); console at 115200. Y2/W2 are AC inputs and cannot be tested on USB.
-> 2. Second DS18B20 on TB3 when one is to hand; flash the zone sketch with `SHIELD_PCB` once proven on 24 VAC.
+> 1. About 11-05: count P1 rises since 10-29 12:58 against heating stops; over 5 % means fast poll off for three days.
+>    A room 1 °F under setpoint overnight means 47 °C. Fold in Devon's reply.
+> 2. Shield: zone sketch for its real zone (ROMs, hostname, UCG reservation); a second DS18B20 on TB3.
 > 3. Pico WH carrier and UnicoSCBBench on the Feather (#13).
-> 4. Chiltrix P1: hold 50 °C until nights in the low 30s, then read `.faultCode` rises against the panel log.
-> 5. After a DHW call, confirm the Sentry's hundreds `1` and lit `burnerOn`/`circAuxOn` (#257).
-> 6. Carried: spare Pi; sentry offline registration; rev C §9; backup board set; palace redaction.
+> 4. After a DHW call, confirm the Sentry's hundreds `1` and lit `burnerOn`/`circAuxOn` (#257).
+> 5. Carried: spare Pi; sentry offline registration; rev C §9; backup board set; palace redaction.
 >
 > **Notes:**
-> - Probe VDD/GND reversed on the plug reads millivolts across TB3 V–G: F2 trips and self-resets.
-> - JP1 open, R15 off, U2 fitted is the intended build. Arduino clone is on `feat/airhandler-ds2482`.
-> - No pyserial on the M2; read the port with a stdlib termios script.
+> - TB4 FLOW on A3 is an unfitted pulse-meter option; the "air flow sensors" are the two NTCs.
+> - arduino-cli over SSH on the M2: `ARDUINO_DIRECTORIES_USER=~/arduino-user`, Homebrew PATH (global tools/arduino-cli.md).
 
 ## Backup Runbook (drivable from a Mac Claude session)
 
