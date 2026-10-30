@@ -16,7 +16,7 @@ This file exists for Mac-side Claude sessions that need to drive Pi operations r
 > Registers 210 and 215 read as high-side pressure and saturation temperature: a P1 is a 350–650 kPa jump in the last
 > minute of a 36–40 Hz plateau with flow and water steady, and steady pressure shows no exchanger fouling. The P1 rate
 > is 14 % of heating stops since the fast poll went live (10-26 17:49), against 3.4–4.2 % before. Heating target set
-> to 46 °C at 12:58 (register 143 confirmed); P53 stays 50 %. An email to Devon is drafted for David to send. Evidence
+> to 46 °C at 12:58 (register 143 confirmed); P53 stays 50 %. Devon has the email, agreed to 46 °C as a stopgap and is checking the Modbus analysis with Chiltrix. Evidence
 > in `docs/chiltrix-modbus.md` on #253; rules in CLAUDE.md (911ca06).
 >
 > The rev A shield passed its final bench run powered from TB1 alone, no USB, on WiFi at 10.0.0.69 with
